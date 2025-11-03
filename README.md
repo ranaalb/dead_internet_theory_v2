@@ -1,2 +1,2 @@
-# dead_internet_theory
-CS 171  Project
+# CS171 Project -- Dead Internet Theory?
+
