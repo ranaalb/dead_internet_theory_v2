@@ -288,6 +288,664 @@ if (section6) {
   gameObserver.observe(section6);
 }
 
+// Wait for DOM content to be loaded before creating the pie chart
+document.addEventListener('DOMContentLoaded', () => {
+  try {
+    console.log('Creating pie chart...');
+
+    // Dimensions and radius
+    const width = 600, height = 600, radius = Math.min(width, height) / 2;
+
+    // Color scheme
+    const color = d3.scaleOrdinal()
+      .domain(["Human", "Bot"])
+      .range(["#286cd8ff", "#ec1010ff"]);
+
+    // Create the SVG container
+    const chartDiv = document.getElementById('chart');
+    if (!chartDiv) {
+      console.error('#chart element not found');
+      return;
+    }
+
+    const svg = d3.select("#chart")
+      .append("svg")
+      .attr("width", width)
+      .attr("height", height)
+      .append("g")
+      .attr("transform", `translate(${width / 2}, ${height / 2})`);
+
+    const arc = d3.arc()
+      .innerRadius(0)
+      .outerRadius(radius - 20);
+
+    const pie = d3.pie()
+      .sort(null)
+      .value(d => d.count);
+
+    // Sample data
+    const data = [
+      { type: "Human", count: 96.76 },
+      { type: "Bot", count: 3.24 }
+    ];
+
+    console.log('Data for pie chart:', data);
+
+    // Create pie slices
+    const arcs = pie(data);
+
+    // Add paths
+    svg.selectAll("path")
+      .data(arcs)
+      .enter()
+      .append("path")
+      .attr("fill", d => color(d.data.type))
+      .attr("d", arc)
+      .attr("stroke", "white")
+      .attr("stroke-width", 1);
+
+    // Add labels
+    svg.selectAll("text")
+      .data(arcs)
+      .enter()
+      .append("text")
+      .attr("class", "label")
+      .attr("transform", d => `translate(${arc.centroid(d)})`)
+      .attr("dy", "0.35em")
+      .attr("text-anchor", "middle")
+      .text(d => `${d.data.type} (${((d.data.count / d3.sum(data, d=>d.count))*100).toFixed(1)}%)`);
+
+    console.log('Pie chart created successfully');
+  } catch (error) {
+    console.error('Error creating pie chart:', error);
+    const chartEl = document.getElementById('chart');
+    if (chartEl) {
+      chartEl.innerHTML = '<p style="color:#fff; text-align:center; padding:2rem;">Error creating pie chart. Check console for details.</p>';
+    }
+  }
+});
+
+// ========== BOT ENGAGEMENT CHARTS ==========
+document.addEventListener('DOMContentLoaded', async () => {
+  const chartDiv = d3.select("#chart-ignored");
+  const tooltip = d3.select(".tooltip");
+
+  if (chartDiv.empty()) {
+    console.warn('No #chart-ignored element found; skipping chart');
+    return;
+  }
+
+  const width = 900, height = 450;
+
+  // Show loading message
+  const loadingText = chartDiv.append('div')
+    .style('color', 'white')
+    .style('text-align', 'center')
+    .style('padding', '2rem')
+    .style('font-size', '18px')
+    .text('Loading data...');
+
+  try {
+    // Load CSV data
+    const data = await d3.csv('Datasets/Features_For_Traditional_ML_Techniques.csv');
+    console.log('CSV loaded. Rows:', data.length);
+
+    // Analyze bot vs human engagement
+    let botZeroRetweets = 0;
+    let humanZeroRetweets = 0;
+    let botTotal = 0;
+    let humanTotal = 0;
+    let botTotalRetweets = 0;
+    let humanTotalRetweets = 0;
+
+    data.forEach(row => {
+      const botBinary = row.BotScoreBinary ? row.BotScoreBinary.trim() : '';
+      const retweetsStr = row.retweets ? row.retweets.trim() : '';
+
+      if (botBinary && retweetsStr) {
+        try {
+          const isBot = parseFloat(botBinary) === 1.0;
+          const retweets = parseFloat(retweetsStr);
+
+          if (isBot) {
+            botTotal++;
+            botTotalRetweets += retweets;
+            if (retweets === 0.0) botZeroRetweets++;
+          } else {
+            humanTotal++;
+            humanTotalRetweets += retweets;
+            if (retweets === 0.0) humanZeroRetweets++;
+          }
+        } catch (e) {
+          // Skip invalid rows
+        }
+      }
+    });
+
+    const botZeroPct = botTotal > 0 ? (botZeroRetweets / botTotal * 100) : 0;
+    const humanZeroPct = humanTotal > 0 ? (humanZeroRetweets / humanTotal * 100) : 0;
+    const totalRetweets = botTotalRetweets + humanTotalRetweets;
+    const botEngagementPct = totalRetweets > 0 ? (botTotalRetweets / totalRetweets * 100) : 0;
+
+    console.log('Bot accounts:', botTotal);
+    console.log('Human accounts:', humanTotal);
+    console.log('Bots with zero retweets:', botZeroPct.toFixed(1) + '%');
+    console.log('Humans with zero retweets:', humanZeroPct.toFixed(1) + '%');
+    console.log('Bot retweet engagement:', botEngagementPct.toFixed(4) + '%');
+
+    loadingText.remove();
+
+    const dataset = [
+      { type: 'Bots', percentage: botZeroPct },
+      { type: 'Humans', percentage: humanZeroPct }
+    ];
+
+    const donutData = [
+      { type: 'Bots', value: botEngagementPct },
+      { type: 'Humans', value: 100 - botEngagementPct }
+    ];
+
+    console.log('Chart data loaded');
+    console.log('Bar chart:', dataset);
+    console.log('Donut chart:', donutData);
+
+    try {
+      // Create container for both charts side by side
+      const containerDiv = chartDiv.append("div")
+        .style("display", "flex")
+        .style("flex-direction", "row")
+        .style("justify-content", "center")
+        .style("align-items", "center")
+        .style("gap", "40px")
+        .style("flex-wrap", "nowrap")
+        .style("padding", "20px")
+        .style("max-width", "100%")
+        .style("margin", "0 auto");
+
+      // ========== BAR CHART: Tweets with Zero Retweets ==========
+      const barWidth = 450, barHeight = 420;
+      const barMargin = { top: 70, right: 25, bottom: 70, left: 90 };
+
+      const barSvg = containerDiv.append("svg")
+        .attr("width", barWidth)
+        .attr("height", barHeight)
+        .style("background", "rgba(255, 255, 255, 0.03)")
+        .style("border-radius", "16px")
+        .style("box-shadow", "0 8px 20px rgba(0, 0, 0, 0.5)")
+        .style("border", "1px solid rgba(255, 255, 255, 0.1)");
+
+      const barG = barSvg.append("g")
+        .attr("transform", `translate(${barMargin.left},${barMargin.top})`);
+
+      const barInnerWidth = barWidth - barMargin.left - barMargin.right;
+      const barInnerHeight = barHeight - barMargin.top - barMargin.bottom;
+
+      const x = d3.scaleBand()
+        .domain(dataset.map(d => d.type))
+        .range([0, barInnerWidth])
+        .padding(0.4);
+
+      const y = d3.scaleLinear()
+        .domain([0, 100])
+        .range([barInnerHeight, 0]);
+
+      // Grid lines
+      barG.append("g")
+        .attr("class", "grid")
+        .call(d3.axisLeft(y)
+          .tickSize(-barInnerWidth)
+          .tickFormat("")
+        )
+        .selectAll("line")
+        .style("stroke", "rgba(255,255,255,0.1)")
+        .style("stroke-dasharray", "3,3");
+
+      barG.selectAll(".grid .domain")
+        .style("stroke", "none");
+
+      // Axes
+      barG.append("g")
+        .attr("transform", `translate(0,${barInnerHeight})`)
+        .call(d3.axisBottom(x))
+        .selectAll("text")
+        .style("font-size", "17px")
+        .style("font-weight", "700")
+        .style("fill", "white");
+
+      barG.append("g")
+        .call(d3.axisLeft(y).tickFormat(d => d + "%").ticks(5))
+        .selectAll("text")
+        .style("font-size", "14px")
+        .style("font-weight", "500")
+        .style("fill", "#e0e0e0");
+
+      // Style axis lines and ticks
+      barG.selectAll(".domain")
+        .style("stroke", "rgba(255,255,255,0.4)")
+        .style("stroke-width", "2px");
+      
+      barG.selectAll(".tick line")
+        .style("stroke", "rgba(255,255,255,0.25)");
+
+      // Bars with animation
+      barG.selectAll(".bar")
+        .data(dataset)
+        .enter()
+        .append("rect")
+        .attr("class", "bar")
+        .attr("x", d => x(d.type))
+        .attr("width", x.bandwidth())
+        .attr("y", barInnerHeight)
+        .attr("height", 0)
+        .attr("fill", d => d.type === "Bots" ? "#ec1010ff" : "#286cd8ff")
+        .attr("rx", 6)
+        .attr("ry", 6)
+        .style("filter", "drop-shadow(0px 2px 4px rgba(0,0,0,0.4))")
+        .transition()
+        .duration(1500)
+        .ease(d3.easeCubicOut)
+        .attr("y", d => y(d.percentage))
+        .attr("height", d => barInnerHeight - y(d.percentage));
+
+      // Labels on bars
+      barG.selectAll(".bar-label")
+        .data(dataset)
+        .enter()
+        .append("text")
+        .attr("class", "bar-label")
+        .attr("x", d => x(d.type) + x.bandwidth() / 2)
+        .attr("y", d => y(d.percentage) - 15)
+        .attr("text-anchor", "middle")
+        .attr("fill", "white")
+        .attr("font-size", "26px")
+        .attr("font-weight", "bold")
+        .style("text-shadow", "0 3px 6px rgba(0,0,0,0.7)")
+        .text(d => d.percentage.toFixed(1) + "%");
+
+      // Chart subtitle
+      barG.append("text")
+        .attr("x", barInnerWidth / 2)
+        .attr("y", -40)
+        .attr("text-anchor", "middle")
+        .attr("fill", "white")
+        .attr("font-size", "16px")
+        .attr("font-weight", "700")
+        .style("letter-spacing", "0.5px")
+        .text("Most bot tweets get no retweets");
+
+      // Y-axis label
+      barG.append("text")
+        .attr("transform", "rotate(-90)")
+        .attr("x", -barInnerHeight / 2)
+        .attr("y", -70)
+        .attr("text-anchor", "middle")
+        .attr("fill", "#b0b0b0")
+        .attr("font-size", "13px")
+        .attr("font-weight", "500")
+        .text("Percent of tweets with zero retweets");
+
+      // ========== DONUT CHART: Retweet Engagement Composition ==========
+      const donutWidth = 450, donutHeight = 420;
+      const donutRadius = Math.min(donutWidth, donutHeight) / 2 - 60;
+
+      const donutSvg = containerDiv.append("svg")
+        .attr("width", donutWidth)
+        .attr("height", donutHeight)
+        .style("background", "rgba(255, 255, 255, 0.03)")
+        .style("border-radius", "16px")
+        .style("box-shadow", "0 8px 20px rgba(0, 0, 0, 0.5)")
+        .style("border", "1px solid rgba(255, 255, 255, 0.1)");
+
+      const donutG = donutSvg.append("g")
+        .attr("transform", `translate(${donutWidth / 2},${donutHeight / 2 + 15})`);
+
+      const color = d3.scaleOrdinal()
+        .domain(["Bots", "Humans"])
+        .range(["#ec1010ff", "#286cd8ff"]);
+
+      const pie = d3.pie()
+        .value(d => d.value)
+        .sort(null);
+
+      const arc = d3.arc()
+        .innerRadius(donutRadius * 0.6)
+        .outerRadius(donutRadius);
+
+      // Draw donut slices
+      const paths = donutG.selectAll("path")
+        .data(pie(donutData))
+        .enter()
+        .append("path")
+        .attr("d", arc)
+        .attr("fill", d => color(d.data.type))
+        .attr("stroke", "white")
+        .attr("stroke-width", 3)
+        .style("filter", "drop-shadow(0px 2px 4px rgba(0,0,0,0.4))")
+        .style("opacity", 0);
+
+      paths.transition()
+        .duration(1500)
+        .ease(d3.easeCubicOut)
+        .style("opacity", 1)
+        .attrTween("d", function(d) {
+          const i = d3.interpolate({ startAngle: 0, endAngle: 0 }, d);
+          return function(t) { return arc(i(t)); };
+        });
+
+      // Center text
+      donutG.append("text")
+        .attr("text-anchor", "middle")
+        .attr("y", -18)
+        .attr("fill", "#ec1010ff")
+        .attr("font-size", "24px")
+        .attr("font-weight", "bold")
+        .style("text-shadow", "0 3px 6px rgba(0,0,0,0.7)")
+        .text(`Bots = ${donutData[0].value.toFixed(4)}%`);
+
+      donutG.append("text")
+        .attr("text-anchor", "middle")
+        .attr("y", 8)
+        .attr("fill", "white")
+        .attr("font-size", "15px")
+        .attr("font-weight", "500")
+        .text("of all retweet engagement");
+
+      // Chart title
+      donutG.append("text")
+        .attr("text-anchor", "middle")
+        .attr("y", -donutRadius - 45)
+        .attr("fill", "white")
+        .attr("font-size", "16px")
+        .attr("font-weight", "700")
+        .style("letter-spacing", "0.5px")
+        .text("Bots are 0.0555% of all retweet engagement");
+
+      donutG.append("text")
+        .attr("text-anchor", "middle")
+        .attr("y", -donutRadius - 23)
+        .attr("fill", "#b0b0b0")
+        .attr("font-size", "13px")
+        .attr("font-weight", "500")
+        .text("Composition of total retweets");
+
+      // Legend
+      const legend = donutSvg.append("g")
+        .attr("transform", `translate(${donutWidth - 115}, ${donutHeight - 75})`);
+
+      const legendData = [
+        { label: "Bots", color: "#ec1010ff" },
+        { label: "Humans", color: "#286cd8ff" }
+      ];
+
+      legendData.forEach((d, i) => {
+        const legendRow = legend.append("g")
+          .attr("transform", `translate(0, ${i * 28})`);
+
+        legendRow.append("rect")
+          .attr("width", 18)
+          .attr("height", 18)
+          .attr("rx", 4)
+          .attr("fill", d.color)
+          .style("filter", "drop-shadow(0px 2px 3px rgba(0,0,0,0.4))");
+
+        legendRow.append("text")
+          .attr("x", 26)
+          .attr("y", 13)
+          .attr("fill", "white")
+          .attr("font-size", "15px")
+          .attr("font-weight", "600")
+          .text(d.label);
+      });
+
+      console.log('Charts rendered successfully!');
+      
+    } catch (renderError) {
+      console.error('Error rendering charts:', renderError);
+      chartDiv.html('').append('div')
+        .style('color', '#ff6b6b')
+        .style('text-align', 'center')
+        .style('padding', '2rem')
+        .text('Error rendering charts. Check console for details.');
+    }
+  } catch (loadError) {
+    console.error('Error loading data:', loadError);
+    loadingText
+      .style('color', '#ff6b6b')
+      .text('Error loading data. Check console for details.');
+  }
+});
+
+});
+
+// Wait for DOM content to be loaded before creating the pie chart
+document.addEventListener('DOMContentLoaded', () => {
+  try {
+    console.log('Creating pie chart...');
+
+    // Dimensions and radius
+    const width = 600, height = 600, radius = Math.min(width, height) / 2;
+
+    // Color scheme
+    const color = d3.scaleOrdinal()
+      .domain(["Human", "Bot"])
+      .range(["#286cd8ff", "#ec1010ff"]);
+
+    // Create the SVG container
+    const chartDiv = document.getElementById('chart');
+    if (!chartDiv) {
+      console.error('#chart element not found');
+      return;
+    }
+
+    const svg = d3.select("#chart")
+      .append("svg")
+      .attr("width", width)
+      .attr("height", height)
+      .append("g")
+      .attr("transform", `translate(${width / 2}, ${height / 2})`);
+
+    const arc = d3.arc()
+      .innerRadius(0)
+      .outerRadius(radius - 20);
+
+    const pie = d3.pie()
+      .sort(null)
+      .value(d => d.count);
+
+    // Sample data
+    const data = [
+      { type: "Human", count: 96.76 },
+      { type: "Bot", count: 3.24 }
+    ];
+
+    console.log('Data for pie chart:', data);
+
+    // Create pie slices
+    const arcs = pie(data);
+
+    // Add paths
+    svg.selectAll("path")
+      .data(arcs)
+      .enter()
+      .append("path")
+      .attr("fill", d => color(d.data.type))
+      .attr("d", arc)
+      .attr("stroke", "white")
+      .attr("stroke-width", 1);
+
+    // Add labels
+    svg.selectAll("text")
+      .data(arcs)
+      .enter()
+      .append("text")
+      .attr("class", "label")
+      .attr("transform", d => `translate(${arc.centroid(d)})`)
+      .attr("dy", "0.35em")
+      .attr("text-anchor", "middle")
+      .text(d => `${d.data.type} (${((d.data.count / d3.sum(data, d=>d.count))*100).toFixed(1)}%)`);
+
+    console.log('Pie chart created successfully');
+  } catch (error) {
+    console.error('Error creating pie chart:', error);
+    const chartEl = document.getElementById('chart');
+    if (chartEl) {
+      chartEl.innerHTML = '<p style="color:#fff; text-align:center; padding:2rem;">Error creating pie chart. Check console for details.</p>';
+    }
+  }
+});
+
+// ========== IGNORED POSTS CHART (BOTS VS HUMANS) ==========
+document.addEventListener('DOMContentLoaded', async () => {
+  const chartDiv = d3.select("#chart-ignored");
+    const tooltip = d3.select(".tooltip");
+
+    const width = 700, height = 450, margin = { top: 40, right: 20, bottom: 60, left: 60 };
+
+    if (chartDiv.empty()) {
+      console.warn('No #chart-ignored element found; skipping ignored-posts chart');
+      return;
+    }
+
+    const svg = chartDiv.append("svg")
+      .attr("width", width)
+      .attr("height", height);
+
+    const g = svg.append("g")
+      .attr("transform", `translate(${margin.left},${margin.top})`);
+
+    const innerWidth = width - margin.left - margin.right;
+    const innerHeight = height - margin.top - margin.bottom;
+
+    const DATASET_PATH = 'Truth_Seeker_sample.csv'; // use sample for testing
+    let data = [];
+    try {
+      data = await d3.csv(DATASET_PATH);
+    } catch (err) {
+      console.error('Failed to load CSV for ignored-posts chart:', err);
+      chartDiv.append('text')
+        .attr('x', 20)
+        .attr('y', 40)
+        .attr('fill', 'white')
+        .text('Could not load dataset for this chart.');
+      return;
+    }
+
+    // Ensure numeric conversion
+    data.forEach(d => {
+      d.likes = +d.likes || 0;
+      d.retweets = +d.retweets || 0;
+      d.replies = +d.replies || 0;
+    });
+
+    const cols = data.columns || (data.length ? Object.keys(data[0]) : []);
+
+    // Candidate column names for account type
+    const candidates = ['account_type','accountType','AccountType','account_type_label','BotScoreBinary','bot','is_bot','bot_label','label'];
+    let groupKey = cols.find(c => candidates.map(x=>x.toLowerCase()).includes(c.toLowerCase()));
+
+    // If still not found, try to detect a binary column with only 0/1 values
+    if (!groupKey) {
+      for (const c of cols) {
+        const vals = new Set(data.map(d => (d[c]||'').toString().trim()).filter(x=>x!==""));
+        if (vals.size > 0 && vals.size <= 2) {
+          // likely a binary/grouping column
+          groupKey = c;
+          break;
+        }
+      }
+    }
+
+    // Normalizer to map various labels to 'Human' or 'Bot'
+    const normalize = v => {
+      if (v == null) return 'Unknown';
+      const s = String(v).trim();
+      if (s === '' ) return 'Unknown';
+      if (s === '0' || /^human$/i.test(s) || /human/i.test(s)) return 'Human';
+      if (s === '1' || /^bot$/i.test(s) || /bot/i.test(s)) return 'Bot';
+      return s;
+    };
+
+    // Build summary counts (percentage ignored) grouped by normalized type
+    const grouped = d3.rollups(
+      data,
+      v => {
+        const ignored = v.filter(d => (d.likes + d.retweets + d.replies) === 0).length;
+        return (ignored / v.length) * 100;
+      },
+      d => groupKey ? normalize(d[groupKey]) : 'Unknown'
+    );
+
+    // Convert to object map
+    const map = new Map(grouped.map(([k,v]) => [k, v]));
+
+    // Ensure both Human and Bot entries exist (default 0)
+    const dataset = [
+      { type: 'Human', ignoredPct: +(map.get('Human') || 0) },
+      { type: 'Bot', ignoredPct: +(map.get('Bot') || 0) }
+    ];
+
+    const x = d3.scaleBand()
+      .domain(dataset.map(d => d.type))
+      .range([0, innerWidth])
+      .padding(0.3);
+
+    const y = d3.scaleLinear()
+      .domain([0, 100])
+      .range([innerHeight, 0]);
+
+    // Axes
+    g.append("g")
+      .attr("transform", `translate(0,${innerHeight})`)
+      .call(d3.axisBottom(x));
+
+    g.append("g")
+      .call(d3.axisLeft(y).tickFormat(d => d + "%"));
+
+    // Bars with animation
+    g.selectAll(".bar")
+      .data(dataset)
+      .enter()
+      .append("rect")
+      .attr("class", "bar")
+      .attr("x", d => x(d.type))
+      .attr("width", x.bandwidth())
+      .attr("y", innerHeight)
+      .attr("height", 0)
+      .attr("fill", d => d.type === "Bot" ? "#ec1010ff" : "#286cd8ff")
+      .transition()
+      .duration(1200)
+      .attr("y", d => y(d.ignoredPct))
+      .attr("height", d => innerHeight - y(d.ignoredPct));
+
+    // Add hover interaction
+    g.selectAll(".bar")
+      .on("mousemove", (event, d) => {
+        tooltip.style("opacity", 1)
+          .html(`<strong>${d.type}</strong><br>${d.ignoredPct.toFixed(1)}% ignored posts`)
+          .style("left", (event.clientX + 10) + "px")
+          .style("top", (event.clientY - 40) + "px");
+      })
+      .on("mouseout", () => tooltip.style("opacity", 0));
+
+    // Labels
+    g.selectAll(".label")
+      .data(dataset)
+      .enter()
+      .append("text")
+      .attr("class", "label")
+      .attr("x", d => x(d.type) + x.bandwidth() / 2)
+      .attr("y", d => y(d.ignoredPct) - 10)
+      .attr("text-anchor", "middle")
+      .attr("fill", "white")
+      .text(d => d.ignoredPct.toFixed(1) + "%");
+
+    // Titles
+    g.append("text")
+      .attr("class", "chart-title")
+      .attr("x", innerWidth / 2)
+      .attr("y", -10)
+      .text("% of Posts with No Engagement");
+  });
 
 
 
