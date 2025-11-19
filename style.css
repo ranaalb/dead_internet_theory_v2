@@ -994,6 +994,16 @@ svg {
   justify-content: center;
 }
 
+/* Remove horizontal padding/offset that can push the trend section to the right
+   and cause the chart to be clipped. Make the inner container full-width and
+   ensure box-sizing so padding doesn't increase layout width. */
+.trend-section .trend-container {
+  width: 100% !important;
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+  box-sizing: border-box !important;
+}
+
 .trend-title {
   font-size: 1.2rem;
   margin-bottom: 0.3rem;
@@ -1067,16 +1077,17 @@ svg {
 }
 
 #searchTrendChart {
-  padding: 2rem 1rem 3rem 1rem;
-  margin: 0 auto 3rem;
-  min-height: 800px;
+  padding: 2rem 0 2rem 0; /* remove side padding so chart aligns with container */
+  margin: 0 auto 2rem;
+  min-height: 680px;
   display: flex;
   align-items: center;
   justify-content: center;
   width: 100%;
   opacity: 0;
-  transform: translateY(50px);
-  transition: opacity 1s ease-out, transform 1s ease-out;
+  transform: translateY(30px);
+  transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+  box-sizing: border-box;
 }
 
 #searchTrendChart.visible {
@@ -1850,6 +1861,123 @@ svg {
   justify-content: space-between;
   font-size: 12px;
   color: var(--text-secondary);
+}
+
+/* ========================================
+   VISUALIZATION SIZE ADJUSTMENTS (Laptop)
+   - Make charts smaller on laptops so they don't dominate the 100vh sections
+   - Keep Facebook chart larger (exception)
+   - Ensure SVGs preserve aspect ratio and don't stretch
+   ======================================== */
+@media (min-width: 992px) {
+  /* Prefer preserving intrinsic SVG aspect ratio */
+  svg {
+    width: 100% !important;
+    height: auto !important;
+    display: block;
+    max-width: 100%;
+  }
+
+  /* Ensure each full-viewport section keeps equal top/bottom padding on laptop screens
+     so content is centered and not flush to the edge of the viewport. Use box-sizing to
+     include padding in the 100vh section sizing. Adjust the vertical padding (vh) as needed. */
+  .section {
+    box-sizing: border-box;
+    padding-top: 6vh !important;
+    padding-bottom: 6vh !important;
+    padding-left: 1rem !important;
+    padding-right: 1rem !important;
+  }
+
+  /* Smaller chart containers (most visualizations) */
+  #searchTrendChart,
+  #scatterChart,
+  #worldMap,
+  #traffic-chart,
+  #botRevealViz,
+  .chart-wrapper {
+    width: 100%;
+    max-width: 1200px;
+    max-height: 55vh; /* reduced size so it fits nicely inside a 100vh section */
+    height: auto !important;
+    margin: 0 auto 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: auto; /* allow internal scroll rather than stretching the section */
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Ensure SVGs inside those containers respect the container height */
+  #searchTrendChart svg,
+  #scatterChart svg,
+  #worldMap svg,
+  #traffic-chart svg,
+  #botRevealViz svg,
+  .chart-wrapper svg {
+    max-height: 55vh;
+    height: auto !important;
+    width: 100%;
+    display: block;
+  }
+
+  /* Facebook visualization is the exception — allow it to be larger */
+  #facebook-chart {
+    width: 100%;
+    max-width: 1400px;
+    max-height: 78vh; /* give Facebook chart more vertical space */
+    height: auto !important;
+    margin: 0 auto 1.5rem;
+    overflow: auto;
+  }
+
+  #facebook-chart svg {
+    max-height: 78vh;
+    height: auto !important;
+    width: 100%;
+    display: block;
+  }
+
+  /* Override any earlier min-height rules that could force charts to expand */
+  #searchTrendChart.minimize,
+  #scatterChart.minimize,
+  #worldMap.minimize,
+  #traffic-chart.minimize,
+  #botRevealViz.minimize {
+    min-height: 0 !important;
+  }
+}
+
+/* Fine-tune problematic charts: make global map smaller and ensure
+   search trend chart is centered and padded so it's not cut off. */
+@media (min-width: 992px) {
+  /* make the world map a bit smaller than other charts */
+  #worldMap {
+    max-height: 45vh !important;
+    min-height: 30vh;
+    margin: 0 auto 1.25rem;
+    padding: 0.8rem;
+    box-sizing: border-box;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  #worldMap svg {
+    max-height: 44vh !important;
+    width: 100% !important;
+    height: auto !important;
+    display: block;
+  }
+
+
+  /* Add gentle padding for chart-wrapper so embedded visual elements
+     don't sit flush against the viewport edge */
+  .chart-wrapper {
+    padding: 0.8rem 1rem;
+    box-sizing: border-box;
+  }
 }
 
 /* ========================================
@@ -3005,7 +3133,6 @@ svg {
 }
 
 /* Keep sections fully visible: reduce large min-heights inside charts where necessary */
-#searchTrendChart { min-height: 420px; }
 #scatterChart, #worldMap { min-height: 420px; }
 #botRevealViz { min-height: 320px; }
 

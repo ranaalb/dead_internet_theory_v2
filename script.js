@@ -2100,21 +2100,48 @@ document.addEventListener('DOMContentLoaded', async function() {
     .domain([25, 60])
     .interpolator(d3.interpolateRgb('#4AADFF', '#FF4444'));
 
-  // Add legend
+  // Map numeric 'nervous' values to human-friendly sentiment labels
+  // (keep colors as-is; only redefine the meaning shown on hover)
+  function getSentimentLabel(nervous) {
+    if (nervous == null || isNaN(nervous)) return 'No data';
+    // thresholds chosen to align with the visual blue->red continuum
+    if (nervous <= 30) return 'Excited';
+    if (nervous <= 45) return 'Balanced sentiment';
+    if (nervous <= 55) return 'Slightly nervous';
+    return 'Nervous';
+  }
+
+  // Add legend with even top/bottom internal padding
+  const legendWidth = 220;
+  const legendRightSpacing = 20; // spacing from right edge of SVG
+  const internalPadding = 14; // equal top and bottom padding inside legend
+  const titleFontSize = 16;
+  const labelFontSize = 14;
+  const barHeight = 15;
+
+  // positions calculated so top and bottom padding are equal
+  const titleY = internalPadding + titleFontSize; // baseline for title
+  const barY = titleY + 8; // gap between title and bar
+  const labelY = barY + barHeight + (labelFontSize + 4); // baseline for labels
+
+  const legendHeight = labelY + internalPadding; // bottom padding equals top padding
+  const legendX = mapWidth - legendWidth - legendRightSpacing;
+  const legendY = mapHeight - legendHeight - 20; // keep a little extra spacing from SVG bottom
+
   const legend = mapSvg.append('g')
     .attr('class', 'map-legend')
-    .attr('transform', `translate(${mapWidth - 240}, ${mapHeight - 90})`);
+    .attr('transform', `translate(${legendX}, ${legendY})`);
 
   legend.append('rect')
-    .attr('width', 220).attr('height', 80)
+    .attr('width', legendWidth).attr('height', legendHeight)
     .attr('fill', 'rgba(22, 24, 28, 0.95)')
     .attr('stroke', 'rgba(29, 155, 240, 0.3)')
     .attr('stroke-width', 2)
     .attr('rx', 8);
 
   legend.append('text')
-    .attr('x', 15).attr('y', 25)
-    .style('fill', '#E7E9EA').style('font-size', '16px').style('font-weight', '700')
+    .attr('x', 15).attr('y', titleY)
+    .style('fill', '#E7E9EA').style('font-size', `${titleFontSize}px`).style('font-weight', '700')
     .text('Concern Level');
 
   const gradient = legend.append('defs').append('linearGradient')
@@ -2122,14 +2149,18 @@ document.addEventListener('DOMContentLoaded', async function() {
   gradient.append('stop').attr('offset', '0%').attr('stop-color', '#4AADFF');
   gradient.append('stop').attr('offset', '100%').attr('stop-color', '#FF4444');
 
+  // gradient bar
+  const barX = 15;
+  const barWidth = legendWidth - barX * 2;
   legend.append('rect')
-    .attr('x', 15).attr('y', 35).attr('width', 190).attr('height', 15)
+    .attr('x', barX).attr('y', barY).attr('width', barWidth).attr('height', barHeight)
     .attr('fill', 'url(#legend-gradient)').attr('rx', 3);
 
-  legend.append('text').attr('x', 15).attr('y', 68)
-    .style('fill', '#71767B').style('font-size', '14px').text('25% (Less Concerned)');
-  legend.append('text').attr('x', 205).attr('y', 68)
-    .style('fill', '#71767B').style('font-size', '14px').attr('text-anchor', 'end').text('60% (More Concerned)');
+  // labels
+  legend.append('text').attr('x', barX).attr('y', labelY)
+    .style('fill', '#71767B').style('font-size', `${labelFontSize}px`).text('Excited');
+  legend.append('text').attr('x', barX + barWidth).attr('y', labelY)
+    .style('fill', '#71767B').style('font-size', `${labelFontSize}px`).attr('text-anchor', 'end').text('Nervous');
 
   try {
     const world = await d3.json('https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json');
@@ -2159,7 +2190,7 @@ document.addEventListener('DOMContentLoaded', async function() {
               <div style="margin-top:10px; padding-top:8px; border-top:2px solid rgba(29,155,240,0.3);">
                 <div style="background:${colorScale(data.nervous)}; height:8px; border-radius:4px; margin-top:4px;"></div>
                 <em style="color:#71767B; font-size:13px;">
-                  ${data.nervous > 60 ? 'High nervousness' : data.nervous > 55 ? 'Moderate nervousness' : 'Balanced sentiment'}
+                  ${getSentimentLabel(data.nervous)}
                 </em>
               </div>
             </div>
