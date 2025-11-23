@@ -137,6 +137,50 @@ const gameData = [
   }
 ];
 
+// Shuffle gameData so questions appear in random order each refresh
+// Improved shuffle: avoid simple alternation (e.g., human, ai, human, ai)
+function betterShuffle(array) {
+  // Separate bots and humans
+  const bots = array.filter(q => q.isBot);
+  const humans = array.filter(q => !q.isBot);
+
+  // Shuffle each group independently
+  for (let i = bots.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [bots[i], bots[j]] = [bots[j], bots[i]];
+  }
+  for (let i = humans.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [humans[i], humans[j]] = [humans[j], humans[i]];
+  }
+
+  // Merge with random chunk sizes to avoid strict alternation
+  let result = [];
+  let botIdx = 0, humanIdx = 0;
+  while (botIdx < bots.length || humanIdx < humans.length) {
+    // Randomly decide how many to take from each group (1 or 2)
+    if (botIdx < bots.length && Math.random() < 0.5) {
+      const take = Math.min(bots.length - botIdx, Math.random() < 0.7 ? 1 : 2);
+      result = result.concat(bots.slice(botIdx, botIdx + take));
+      botIdx += take;
+    }
+    if (humanIdx < humans.length) {
+      const take = Math.min(humans.length - humanIdx, Math.random() < 0.7 ? 1 : 2);
+      result = result.concat(humans.slice(humanIdx, humanIdx + take));
+      humanIdx += take;
+    }
+  }
+  // If bots or humans left, add them
+  if (botIdx < bots.length) result = result.concat(bots.slice(botIdx));
+  if (humanIdx < humans.length) result = result.concat(humans.slice(humanIdx));
+
+  // Copy back to original array
+  for (let i = 0; i < array.length; i++) {
+    array[i] = result[i];
+  }
+}
+betterShuffle(gameData);
+
 // Game State
 let currentQuestion = 0;
 let score = 0;
@@ -281,13 +325,13 @@ function endGame() {
   let message = '';
   
   if (percentage >= 80) {
-    message = '🎉 Excellent! You have great digital literacy skills!';
+    message = 'Excellent! You have great digital literacy skills!';
   } else if (percentage >= 60) {
-    message = '👍 Good job! You can spot most fake content.';
+    message = 'Good job! You can spot most fake content.';
   } else if (percentage >= 40) {
-    message = '🤔 Not bad, but there\'s room for improvement in detecting AI content.';
+    message = 'Not bad, but there\'s room for improvement in detecting AI content.';
   } else {
-    message = '📚 Keep practicing! AI detection is tricky but learnable.';
+    message = 'Keep practicing! AI detection is tricky but learnable.';
   }
   
   finalMessage.textContent = message;
@@ -2439,3 +2483,92 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 });
 
+
+
+
+// ===== Scoped Binary Rain for #sectionHacker =====
+(function () {
+  const section = document.getElementById('sectionHacker');
+  if (!section) return;
+
+  const canvas = document.getElementById('hackerMatrix') || (() => {
+    const c = document.createElement('canvas');
+    c.id = 'hackerMatrix';
+    section.prepend(c);
+    return c;
+  })();
+  const ctx = canvas.getContext('2d');
+
+  const glyphs = '01';
+  const bgFade = 0.08;
+  const color = '#00ff00';
+  const baseFont = 16;
+  let running = false;
+  let rafId = null;
+  let drops = [];
+  let fontSize = baseFont;
+  let cols = 0;
+
+  function resizeMatrix() {
+    const dpr = Math.max(1, Math.floor(window.devicePixelRatio || 1));
+    const { width, height } = section.getBoundingClientRect();
+    canvas.style.width = width + 'px';
+    canvas.style.height = height + 'px';
+    canvas.width = Math.max(1, Math.floor(width * dpr));
+    canvas.height = Math.max(1, Math.floor(height * dpr));
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.scale(dpr, dpr);
+    fontSize = Math.max(12, Math.round(baseFont));
+    cols = Math.max(1, Math.floor(width / fontSize));
+    drops = new Array(cols).fill(1);
+    ctx.font = fontSize + 'px monospace';
+  }
+
+  function tick() {
+    if (!running) return;
+    const { width, height } = section.getBoundingClientRect();
+    ctx.fillStyle = `rgba(0, 0, 0, ${bgFade})`;
+    ctx.fillRect(0, 0, width, height);
+    ctx.fillStyle = color;
+    ctx.textBaseline = 'top';
+    for (let i = 0; i < drops.length; i++) {
+      const char = glyphs[Math.floor(Math.random() * glyphs.length)];
+      const x = i * fontSize;
+      const y = drops[i] * fontSize;
+      ctx.fillText(char, x, y);
+      if (y > height && Math.random() > 0.975) drops[i] = 0;
+      drops[i]++;
+    }
+    rafId = setTimeout(tick, 35)
+  }
+
+  function start() {
+    if (running) return;
+    running = true;
+    resizeMatrix();
+    rafId = requestAnimationFrame(tick);
+  }
+
+  function stop() {
+    running = false;
+    if (rafId) clearTimeout(rafId);  // changed from cancelAnimationFrame
+    rafId = null;
+  }
+
+  const io = new IntersectionObserver(
+    (entries) => {
+      entries.forEach((entry) => {
+        if (entry.target !== section) return;
+        if (entry.isIntersecting) start();
+        else stop();
+      });
+    },
+    { threshold: 0.35 }
+  );
+  io.observe(section);
+
+  const ro = new ResizeObserver(resizeMatrix);
+  ro.observe(section);
+  window.addEventListener('resize', resizeMatrix);
+  window.addEventListener('orientationchange', resizeMatrix);
+})();
