@@ -2242,6 +2242,86 @@ document.addEventListener('DOMContentLoaded', async () => {
         observer.unobserve(entry.target);
       }
     });
+
+      // ========================================
+      // Binary rain for #sectionHacker
+      // Inserts a full-size canvas into the hacker section and animates falling 0/1 characters
+      // ========================================
+      function initBinaryRain() {
+        const section = document.getElementById('sectionHacker');
+        if (!section) return;
+        // avoid creating multiple canvases
+        if (section.querySelector('.hacker-canvas')) return;
+
+        const canvas = document.createElement('canvas');
+        canvas.className = 'hacker-canvas';
+        // insert behind the visible text but inside the section
+        section.insertBefore(canvas, section.firstChild);
+        const ctx = canvas.getContext('2d');
+
+        let width, height, columns, fontSize = 14, drops = [];
+
+        function resize() {
+          width = canvas.width = Math.max(300, section.clientWidth);
+          height = canvas.height = Math.max(200, section.clientHeight);
+          // font size scales a little with width on larger screens
+          fontSize = Math.max(10, Math.round(width / 120));
+          ctx.font = fontSize + 'px monospace';
+          columns = Math.floor(width / fontSize);
+          drops = new Array(columns).fill(0).map(() => Math.floor(Math.random() * height / fontSize));
+        }
+
+        resize();
+        window.addEventListener('resize', () => {
+          resize();
+        });
+
+        // draw loop
+        function draw() {
+          // translucent black to create trailing effect
+          ctx.fillStyle = 'rgba(0, 0, 0, 0.07)';
+          ctx.fillRect(0, 0, width, height);
+
+          for (let i = 0; i < columns; i++) {
+            const char = Math.random() > 0.5 ? '0' : '1';
+            const x = i * fontSize;
+            const y = drops[i] * fontSize;
+
+            // occasional color variance for visual interest
+            if (i % 17 === 0) {
+              ctx.fillStyle = '#b266ff'; // purple streaks
+            } else if (i % 13 === 0) {
+              ctx.fillStyle = '#4AADFF'; // blue streaks
+            } else {
+              ctx.fillStyle = '#00ff66'; // neon green rain
+            }
+
+            ctx.fillText(char, x, y);
+
+            // advance drop with a bit of randomness
+            drops[i] = drops[i] + 1 + Math.random() * 0.6;
+
+            // occasionally restart drop near top
+            if (drops[i] * fontSize > height && Math.random() > 0.975) {
+              drops[i] = 0;
+            }
+          }
+
+          requestAnimationFrame(draw);
+        }
+
+        // initialize background to solid transparent so first frame draws cleanly
+        ctx.fillStyle = 'rgba(0,0,0,0)';
+        ctx.fillRect(0, 0, width, height);
+        requestAnimationFrame(draw);
+      }
+
+      // Start when DOM is ready. If this script is loaded at bottom of body it's fine too.
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initBinaryRain);
+      } else {
+        initBinaryRain();
+      }
   }, { threshold: 0.3 });
 
   observer.observe(bostonSection);

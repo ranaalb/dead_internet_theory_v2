@@ -1358,14 +1358,14 @@ svg {
   font-weight: 700;
   text-transform: uppercase;
   position: relative;
-  color: #00ff00;
+  /* base color is a bright red; the layered pseudo-elements will flash purple/blue */
+  color: #ff4444;
   letter-spacing: 0.1em;
-  text-shadow: 
-    0 0 10px #00ff00,
-    0 0 20px #00ff00,
-    0 0 30px #00ff00,
-    0 0 40px #00ff00;
-  animation: glitch 1s infinite;
+  text-shadow:
+    0 0 8px #ff4444,
+    0 0 16px rgba(255,68,68,0.9);
+  /* much faster base glitch to create a rapid flicker */
+  animation: glitch 0.28s infinite;
 }
 
 .glitch::before,
@@ -1380,21 +1380,24 @@ svg {
 
 .glitch::before {
   left: 2px;
-  text-shadow: -2px 0 #ff00ff;
+  /* purple flash */
+  text-shadow: -2px 0 #b266ff;
   clip: rect(44px, 450px, 56px, 0);
-  animation: glitch-anim 5s infinite linear alternate-reverse;
+  /* quick, snappy slices */
+  animation: glitch-anim 0.6s infinite linear alternate-reverse;
 }
 
 .glitch::after {
   left: -2px;
-  text-shadow: -2px 0 #00ffff;
+  /* blue/cyan flash */
+  text-shadow: -2px 0 #4AADFF;
   clip: rect(44px, 450px, 56px, 0);
-  animation: glitch-anim2 5s infinite linear alternate-reverse;
+  animation: glitch-anim2 0.6s infinite linear alternate-reverse;
 }
 
 @keyframes glitch {
-  0%, 100% { text-shadow: 0 0 10px #00ff00, 0 0 20px #00ff00; }
-  50% { text-shadow: 0 0 20px #00ff00, 0 0 40px #00ff00, 0 0 60px #00ff00; }
+  0%, 100% { text-shadow: 0 0 6px #ff4444, 0 0 12px rgba(255,68,68,0.9); }
+  50% { text-shadow: 0 0 14px #ff4444, 0 0 22px rgba(178,102,255,0.85), 0 0 30px rgba(74,173,255,0.6); }
 }
 
 @keyframes glitch-anim {
@@ -1413,6 +1416,23 @@ svg {
   60% { clip: rect(2px, 9999px, 40px, 0); }
   80% { clip: rect(45px, 9999px, 60px, 0); }
   100% { clip: rect(78px, 9999px, 98px, 0); }
+}
+
+/* Binary rain canvas inside hacker section */
+.hacker-section {
+  position: relative; /* ensure canvas can be absolutely positioned inside */
+  overflow: hidden;
+}
+
+.hacker-canvas {
+  position: absolute;
+  inset: 0; /* fill parent */
+  width: 100%;
+  height: 100%;
+  z-index: 1; /* behind text (text should have z-index:2) */
+  pointer-events: none;
+  opacity: 0.85;
+  mix-blend-mode: screen;
 }
 
 /* ========================================
