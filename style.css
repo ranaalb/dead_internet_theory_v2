@@ -18,13 +18,13 @@
   
   /* Typography Scale */
   --font-system: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  --font-size-xs: 0.75rem;
-  --font-size-sm: 0.9rem;
-  --font-size-md: 1rem;
-  --font-size-lg: 1.2rem;
-  --font-size-xl: 1.4rem;
-  --font-size-2xl: 1.7rem;
-  --font-size-3xl: 2rem;
+  --font-size-xs: 0.7rem;
+  --font-size-sm: 0.8rem;
+  --font-size-md: 0.9rem;
+  --font-size-lg: 1rem;
+  --font-size-xl: 1.1rem;
+  --font-size-2xl: 1.3rem;
+  --font-size-3xl: 1.5rem;
   
   /* Spacing Scale */
   --spacing-xs: 0.5rem;
@@ -88,7 +88,7 @@ p {
   color: var(--text-primary);
   background: var(--primary-dark);
   overflow: hidden;
-  padding: 1rem;
+  padding: 0.5rem;
 }
 
 #section1 { background: var(--primary-dark); }
@@ -276,10 +276,10 @@ font-size: 25px;
 .chat-bubbles {
   display: flex;
   flex-direction: column;
-  gap: 1.2rem;
-  max-width: 1200px;
-  margin: 1rem auto;
-  padding: 1.5rem 1rem;
+  gap: 0.6rem;
+  max-width: 1000px;
+  margin: 0.5rem auto;
+  padding: 0.8rem 1rem;
   width: 100%;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   background: linear-gradient(135deg, rgba(29, 155, 240, 0.03) 0%, rgba(138, 43, 226, 0.03) 100%);
@@ -306,7 +306,7 @@ font-size: 25px;
 
 .message-container {
   display: flex;
-  gap: 0.8rem;
+  gap: 0.5rem;
   opacity: 0;
   transform: translateY(40px) scale(0.95);
   animation: none;
@@ -335,14 +335,14 @@ font-size: 25px;
 }
 
 .profile-pic {
-  width: 45px;
-  height: 45px;
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 24px;
+  font-size: 18px;
   flex-shrink: 0;
   box-shadow: 
     0 8px 24px rgba(102, 126, 234, 0.4),
@@ -377,13 +377,13 @@ font-size: 25px;
 .message-content {
   display: flex;
   flex-direction: column;
-  gap: 0.4rem;
+  gap: 0.2rem;
   max-width: 75%;
 }
 
 .bubble {
-  border-radius: 20px;
-  padding: 0.8rem 1.2rem;
+  border-radius: 16px;
+  padding: 0.4rem 0.7rem;
   position: relative;
   word-wrap: break-word;
   box-shadow: 
@@ -448,9 +448,9 @@ font-size: 25px;
 }
 
 .bubble p {
-  font-size: 0.95rem;
+  font-size: 0.75rem;
   margin: 0;
-  line-height: 1.5;
+  line-height: 1.3;
   color: white;
   text-align: left;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
@@ -460,7 +460,7 @@ font-size: 25px;
 }
 
 .contact-name {
-  font-size: 0.85rem;
+  font-size: 0.65rem;
   color: rgba(29, 155, 240, 0.8);
   font-style: normal;
   margin-left: 0.3rem;
@@ -617,12 +617,12 @@ font-size: 25px;
 .tweet-username {
   color: white;
   font-weight: 700;
-  font-size: 2.3rem;
+  font-size: 1.3rem;
 }
 
 .tweet-handle {
   color: #71767b;
-  font-size: 1.8rem;
+  font-size: 1rem;
 }
 
 .tweet-menu {
@@ -637,15 +637,15 @@ font-size: 25px;
 
 .tweet-headline {
   color: white;
-  font-size: 2.3rem;
+  font-size: 1.3rem;
   font-weight: 700;
-  margin-bottom: 1.2rem;
+  margin-bottom: 0.8rem;
   line-height: 1.4;
 }
 
 .tweet-body {
   color: white;
-  font-size: 2.1rem;
+  font-size: 1.1rem;
   line-height: 1.6;
   margin: 0;
   font-weight: 400;
@@ -661,16 +661,16 @@ font-size: 25px;
   justify-content: space-between;
   align-items: center;
   color: #71767b;
-  font-size: 1.7rem;
+  font-size: 1rem;
 }
 
 .tweet-stats span {
   display: flex;
   align-items: center;
-  gap: 0.6rem;
+  gap: 0.4rem;
   cursor: pointer;
   transition: color 0.2s ease;
-  font-size: 1.7rem;
+  font-size: 1rem;
 }
 
 .tweet-stats span:hover {
@@ -690,16 +690,12 @@ font-size: 25px;
 }
 
 .game-question p {
-  color: white;
-  font-size: 2rem;
+  color: #ffffff;
+  font-size: 1.2rem;
   font-weight: 600;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   margin: 0;
   text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-  background: linear-gradient(135deg, #ffffff, #e6f3ff);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
 }
 
 .game-buttons {
@@ -958,7 +954,7 @@ svg {
    ======================================== */
 .trend-section {
   background: var(--secondary-dark);
-  padding: 1.5rem;
+  padding: 1rem 0.5rem;
   position: relative;
   overflow: hidden;
   display: flex;
@@ -983,8 +979,8 @@ svg {
 }
 
 .trend-container {
-  max-width: 1600px;
-  width: 98%;
+  max-width: 100%;
+  width: 100%;
   text-align: center;
   position: relative;
   z-index: 2;
@@ -992,21 +988,14 @@ svg {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-}
-
-/* Remove horizontal padding/offset that can push the trend section to the right
-   and cause the chart to be clipped. Make the inner container full-width and
-   ensure box-sizing so padding doesn't increase layout width. */
-.trend-section .trend-container {
-  width: 100% !important;
-  padding-left: 0 !important;
-  padding-right: 0 !important;
-  box-sizing: border-box !important;
+  padding: 0;
+  margin: 0;
+  box-sizing: border-box;
 }
 
 .trend-title {
-  font-size: 1.2rem;
-  margin-bottom: 0.3rem;
+  font-size: 0.9rem;
+  margin-bottom: 0.15rem;
   color: #E7E9EA;
   text-shadow: 0 0 20px rgba(29, 155, 240, 0.4);
   letter-spacing: 0.5px;
@@ -1018,9 +1007,9 @@ svg {
 }
 
 .trend-subtitle {
-  font-size: 0.8rem;
+  font-size: 0.55rem;
   color: var(--text-secondary);
-  margin-bottom: 1.5rem;
+  margin-bottom: 0.5rem;
   font-style: normal;
   font-weight: 400;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
@@ -1032,28 +1021,28 @@ svg {
 .chart-controls {
   display: flex;
   justify-content: center;
-  gap: 1.5rem;
-  margin-bottom: 2rem;
+  gap: 0.4rem;
+  margin-bottom: 0.4rem;
   flex-wrap: wrap;
   opacity: 0;
-  transform: translateY(20px);
+  transform: translateY(15px);
   animation: fadeInUp 0.8s ease-out 0.4s forwards;
 }
 
 .chart-btn {
-  padding: 0.5rem 1rem;
-  font-size: 0.8rem;
+  padding: 0.25rem 0.5rem;
+  font-size: 0.55rem;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   background: rgba(100, 149, 237, 0.15);
-  border: 2px solid rgba(100, 149, 237, 0.3);
+  border: 1.5px solid rgba(100, 149, 237, 0.3);
   color: #b8b8d1;
-  border-radius: 30px;
+  border-radius: 20px;
   cursor: pointer;
   transition: all 0.3s ease;
   backdrop-filter: blur(10px);
   display: flex;
   align-items: center;
-  gap: 0.7rem;
+  gap: 0.3rem;
   font-weight: 600;
 }
 
@@ -1073,19 +1062,20 @@ svg {
 }
 
 .chart-btn i {
-  font-size: 0.9rem;
+  font-size: 0.6rem;
 }
 
 #searchTrendChart {
-  padding: 2rem 0 2rem 0; /* remove side padding so chart aligns with container */
-  margin: 0 auto 2rem;
-  min-height: 680px;
+  padding: 0.2rem 0;
+  margin: 0 auto 0.8rem;
+  min-height: 175px;
   display: flex;
   align-items: center;
   justify-content: center;
   width: 100%;
+  max-width: 400px;
   opacity: 0;
-  transform: translateY(30px);
+  transform: translateY(20px);
   transition: opacity 0.6s ease-out, transform 0.6s ease-out;
   box-sizing: border-box;
 }
@@ -1096,7 +1086,10 @@ svg {
 }
 
 #searchTrendChart svg {
-  overflow: visible;
+  display: block;
+  margin: 0 auto;
+  max-width: 100%;
+  height: auto;
 }
 
 /* Notice shown when CSV is unavailable */
@@ -1120,11 +1113,12 @@ svg {
 
 .trend-stats {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-  gap: 0.8rem;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.5rem;
   margin-bottom: 0;
+  margin-top: 0.3rem;
   width: 100%;
-  max-width: 1000px;
+  max-width: 600px;
   opacity: 0;
   animation: fadeIn 1s ease-out 1.5s forwards;
 }
@@ -1140,9 +1134,9 @@ svg {
 
 .stat-card {
   background: rgba(29, 155, 240, 0.08);
-  border: 2px solid rgba(29, 155, 240, 0.25);
-  border-radius: 12px;
-  padding: 0.8rem;
+  border: 1.5px solid rgba(29, 155, 240, 0.25);
+  border-radius: 8px;
+  padding: 0.5rem;
   backdrop-filter: blur(10px);
   transition: all 0.3s ease;
   position: relative;
@@ -1171,27 +1165,28 @@ svg {
 }
 
 .stat-icon {
-  font-size: 2.5rem;
+  font-size: 1.1rem;
   color: #1D9BF0;
-  margin-bottom: 1rem;
+  margin-bottom: 0.5rem;
   filter: drop-shadow(0 0 15px rgba(29, 155, 240, 0.6));
 }
 
 .stat-value {
-  font-size: 1.4rem;
+  font-size: 0.85rem;
   color: #fff;
   font-weight: 700;
-  margin-bottom: 0.3rem;
+  margin-bottom: 0.2rem;
   text-shadow: 0 0 15px rgba(100, 149, 237, 0.6);
   letter-spacing: 1px;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
 }
 
 .stat-label {
-  font-size: 0.75rem;
+  font-size: 0.55rem;
   color: #d0d0e0;
   text-transform: uppercase;
-  letter-spacing: 1.5px;
+  letter-spacing: 0.5px;
+  line-height: 1.3;
   font-weight: 600;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
 }
@@ -1200,16 +1195,16 @@ svg {
 .line-chart-path {
   fill: none;
   stroke: #1D9BF0;
-  stroke-width: 8;
-  filter: drop-shadow(0 0 20px rgba(29, 155, 240, 0.8));
+  stroke-width: 2;
+  filter: drop-shadow(0 0 8px rgba(29, 155, 240, 0.8));
   transition: all 0.3s ease;
   stroke-linecap: round;
   stroke-linejoin: round;
 }
 
 .line-chart-path:hover {
-  stroke-width: 10;
-  filter: drop-shadow(0 0 30px rgba(29, 155, 240, 1));
+  stroke-width: 2.5;
+  filter: drop-shadow(0 0 10px rgba(29, 155, 240, 1));
 }
 
 .line-chart-area {
@@ -1221,30 +1216,30 @@ svg {
 .chart-dot {
   fill: #1D9BF0;
   stroke: white;
-  stroke-width: 4;
+  stroke-width: 1.5;
   cursor: pointer;
   transition: all 0.2s ease;
-  filter: drop-shadow(0 0 12px rgba(29, 155, 240, 0.8));
+  filter: drop-shadow(0 0 5px rgba(29, 155, 240, 0.8));
 }
 
 .chart-dot:hover {
-  r: 12 !important;
+  r: 4 !important;
   fill: #ffd700;
   stroke: #fff;
-  stroke-width: 5;
-  filter: drop-shadow(0 0 22px rgba(255, 215, 0, 1));
+  stroke-width: 2;
+  filter: drop-shadow(0 0 9px rgba(255, 215, 0, 1));
 }
 
 .chart-axis path,
 .chart-axis line {
   stroke: rgba(231, 233, 234, 0.4);
   shape-rendering: crispEdges;
-  stroke-width: 2;
+  stroke-width: 1.2;
 }
 
 .chart-axis text {
   fill: var(--text-primary);
-  font-size: 16px;
+  font-size: 10px;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   font-weight: 600;
 }
@@ -1354,7 +1349,7 @@ svg {
 
 .glitch {
   font-family: 'Courier New', monospace;
-  font-size: 1.8rem;
+  font-size: 1.4rem;
   font-weight: 700;
   text-transform: uppercase;
   position: relative;
@@ -1418,6 +1413,68 @@ svg {
   100% { clip: rect(78px, 9999px, 98px, 0); }
 }
 
+.glitch-subtitle {
+  font-family: 'Courier New', monospace;
+  font-size: 0.95rem;
+  font-weight: 400;
+  text-transform: none;
+  position: relative;
+  color: #71767B;
+  letter-spacing: 0.05em;
+  margin-top: 1.5rem;
+  text-shadow: 0 0 4px rgba(113, 118, 123, 0.8);
+  animation: subtleGlitch 3s infinite;
+  opacity: 0.9;
+}
+
+.glitch-subtitle::before,
+.glitch-subtitle::after {
+  content: attr(data-text);
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0.3;
+}
+
+.glitch-subtitle::before {
+  left: 1px;
+  text-shadow: -1px 0 rgba(178, 102, 255, 0.5);
+  clip: rect(0, 450px, 20px, 0);
+  animation: subtleGlitch-anim 2s infinite linear alternate-reverse;
+}
+
+.glitch-subtitle::after {
+  left: -1px;
+  text-shadow: -1px 0 rgba(74, 173, 255, 0.5);
+  clip: rect(0, 450px, 20px, 0);
+  animation: subtleGlitch-anim2 2s infinite linear alternate-reverse;
+}
+
+@keyframes subtleGlitch {
+  0%, 95%, 100% { 
+    text-shadow: 0 0 4px rgba(113, 118, 123, 0.8);
+    opacity: 0.9;
+  }
+  97% { 
+    text-shadow: 0 0 6px rgba(255, 68, 68, 0.4), 0 0 8px rgba(178, 102, 255, 0.3);
+    opacity: 1;
+  }
+}
+
+@keyframes subtleGlitch-anim {
+  0% { clip: rect(5px, 9999px, 15px, 0); }
+  50% { clip: rect(10px, 9999px, 20px, 0); }
+  100% { clip: rect(8px, 9999px, 18px, 0); }
+}
+
+@keyframes subtleGlitch-anim2 {
+  0% { clip: rect(12px, 9999px, 22px, 0); }
+  50% { clip: rect(6px, 9999px, 16px, 0); }
+  100% { clip: rect(14px, 9999px, 24px, 0); }
+}
+
 /* Binary rain canvas inside hacker section */
 .hacker-section {
   position: relative; /* ensure canvas can be absolutely positioned inside */
@@ -1441,7 +1498,7 @@ svg {
 .dictionary-section {
   background: linear-gradient(135deg, #f5f5dc 0%, #e8e4d0 100%);
   color: #2c2c2c;
-  padding: var(--spacing-2xl) var(--spacing-xl);
+  padding: var(--spacing-md) var(--spacing-sm);
 }
 
 .dictionary-intro {
@@ -1470,26 +1527,26 @@ svg {
 }
 
 .intro-text-line2 {
-  font-size: var(--font-size-2xl);
+  font-size: var(--font-size-xl);
   font-weight: 600;
   color: var(--text-primary);
-  margin-bottom: 0.5rem;
-  letter-spacing: 0.5px;
+  margin-bottom: 0.4rem;
+  letter-spacing: 0.3px;
   animation-delay: 0.5s;
 }
 
 .intro-text-line2 .highlight {
   color: var(--accent-blue);
   font-weight: 700;
-  font-size: var(--font-size-2xl);
+  font-size: var(--font-size-xl);
   text-decoration: underline;
   text-decoration-color: var(--accent-blue);
-  text-decoration-thickness: 3px;
-  text-underline-offset: 4px;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 3px;
 }
 
 .intro-text-line3 {
-  font-size: var(--font-size-xl);
+  font-size: var(--font-size-lg);
   font-weight: 400;
   color: var(--text-secondary);
   font-style: italic;
@@ -1509,10 +1566,10 @@ svg {
 }
 
 .dictionary-entry {
-  max-width: 1000px;
+  max-width: 800px;
   background: var(--primary-dark);
-  padding: var(--spacing-2xl);
-  border: 3px solid var(--accent-blue);
+  padding: var(--spacing-md);
+  border: 2px solid var(--accent-blue);
   box-shadow: 0 8px 32px rgba(29, 155, 240, 0.2);
   font-family: var(--font-system);
   text-align: left;
@@ -1530,9 +1587,9 @@ svg {
 }
 
 .word-header {
-  border-bottom: 4px solid var(--accent-blue);
-  padding-bottom: var(--spacing-lg);
-  margin-bottom: var(--spacing-xl);
+  border-bottom: 3px solid var(--accent-blue);
+  padding-bottom: var(--spacing-sm);
+  margin-bottom: var(--spacing-md);
 }
 
 .dictionary-word {
@@ -1614,7 +1671,7 @@ svg {
    ======================================== */
 .sentiment-section {
   background: var(--primary-dark);
-  padding: 2rem 0.5rem;
+  padding: 1rem 0.5rem;
   min-height: 100vh;
 }
 
@@ -1628,8 +1685,8 @@ svg {
 }
 
 .sentiment-title {
-  font-size: 1.2rem;
-  margin-bottom: 0.4rem;
+  font-size: 1rem;
+  margin-bottom: 0.3rem;
   color: var(--text-bright);
   letter-spacing: 0.5px;
   font-weight: 700;
@@ -1640,7 +1697,7 @@ svg {
 }
 
 .sentiment-subtitle {
-  font-size: 0.85rem;
+  font-size: 0.75rem;
   color: var(--text-secondary);
   margin-bottom: 0.8rem;
   opacity: 0;
@@ -1652,20 +1709,20 @@ svg {
 .viz-tabs {
   display: flex;
   justify-content: center;
-  gap: 0.8rem;
-  margin-bottom: 0.8rem;
+  gap: 0.6rem;
+  margin-bottom: 0.6rem;
   opacity: 0;
   animation: fadeInUp 0.8s ease-out 0.4s forwards;
   flex-wrap: wrap;
 }
 
 .viz-tab {
-  padding: 0.6rem 1rem;
+  padding: 0.5rem 0.8rem;
   background: var(--secondary-dark);
   border: 2px solid transparent;
   border-radius: 4px;
   color: var(--text-secondary);
-  font-size: 1.3rem;
+  font-size: 0.9rem;
   font-weight: 700;
   cursor: pointer;
   transition: all 0.3s ease;
@@ -1691,7 +1748,7 @@ svg {
 }
 
 .viz-tab i {
-  font-size: 1.4rem;
+  font-size: 1rem;
 }
 
 /* Tab Content */
@@ -1706,13 +1763,17 @@ svg {
 }
 
 #scatterChart {
-  margin: 0 auto 2rem;
-  min-height: 750px;
+  margin: 0 auto 1rem;
+  min-height: 550px;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 #worldMap {
-  margin: 0 auto 2rem;
-  min-height: 750px;
+  margin: 0 auto 1rem;
+  min-height: 550px;
 }
 
 .country {
@@ -1766,14 +1827,15 @@ svg {
 }
 
 .scatter-label {
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 600;
   fill: var(--text-primary);
   pointer-events: none;
-  text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.9), 
-               -1px -1px 3px rgba(0, 0, 0, 0.9),
-               1px -1px 3px rgba(0, 0, 0, 0.9),
-               -1px 1px 3px rgba(0, 0, 0, 0.9);
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 1), 
+               -2px -2px 4px rgba(0, 0, 0, 1),
+               2px -2px 4px rgba(0, 0, 0, 1),
+               -2px 2px 4px rgba(0, 0, 0, 1),
+               0 0 6px rgba(0, 0, 0, 1);
   transition: all 0.3s ease;
 }
 
@@ -1785,7 +1847,7 @@ svg {
 
 .scatter-axis text {
   fill: var(--text-secondary);
-  font-size: 20px;
+  font-size: 16px;
   font-weight: 600;
 }
 
@@ -1917,19 +1979,18 @@ svg {
   #botRevealViz,
   .chart-wrapper {
     width: 100%;
-    max-width: 1200px;
-    max-height: 55vh; /* reduced size so it fits nicely inside a 100vh section */
+    max-width: 100%;
     height: auto !important;
-    margin: 0 auto 1.5rem;
+    margin: 0 auto 0.5rem;
     display: flex;
+    flex-direction: column;
     align-items: center;
-    justify-content: center;
-    overflow: auto; /* allow internal scroll rather than stretching the section */
+    justify-content: flex-start;
+    overflow: visible;
     -webkit-overflow-scrolling: touch;
   }
 
   /* Ensure SVGs inside those containers respect the container height */
-  #searchTrendChart svg,
   #scatterChart svg,
   #worldMap svg,
   #traffic-chart svg,
@@ -1944,15 +2005,32 @@ svg {
   /* Facebook visualization is the exception â€” allow it to be larger */
   #facebook-chart {
     width: 100%;
-    max-width: 1400px;
-    max-height: 78vh; /* give Facebook chart more vertical space */
+    max-width: 100%;
+    min-height: 350px;
+    max-height: 45vh;
     height: auto !important;
-    margin: 0 auto 1.5rem;
-    overflow: auto;
+    margin: 0.5rem auto 0.8rem;
+    overflow: visible;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
+  #traffic-chart {
+    width: 100%;
+    max-width: 1200px;
+    min-height: 500px;
+    height: auto;
+    margin: 0.5rem auto;
+    overflow: visible;
+    display: flex;
+    justify-content: center;
+    align-items: center;
   }
 
   #facebook-chart svg {
-    max-height: 78vh;
+    min-height: 350px;
+    max-height: 45vh;
     height: auto !important;
     width: 100%;
     display: block;
@@ -1995,7 +2073,7 @@ svg {
   /* Add gentle padding for chart-wrapper so embedded visual elements
      don't sit flush against the viewport edge */
   .chart-wrapper {
-    padding: 0.8rem 1rem;
+    padding: 0.3rem 1rem;
     box-sizing: border-box;
   }
 }
@@ -2044,10 +2122,10 @@ svg {
 }
 
 .big-question {
-  font-size: 1.8rem;
+  font-size: 1.4rem;
   font-weight: 800;
   color: #ffffff;
-  margin-bottom: 1rem;
+  margin-bottom: 0.8rem;
   text-shadow: 
     0 0 20px rgba(29, 155, 240, 0.5),
     0 0 40px rgba(29, 155, 240, 0.3),
@@ -2084,7 +2162,7 @@ svg {
 }
 
 .question-prompt {
-  font-size: 2.2rem;
+  font-size: 1.3rem;
   color: rgba(255, 255, 255, 0.7);
   font-weight: 300;
   font-style: italic;
@@ -2108,11 +2186,16 @@ svg {
    ======================================== */
 .prediction-section {
   background: #151414;
+  padding: 1rem 0.5rem;
+  overflow-x: hidden;
 }
 
 .prediction-container {
-  max-width: 900px;
+  max-width: 95%;
   text-align: center;
+  margin: 0 auto;
+  padding: 0 0.5rem;
+  box-sizing: border-box;
 }
 
 .prediction-question {
@@ -2236,34 +2319,43 @@ svg {
 }
 
 .bot-predict-container {
-  max-width: 1400px;
-  width: 100%;
+  max-width: 800px;
+  width: 95%;
   text-align: center;
   position: relative;
+  margin: 0 auto;
+  padding: 0 0.5rem;
+  box-sizing: border-box;
 }
 
 .bot-predict-title {
-  font-size: 3rem;
-  margin-bottom: 0.8rem;
+  font-size: 1rem;
+  margin-bottom: 0.4rem;
   color: #fff;
   font-weight: 700;
   text-shadow: 0 2px 10px rgba(29, 155, 240, 0.3);
+  line-height: 1.2;
 }
 
 .bot-predict-subtitle {
-  font-size: 1.5rem;
+  font-size: 0.75rem;
   color: #8899A6;
-  margin-bottom: 2rem;
+  margin-bottom: 0.8rem;
   font-weight: 400;
 }
 
 .prediction-area {
   background: rgba(21, 32, 43, 0.6);
-  border-radius: 20px;
-  padding: 2rem;
+  border-radius: 8px;
+  padding: 1rem;
   backdrop-filter: blur(10px);
   border: 1px solid rgba(29, 155, 240, 0.2);
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  max-width: 100%;
+  overflow: visible;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 .scroll-prompt {
@@ -2278,30 +2370,30 @@ svg {
 
 .scroll-prompt-content {
   background: linear-gradient(135deg, rgba(29, 155, 240, 0.95) 0%, rgba(0, 132, 212, 0.95) 100%);
-  padding: 3rem 4rem;
-  border-radius: 24px;
+  padding: 2rem 2.5rem;
+  border-radius: 20px;
   box-shadow: 0 12px 40px rgba(0, 0, 0, 0.6);
   border: 2px solid rgba(255, 255, 255, 0.2);
   backdrop-filter: blur(10px);
 }
 
 .scroll-prompt-title {
-  font-size: 2.5rem;
+  font-size: 1.6rem;
   color: #fff;
-  margin-bottom: 1rem;
+  margin-bottom: 0.8rem;
   font-weight: 700;
   text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
 }
 
 .scroll-prompt-text {
-  font-size: 1.6rem;
+  font-size: 1rem;
   color: #E7F3FF;
-  margin-bottom: 2rem;
-  line-height: 1.5;
+  margin-bottom: 1.2rem;
+  line-height: 1.4;
 }
 
 .scroll-arrow {
-  font-size: 3rem;
+  font-size: 2rem;
   color: #fff;
   animation: bounceArrow 2s infinite;
 }
@@ -2319,65 +2411,76 @@ svg {
 }
 
 .selection-counter {
-  font-size: 1.8rem;
-  margin-bottom: 1.5rem;
+  font-size: 0.85rem;
+  margin-bottom: 0.5rem;
   color: #fff;
   font-weight: 600;
 }
 
 .counter-label {
   color: #8899A6;
-  font-size: 1.4rem;
+  font-size: 0.75rem;
 }
 
 .counter-value {
   color: #1D9BF0;
-  font-size: 2.2rem;
+  font-size: 1.1rem;
   font-weight: 700;
-  margin: 0 0.5rem;
+  margin: 0 0.25rem;
 }
 
 .counter-total {
   color: #8899A6;
-  font-size: 1.6rem;
+  font-size: 0.85rem;
 }
 
 .tweet-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
-  gap: 8px;
-  margin-bottom: 2rem;
+  grid-template-columns: repeat(10, 1fr);
+  grid-template-rows: repeat(10, 1fr);
+  gap: 2px;
+  margin-bottom: 1rem;
   user-select: none;
-  max-width: 900px;
-  margin-left: auto;
-  margin-right: auto;
+  width: 500px;
+  height: 500px;
+  box-sizing: border-box;
+  grid-auto-flow: row;
+  aspect-ratio: 1 / 1;
 }
 
 .tweet-card {
-  background: #192734;
+  background: linear-gradient(135deg, #192734 0%, #15202B 100%);
   border: 2px solid #38444d;
-  border-radius: 12px;
-  padding: 8px;
+  border-radius: 6px;
+  padding: 6px;
+  margin: 2px;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.3s ease;
   position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  aspect-ratio: 1;
+  width: calc(100% - 4px);
+  height: calc(100% - 4px);
+  min-height: 0;
+  min-width: 0;
+  overflow: hidden;
+  box-sizing: border-box;
+  aspect-ratio: 1 / 1;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
 }
 
 .tweet-card:hover {
-  transform: translateY(-2px) scale(1.05);
-  box-shadow: 0 6px 12px rgba(29, 155, 240, 0.3);
+  transform: translateY(-2px) scale(1.08);
+  box-shadow: 0 6px 16px rgba(29, 155, 240, 0.5);
   border-color: #1D9BF0;
 }
 
 .tweet-card.selected {
   background: linear-gradient(135deg, #E91E8C 0%, #C71866 100%);
-  border-color: #E91E8C;
-  box-shadow: 0 4px 12px rgba(233, 30, 140, 0.5);
+  border-color: #FF1744;
+  box-shadow: 0 4px 16px rgba(233, 30, 140, 0.7), 0 0 20px rgba(233, 30, 140, 0.4);
   transform: scale(1.05);
 }
 
@@ -2401,16 +2504,17 @@ svg {
 }
 
 .tweet-pfp {
-  width: 40px;
-  height: 40px;
+  width: 18px;
+  height: 18px;
   border-radius: 50%;
   background: #657786;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 24px;
-  border: 2px solid #38444d;
+  font-size: 10px;
+  border: 1px solid #38444d;
   transition: all 0.3s ease;
+  flex-shrink: 0;
 }
 
 .tweet-card.selected .tweet-pfp {
@@ -2437,17 +2541,17 @@ svg {
   background: linear-gradient(135deg, #1D9BF0, #0084D4);
   color: white;
   border: none;
-  padding: 1.2rem 3.5rem;
-  font-size: 1.5rem;
+  padding: 0.6rem 1.5rem;
+  font-size: 0.9rem;
   border-radius: 50px;
   cursor: pointer;
   font-weight: 700;
-  margin-top: 1.5rem;
+  margin-top: 0.5rem;
   transition: all 0.3s ease;
   box-shadow: 0 4px 15px rgba(29, 155, 240, 0.4);
   display: inline-flex;
   align-items: center;
-  gap: 10px;
+  gap: 6px;
 }
 
 .submit-prediction-btn:hover {
@@ -2466,10 +2570,10 @@ svg {
 }
 
 .prediction-feedback {
-  margin-top: 2rem;
-  padding: 1.5rem;
+  margin-top: 1.5rem;
+  padding: 1rem;
   background: linear-gradient(135deg, rgba(29, 155, 240, 0.15) 0%, rgba(29, 155, 240, 0.05) 100%);
-  border-radius: 16px;
+  border-radius: 12px;
   border: 2px solid #1D9BF0;
   animation: fadeInScale 0.5s ease;
   backdrop-filter: blur(10px);
@@ -2511,19 +2615,22 @@ svg {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 3rem 2rem;
+  padding: 1rem 0.5rem;
 }
 
 .bot-reveal-container {
-  max-width: 1400px;
-  width: 100%;
+  max-width: 800px;
+  width: 95%;
   text-align: center;
+  margin: 0 auto;
+  padding: 0 0.5rem;
+  box-sizing: border-box;
 }
 
 .reveal-title {
-  font-size: 1.4rem;
+  font-size: 1rem;
   color: #fff;
-  margin-bottom: 1rem;
+  margin-bottom: 0.6rem;
   font-weight: 700;
   text-shadow: 0 2px 10px rgba(29, 155, 240, 0.5);
   animation: fadeInDown 0.8s ease;
@@ -2533,19 +2640,22 @@ svg {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 1rem;
-  margin-bottom: 1rem;
+  gap: 0.6rem;
+  margin-bottom: 0.8rem;
   animation: fadeInUp 1s ease 0.3s backwards;
   flex-wrap: wrap;
+  max-width: 100%;
 }
 
 .prediction-side, .actual-side {
   background: rgba(21, 32, 43, 0.8);
-  border-radius: 12px;
-  padding: 0.8rem 1rem;
-  min-width: 120px;
+  border-radius: 8px;
+  padding: 0.5rem 0.6rem;
+  min-width: 85px;
+  max-width: 120px;
   border: 2px solid rgba(255, 255, 255, 0.1);
   backdrop-filter: blur(10px);
+  flex-shrink: 0;
 }
 
 .prediction-side {
@@ -2558,9 +2668,9 @@ svg {
 }
 
 .prediction-side h3, .actual-side h3 {
-  font-size: 0.85rem;
+  font-size: 0.75rem;
   color: #8899A6;
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.4rem;
   font-weight: 600;
 }
 
@@ -2569,9 +2679,9 @@ svg {
 }
 
 .prediction-number, .actual-number {
-  font-size: 1.8rem;
+  font-size: 1.2rem;
   font-weight: 700;
-  margin: 0.3rem 0;
+  margin: 0.15rem 0;
 }
 
 .prediction-number {
@@ -2589,45 +2699,143 @@ svg {
 }
 
 .prediction-side p, .actual-side p {
-  font-size: 0.75rem;
+  font-size: 0.65rem;
   color: #8899A6;
 }
 
 .vs-divider {
-  font-size: 1.2rem;
+  font-size: 1rem;
   font-weight: 700;
   color: #fff;
   opacity: 0.5;
+  flex-shrink: 0;
 }
 
 .reveal-visualization {
-  margin: 0.8rem 0;
-  min-height: 250px;
+  margin: 1rem auto;
+  max-width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.reveal-grid {
+  display: grid;
+  grid-template-columns: repeat(10, 1fr);
+  grid-template-rows: repeat(10, 1fr);
+  gap: 2px;
+  width: 500px;
+  height: 500px;
+  box-sizing: border-box;
+  grid-auto-flow: row;
+  aspect-ratio: 1 / 1;
+  margin: 0 auto;
+}
+
+.reveal-card {
+  background: linear-gradient(135deg, #192734 0%, #15202B 100%);
+  border: 2px solid #38444d;
+  border-radius: 6px;
+  padding: 6px;
+  margin: 2px;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: calc(100% - 4px);
+  height: calc(100% - 4px);
+  min-height: 0;
+  min-width: 0;
+  overflow: hidden;
+  box-sizing: border-box;
+  aspect-ratio: 1 / 1;
+  transition: all 0.4s ease;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+}
+
+.reveal-card.reveal-human {
+  background: linear-gradient(135deg, #1D9BF0 0%, #0084D4 100%);
+  border-color: #1D9BF0;
+  box-shadow: 0 2px 8px rgba(29, 155, 240, 0.4);
+}
+
+.reveal-card.reveal-bot {
+  background: linear-gradient(135deg, #E91E8C 0%, #C71866 100%);
+  border-color: #FF1744;
+  box-shadow: 0 4px 16px rgba(233, 30, 140, 0.7), 0 0 25px rgba(233, 30, 140, 0.5);
+}
+
+.reveal-card.pulse-bot {
+  animation: revealBotPulse 2s ease-in-out infinite;
+}
+
+.reveal-card.user-selected {
+  border: 3px solid #FFD700;
+  box-shadow: 0 0 15px rgba(255, 215, 0, 0.6), 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+
+.reveal-card.user-selected.reveal-bot {
+  border-color: #FFD700;
+  box-shadow: 0 0 20px rgba(255, 215, 0, 0.8), 0 4px 16px rgba(233, 30, 140, 0.7), 0 0 25px rgba(233, 30, 140, 0.5);
+}
+
+.reveal-card.user-selected.reveal-human {
+  border-color: #FFD700;
+  box-shadow: 0 0 20px rgba(255, 215, 0, 0.8), 0 2px 8px rgba(29, 155, 240, 0.4);
+}
+
+@keyframes revealBotPulse {
+  0%, 100% {
+    box-shadow: 0 4px 16px rgba(233, 30, 140, 0.7), 0 0 25px rgba(233, 30, 140, 0.5);
+    transform: scale(1);
+    border-color: #FF1744;
+  }
+  50% {
+    box-shadow: 0 6px 24px rgba(233, 30, 140, 0.9), 0 0 40px rgba(233, 30, 140, 0.7);
+    transform: scale(1.08);
+    border-color: #FF4569;
+  }
+}
+
+.reveal-pfp {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  flex-shrink: 0;
 }
 
 .reveal-stats {
-  margin-top: 1rem;
+  margin-top: 0.8rem;
   animation: fadeIn 1.2s ease 0.6s backwards;
+  max-width: 100%;
 }
 
 .reveal-stats h3 {
-  font-size: 1.1rem;
+  font-size: 0.85rem;
   color: #fff;
-  margin-bottom: 0.8rem;
+  margin-bottom: 0.5rem;
   font-weight: 600;
 }
 
 .stats-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-  gap: 0.8rem;
-  margin-bottom: 0.8rem;
+  grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+  max-width: 100%;
 }
 
 .stat-card {
   background: rgba(21, 32, 43, 0.6);
-  border-radius: 10px;
-  padding: 0.8rem;
+  border-radius: 8px;
+  padding: 0.6rem;
   border: 2px solid rgba(255, 255, 255, 0.1);
   backdrop-filter: blur(10px);
   transition: all 0.3s ease;
@@ -2649,10 +2857,10 @@ svg {
 }
 
 .stat-value {
-  font-size: 1.4rem;
+  font-size: 0.95rem;
   font-weight: 700;
   color: #fff;
-  margin-bottom: 0.4rem;
+  margin-bottom: 0.25rem;
 }
 
 .bot-stat .stat-value {
@@ -2664,17 +2872,18 @@ svg {
 }
 
 .stat-label {
-  font-size: 0.8rem;
+  font-size: 0.7rem;
   color: #8899A6;
-  line-height: 1.4;
+  line-height: 1.3;
 }
 
 .reveal-detail {
-  font-size: 0.9rem;
+  font-size: 0.7rem;
   color: #8899A6;
-  line-height: 1.6;
-  max-width: 900px;
+  line-height: 1.4;
+  max-width: 100%;
   margin: 0 auto;
+  padding: 0 0.5rem;
 }
 
 @keyframes fadeInDown {
@@ -2709,7 +2918,7 @@ svg {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 2rem 1rem;
+  padding: 1.5rem 0.5rem;
   position: relative;
   overflow: hidden;
 }
@@ -2727,18 +2936,20 @@ svg {
 }
 
 .fewer-bots-container {
-  max-width: 900px;
+  max-width: 650px;
+  width: 95%;
   text-align: center;
   position: relative;
   z-index: 1;
   animation: fadeInUp 1s ease;
+  padding: 0 0.5rem;
 }
 
 .fewer-bots-icon {
-  font-size: 2.5rem;
-  margin-bottom: 1rem;
-  width: 70px;
-  height: 70px;
+  font-size: 1.8rem;
+  margin-bottom: 0.8rem;
+  width: 55px;
+  height: 55px;
   background: linear-gradient(135deg, #10B981 0%, #059669 100%);
   border-radius: 50%;
   display: flex;
@@ -2758,9 +2969,9 @@ svg {
 }
 
 .fewer-bots-title {
-  font-size: 1.4rem;
+  font-size: 1.1rem;
   color: #fff;
-  margin-bottom: 1rem;
+  margin-bottom: 0.8rem;
   font-weight: 700;
   background: linear-gradient(90deg, #fff 0%, #1D9BF0 100%);
   -webkit-background-clip: text;
@@ -2769,11 +2980,11 @@ svg {
 }
 
 .fewer-bots-text {
-  font-size: 0.9rem;
+  font-size: 0.8rem;
   color: #8899A6;
-  line-height: 1.6;
-  margin-bottom: 1.5rem;
-  max-width: 750px;
+  line-height: 1.5;
+  margin-bottom: 1.2rem;
+  max-width: 650px;
   margin-left: auto;
   margin-right: auto;
 }
@@ -2781,26 +2992,26 @@ svg {
 .fewer-bots-highlight {
   background: rgba(29, 155, 240, 0.1);
   border: 2px solid #1D9BF0;
-  border-radius: 12px;
-  padding: 1rem 1.5rem;
-  margin-top: 1rem;
+  border-radius: 10px;
+  padding: 0.8rem 1rem;
+  margin-top: 0.8rem;
   backdrop-filter: blur(10px);
   animation: glow 2s ease-in-out infinite;
 }
 
 .fewer-bots-highlight p {
-  font-size: 1.1rem;
+  font-size: 0.9rem;
   color: #1D9BF0;
   font-weight: 600;
   margin: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 0.5rem;
+  gap: 0.4rem;
 }
 
 .highlight-icon {
-  font-size: 1.3rem;
+  font-size: 1rem;
 }
 
 @keyframes glow {
@@ -2818,22 +3029,24 @@ svg {
 }
 
 .facebook-container {
-  max-width: 1400px;
+  max-width: 100%;
+  width: 95%;
   margin: 0 auto;
   text-align: center;
+  padding: 0 0.5rem;
 }
 
 .warning-badge {
   display: inline-flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.3rem;
   background: linear-gradient(135deg, #FFA500 0%, #FF6B00 100%);
   color: white;
-  padding: 0.6rem 1.2rem;
+  padding: 0.3rem 0.6rem;
   border-radius: 50px;
-  font-size: 0.9rem;
+  font-size: 0.7rem;
   font-weight: 600;
-  margin-bottom: 1rem;
+  margin-bottom: 0.8rem;
   box-shadow: 0 4px 20px rgba(255, 165, 0, 0.4);
   animation: slideDown 0.8s ease;
 }
@@ -2860,31 +3073,38 @@ svg {
   }
 }
 
-.facebook-title {
-  font-size: 1.4rem;
+.facebook-main-title {
+  font-size: 1.2rem;
   color: #fff;
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.3rem;
   font-weight: 700;
   animation: fadeInUp 1s ease 0.2s backwards;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.25rem;
+  width: 100%;
+  text-align: center;
 }
 
 .facebook-subtitle {
-  font-size: 0.9rem;
+  font-size: 0.7rem;
   color: #8899A6;
-  margin-bottom: 1.5rem;
+  margin-bottom: 0.4rem;
   animation: fadeInUp 1s ease 0.3s backwards;
 }
 
 .facebook-icon {
   background: linear-gradient(135deg, #1877F2 0%, #0C5FCD 100%);
   color: white;
-  width: 40px;
-  height: 40px;
-  border-radius: 10px;
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.4rem;
+  font-size: 1rem;
   font-weight: bold;
   font-family: sans-serif;
   box-shadow: 0 4px 15px rgba(24, 119, 242, 0.4);
@@ -2892,16 +3112,16 @@ svg {
 
 .facebook-stats {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-  gap: 0.8rem;
-  margin: 1rem 0;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 0.5rem;
+  margin: 0.6rem 0;
 }
 
 .stat-box {
   background: linear-gradient(135deg, rgba(24, 119, 242, 0.15) 0%, rgba(12, 95, 205, 0.1) 100%);
   border: 2px solid rgba(24, 119, 242, 0.3);
-  border-radius: 12px;
-  padding: 1rem;
+  border-radius: 8px;
+  padding: 0.5rem;
   transition: all 0.3s ease;
   animation: fadeInUp 1s ease backwards;
 }
@@ -2917,21 +3137,22 @@ svg {
 }
 
 .stat-box .stat-number {
-  font-size: 1.4rem;
+  font-size: 1rem;
   font-weight: 700;
   color: #1877F2;
-  margin-bottom: 0.3rem;
+  margin-bottom: 0.2rem;
 }
 
 .stat-box .stat-label {
-  font-size: 0.8rem;
+  font-size: 0.65rem;
   color: #8899A6;
+  line-height: 1.3;
 }
 
 .facebook-source {
-  font-size: 0.8rem;
+  font-size: 0.65rem;
   color: #666;
-  margin-top: 1rem;
+  margin-top: 0.5rem;
   font-style: italic;
 }
 
@@ -2955,13 +3176,14 @@ svg {
   margin-bottom: 0.8rem;
   font-weight: 700;
   animation: fadeInDown 1s ease;
+  text-transform: none;
 }
 
 .traffic-subtitle {
   font-size: 0.85rem;
   color: #8899A6;
   line-height: 1.6;
-  margin-bottom: 1.5rem;
+  margin-bottom: 0.3rem;
   max-width: 900px;
   margin-left: auto;
   margin-right: auto;
@@ -2980,8 +3202,144 @@ svg {
 .traffic-source {
   font-size: 0.75rem;
   color: #666;
-  margin-top: 1rem;
+  margin-top: 0.2rem;
   font-style: italic;
+}
+
+/* ========================================
+   SOURCES SECTION STYLES
+   ======================================== */
+.sources-section {
+  background: linear-gradient(180deg, #0a0a1a 0%, #050510 100%);
+  padding: 2rem 1rem;
+}
+
+.sources-container {
+  max-width: 800px;
+  margin: 0 auto;
+  text-align: center;
+}
+
+.sources-title {
+  font-size: 1.5rem;
+  color: #fff;
+  margin-bottom: 0.4rem;
+  font-weight: 700;
+}
+
+.sources-subtitle {
+  font-size: 0.85rem;
+  color: #8899A6;
+  margin-bottom: 1.5rem;
+}
+
+.sources-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.source-item {
+  background: rgba(21, 32, 43, 0.6);
+  border: 2px solid rgba(29, 155, 240, 0.2);
+  border-radius: 10px;
+  padding: 1rem;
+  display: flex;
+  gap: 1rem;
+  align-items: flex-start;
+  text-align: left;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(10px);
+}
+
+.source-item:hover {
+  border-color: #1D9BF0;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(29, 155, 240, 0.2);
+}
+
+.source-number {
+  background: linear-gradient(135deg, #1D9BF0 0%, #0084D4 100%);
+  color: white;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+  font-weight: 700;
+  flex-shrink: 0;
+  box-shadow: 0 4px 12px rgba(29, 155, 240, 0.4);
+}
+
+.source-content {
+  flex: 1;
+}
+
+.source-name {
+  font-size: 1rem;
+  color: #fff;
+  margin-bottom: 0.3rem;
+  font-weight: 600;
+}
+
+.source-description {
+  font-size: 0.8rem;
+  color: #8899A6;
+  margin-bottom: 0.6rem;
+  line-height: 1.4;
+}
+
+.source-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: #1D9BF0;
+  text-decoration: none;
+  font-size: 0.8rem;
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+
+.source-link:hover {
+  color: #00D4FF;
+  gap: 0.7rem;
+}
+
+.source-link.disabled {
+  color: #666;
+  cursor: default;
+}
+
+.source-link.disabled:hover {
+  color: #666;
+  gap: 0.5rem;
+}
+
+.source-link i {
+  font-size: 0.8rem;
+}
+
+.sources-note {
+  background: rgba(29, 155, 240, 0.1);
+  border: 1px solid rgba(29, 155, 240, 0.2);
+  border-radius: 8px;
+  padding: 0.8rem 1rem;
+  font-size: 0.75rem;
+  color: #8899A6;
+  line-height: 1.5;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+  text-align: left;
+}
+
+.sources-note i {
+  color: #1D9BF0;
+  margin-top: 0.2rem;
+  flex-shrink: 0;
 }
 
 /* Section 6 (game) overrides to keep tweet visible and controls reachable */
@@ -3063,14 +3421,13 @@ svg {
 #botRevealViz,
 #facebook-chart,
 #traffic-chart {
-  max-height: calc(100vh - 160px); /* leave room for titles/controls */
+  max-height: 600px;
   height: auto;
-  overflow: visible; /* ensure SVG overflow isn't clipped */
+  overflow: visible;
   margin-bottom: 0.5rem;
 }
 
 /* Ensure embedded svgs scale to container height when possible */
-#searchTrendChart svg,
 #scatterChart svg,
 #worldMap svg,
 #botRevealViz svg,
@@ -3156,7 +3513,46 @@ svg {
 #scatterChart, #worldMap { min-height: 420px; }
 #botRevealViz { min-height: 320px; }
 
+/* Additional responsive constraints for prediction/reveal sections */
+@media (max-width: 1440px) {
+  .bot-predict-container,
+  .bot-reveal-container,
+  .fewer-bots-container {
+    max-width: 90%;
+  }
+  
+  .tweet-grid {
+    width: 380px;
+    height: 380px;
+    gap: 3px;
+  }
+  
+  .tweet-card {
+    padding: 1px;
+  }
+  
+  .tweet-pfp {
+    width: 11px;
+    height: 11px;
+    font-size: 7px;
+  }
+}
 
+@media (max-width: 1024px) {
+  .bot-predict-container,
+  .bot-reveal-container,
+  .fewer-bots-container {
+    max-width: 85%;
+  }
+  
+  .tweet-grid {
+    width: 350px;
+    height: 350px;
+    grid-template-columns: repeat(10, 1fr);
+    grid-template-rows: repeat(10, 1fr);
+    gap: 2px;
+  }
+}
 
 /* Scoped Matrix Rain for #sectionHacker only */
 #sectionHacker {

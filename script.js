@@ -597,8 +597,9 @@ document.addEventListener('DOMContentLoaded', () => {
     // Disable button after submission
     submitBtn.disabled = true;
 
-    // Store the user prediction for the next section
+    // Store the user prediction and selected indices for the next section
     window.userBotPrediction = userPrediction;
+    window.userSelectedIndices = tweets.map((t, idx) => t.selected ? idx : -1).filter(idx => idx !== -1);
 
     // Notify any listeners (e.g., the reveal visualization) that a prediction was submitted
     document.dispatchEvent(new CustomEvent('userPredictionSubmitted', { detail: { prediction: userPrediction } }));
@@ -621,11 +622,18 @@ document.addEventListener('DOMContentLoaded', () => {
   // Observer to trigger animation when section comes into view
   const revealSection = document.getElementById('sectionBotReveal');
   
+  // Listen for prediction submission
+  document.addEventListener('userPredictionSubmitted', (e) => {
+    if (userPredictionDisplay) {
+      userPredictionDisplay.textContent = e.detail.prediction;
+    }
+  });
+
   const observer = new IntersectionObserver((entries) => {
     entries.forEach(entry => {
       if (entry.isIntersecting) {
         // Update user prediction
-        if (window.userBotPrediction) {
+        if (window.userBotPrediction !== undefined) {
           userPredictionDisplay.textContent = window.userBotPrediction;
         }
         
@@ -642,25 +650,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function createBotRevealVisualization() {
     // Clear any existing visualization
-    revealViz.selectAll("*").remove();
+    revealViz.html('');
     
-    const width = 1000;
-    const height = 500;
-    const circleRadius = 18;
-    const spacing = 90;
-    const gridSize = 10;
-
-    const svg = revealViz
-      .append("svg")
-      .attr("width", "100%")
-      .attr("height", "100%")
-      .attr("viewBox", `0 0 ${width} ${height}`)
-      .attr("preserveAspectRatio", "xMidYMid meet")
-      .style("max-width", "100%")
-      .style("height", "auto");
-
-    const startX = (width - (gridSize * spacing)) / 2 + spacing / 2;
-    const startY = (height - (gridSize * spacing)) / 2 + spacing / 2;
+    // Create grid container
+    const gridContainer = revealViz
+      .append('div')
+      .attr('class', 'reveal-grid');
 
     // Create array of 100 items: 3 bots, 97 humans
     let data = [];
@@ -671,97 +666,39 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     }
 
-    // Verify before shuffle
-    const botsBeforeShuffle = data.filter(d => d.isBot).length;
-    console.log('Before shuffle - Bots:', botsBeforeShuffle, 'Humans:', 100 - botsBeforeShuffle);
-
     // Shuffle the array
     for (let i = data.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
       [data[i], data[j]] = [data[j], data[i]];
     }
 
-    // Verify after shuffle
-    const botsAfterShuffle = data.filter(d => d.isBot).length;
-    console.log('After shuffle - Bots:', botsAfterShuffle, 'Humans:', 100 - botsAfterShuffle);
-
-    // Assign grid positions
-    data.forEach((d, i) => {
-      const row = Math.floor(i / gridSize);
-      const col = i % gridSize;
-      d.x = startX + col * spacing;
-      d.y = startY + row * spacing;
-    });
-
     console.log('Total items:', data.length);
     console.log('Bots:', data.filter(d => d.isBot).length);
     console.log('Humans:', data.filter(d => !d.isBot).length);
 
-    // Create circles
-    svg.selectAll("circle")
-      .data(data)
-      .enter()
-      .append("circle")
-      .attr("cx", d => d.x)
-      .attr("cy", d => d.y)
-      .attr("r", 0)
-      .attr("fill", d => d.isBot ? "#E91E8C" : "#1D9BF0")
-      .attr("stroke", d => d.isBot ? "#FF1744" : "#0084D4")
-      .attr("stroke-width", d => d.isBot ? 4 : 2)
-      .classed('bot-circle', d => d.isBot)
-      .attr("opacity", 0)
-      .transition()
-      .duration(600)
-      .delay((d, i) => i * 10)
-      .attr("r", circleRadius)
-      .attr("opacity", 0.9);
+    // Get user selections
+    const userSelections = window.userSelectedIndices || [];
 
-    // Create icons
-    svg.selectAll("text")
-      .data(data)
-      .enter()
-      .append("text")
-      .attr("x", d => d.x)
-      .attr("y", d => d.y)
-      .attr("text-anchor", "middle")
-      .attr("dominant-baseline", "middle")
-      .attr("font-size", "16px")
-      .attr("opacity", 0)
-      .text(d => d.isBot ? "🤖" : "👤")
-      .transition()
-      .duration(500)
-      .delay((d, i) => i * 10 + 400)
-      .attr("opacity", 1);
+    // Create reveal cards
+    data.forEach((item, index) => {
+      const wasSelected = userSelections.includes(index);
+      const card = gridContainer
+        .append('div')
+        .attr('class', `reveal-card ${item.isBot ? 'reveal-bot' : 'reveal-human'} ${wasSelected ? 'user-selected' : ''}`)
+        .style('opacity', 0)
+        .html(`<div class="reveal-pfp">👤</div>`);
+      
+      // Animate entrance
+      setTimeout(() => {
+        card.style('opacity', 1);
+      }, index * 10);
+    });
 
-    // Pulse bot circles
+    // Pulse bot cards after animation completes
     setTimeout(() => {
-      svg.selectAll("circle")
-        .filter(d => d.isBot)
-        .transition()
-        .duration(500)
-        .attr("r", circleRadius + 6)
-        .transition()
-        .duration(400)
-        .attr("r", circleRadius)
-        .transition()
-        .duration(500)
-        .attr("r", circleRadius + 6)
-        .transition()
-        .duration(400)
-        .attr("r", circleRadius);
-    }, 2000);
-
-    // If the user already submitted a prediction, highlight that many bot-circles visually
-    const userPred = window.userBotPrediction || 0;
-    if (userPred > 0) {
-      // highlight the first `userPred` bot circles by adding a class and a glow
-      const botNodes = svg.selectAll('circle').filter(d => d.isBot).nodes();
-      for (let i = 0; i < botNodes.length && i < userPred; i++) {
-        d3.select(botNodes[i]).classed('user-highlight', true)
-          .attr('stroke-width', 6)
-          .attr('opacity', 1);
-      }
-    }
+      gridContainer.selectAll('.reveal-bot')
+        .classed('pulse-bot', true);
+    }, 1500);
   }
 });
 
@@ -809,9 +746,9 @@ document.addEventListener('DOMContentLoaded', () => {
     { quarter: "Q2 2025", value: 687, label: "687" }
   ];
 
-  const margin = { top: 60, right: 40, bottom: 80, left: 80 };
-  const width = 1200 - margin.left - margin.right;
-  const height = 500 - margin.top - margin.bottom;
+  const margin = { top: 30, right: 30, bottom: 60, left: 60 };
+  const width = 1000 - margin.left - margin.right;
+  const height = 350 - margin.top - margin.bottom;
 
   const svg = facebookDiv
     .append("svg")
@@ -859,8 +796,9 @@ document.addEventListener('DOMContentLoaded', () => {
     .attr("x", d => x(d.quarter) + x.bandwidth() / 2)
     .attr("y", d => y(d.value) - 5)
     .attr("text-anchor", "middle")
-    .attr("font-size", "11px")
+    .attr("font-size", "14px")
     .attr("fill", "#fff")
+    .attr("font-weight", "600")
     .attr("opacity", 0)
     .text(d => d.label)
     .transition()
@@ -878,7 +816,7 @@ document.addEventListener('DOMContentLoaded', () => {
     .attr("dx", "-.8em")
     .attr("dy", ".15em")
     .style("fill", "#8899A6")
-    .style("font-size", "11px");
+    .style("font-size", "13px");
 
   // Y Axis
   svg.append("g")
@@ -892,9 +830,10 @@ document.addEventListener('DOMContentLoaded', () => {
     .attr("y", 0 - margin.left + 20)
     .attr("x", 0 - (height / 2))
     .attr("text-anchor", "middle")
-    .style("font-size", "14px")
+    .style("font-size", "16px")
     .style("fill", "#8899A6")
-    .text("Number of removed fake accounts (in millions)");
+    .style("font-weight", "600")
+    .text("Fake Accounts Removed (Millions)");
 
   // Style axis lines
   svg.selectAll(".domain, .tick line")
@@ -925,26 +864,43 @@ document.addEventListener('DOMContentLoaded', () => {
     { year: 2024, human: 49, goodBot: 14, badBot: 37 }
   ];
 
-  const margin = { top: 60, right: 150, bottom: 80, left: 80 };
-  const width = 1400 - margin.left - margin.right;
-  const height = 600 - margin.top - margin.bottom;
+  const margin = { top: 50, right: 150, bottom: 60, left: 80 };
+  const width = 1200 - margin.left - margin.right;
+  const height = 500 - margin.top - margin.bottom;
 
   const svg = trafficDiv
     .append("svg")
-    .attr("width", width + margin.left + margin.right)
-    .attr("height", height + margin.top + margin.bottom)
+    .attr("width", "100%")
+    .attr("height", "100%")
+    .attr("viewBox", `0 0 ${width + margin.left + margin.right} ${height + margin.top + margin.bottom}`)
+    .attr("preserveAspectRatio", "xMidYMid meet")
     .append("g")
     .attr("transform", `translate(${margin.left},${margin.top})`);
 
-  // Add title
+  // Add chart title
   svg.append("text")
     .attr("x", width / 2)
     .attr("y", -30)
     .attr("text-anchor", "middle")
-    .style("font-size", "28px")
+    .style("font-size", "22px")
     .style("font-weight", "bold")
     .style("fill", "#fff")
-    .text("GLOBAL INTERNET TRAFFIC FOR THE PAST 10 YEARS");
+    .text("Internet Traffic Composition (2015-2024)");
+
+  // Create tooltip
+  const tooltip = trafficDiv
+    .append("div")
+    .style("position", "absolute")
+    .style("background", "rgba(0, 0, 0, 0.9)")
+    .style("color", "#fff")
+    .style("padding", "10px 15px")
+    .style("border-radius", "8px")
+    .style("font-size", "14px")
+    .style("pointer-events", "none")
+    .style("opacity", 0)
+    .style("box-shadow", "0 4px 12px rgba(0,0,0,0.5)")
+    .style("transition", "opacity 0.2s")
+    .style("z-index", "1000");
 
   // Scales
   const x = d3.scaleLinear()
@@ -963,11 +919,59 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const series = stack(data);
 
-  // Colors matching the image
+  // Define gradients
+  const defs = svg.append("defs");
+  
+  const humanGradient = defs.append("linearGradient")
+    .attr("id", "humanGradient")
+    .attr("x1", "0%").attr("y1", "0%")
+    .attr("x2", "0%").attr("y2", "100%");
+  humanGradient.append("stop")
+    .attr("offset", "0%")
+    .attr("stop-color", "#00D4FF")
+    .attr("stop-opacity", 1);
+  humanGradient.append("stop")
+    .attr("offset", "100%")
+    .attr("stop-color", "#0099CC")
+    .attr("stop-opacity", 1);
+
+  const goodBotGradient = defs.append("linearGradient")
+    .attr("id", "goodBotGradient")
+    .attr("x1", "0%").attr("y1", "0%")
+    .attr("x2", "0%").attr("y2", "100%");
+  goodBotGradient.append("stop")
+    .attr("offset", "0%")
+    .attr("stop-color", "#E91E8C")
+    .attr("stop-opacity", 1);
+  goodBotGradient.append("stop")
+    .attr("offset", "100%")
+    .attr("stop-color", "#C71866")
+    .attr("stop-opacity", 1);
+
+  const badBotGradient = defs.append("linearGradient")
+    .attr("id", "badBotGradient")
+    .attr("x1", "0%").attr("y1", "0%")
+    .attr("x2", "0%").attr("y2", "100%");
+  badBotGradient.append("stop")
+    .attr("offset", "0%")
+    .attr("stop-color", "#00C896")
+    .attr("stop-opacity", 1);
+  badBotGradient.append("stop")
+    .attr("offset", "100%")
+    .attr("stop-color", "#009975")
+    .attr("stop-opacity", 1);
+
+  // Colors mapping
   const colors = {
-    human: "#00D4FF",      // Cyan/turquoise
-    goodBot: "#E91E8C",    // Magenta/pink
-    badBot: "#00C896"      // Teal/green
+    human: "url(#humanGradient)",
+    goodBot: "url(#goodBotGradient)",
+    badBot: "url(#badBotGradient)"
+  };
+  
+  const solidColors = {
+    human: "#00D4FF",
+    goodBot: "#E91E8C",
+    badBot: "#00C896"
   };
 
   // Area generator
@@ -977,33 +981,127 @@ document.addEventListener('DOMContentLoaded', () => {
     .y1(d => y(d[1]))
     .curve(d3.curveMonotoneX);
 
-  // Draw areas
+  // Draw areas with animations and interactivity
   svg.selectAll(".area")
     .data(series)
     .join("path")
     .attr("class", "area")
     .attr("d", area)
     .style("fill", d => colors[d.key])
-    .style("opacity", 0.9);
+    .style("opacity", 0)
+    .style("cursor", "pointer")
+    .style("transition", "opacity 0.3s ease, filter 0.3s ease")
+    .transition()
+    .duration(1000)
+    .delay((d, i) => i * 200)
+    .style("opacity", 0.85)
+    .on("end", function(d) {
+      d3.select(this)
+        .transition()
+        .duration(2000)
+        .style("opacity", 0.9);
+      
+      // Add hover effects after animation
+      d3.select(this)
+        .on("mouseover", function() {
+          d3.select(this)
+            .style("opacity", 1)
+            .style("filter", "brightness(1.2)");
+        })
+        .on("mouseout", function() {
+          d3.select(this)
+            .style("opacity", 0.9)
+            .style("filter", "brightness(1)");
+        });
+    });
 
-  // Add percentage labels on the areas
+  // Add percentage labels on the areas with animation
   series.forEach((serie, i) => {
     data.forEach((d, j) => {
       const value = serie[j][1] - serie[j][0];
       const xPos = x(d.year);
       const yPos = y(serie[j][0] + value / 2);
       
-      svg.append("text")
-        .attr("x", xPos)
-        .attr("y", yPos)
-        .attr("text-anchor", "middle")
-        .attr("dy", "0.35em")
-        .style("fill", "#fff")
-        .style("font-size", "16px")
-        .style("font-weight", "bold")
-        .style("pointer-events", "none")
-        .text(`${value}%`);
+      // Only show percentage if value is significant enough
+      if (value >= 10) {
+        svg.append("text")
+          .attr("x", xPos)
+          .attr("y", yPos)
+          .attr("text-anchor", "middle")
+          .attr("dy", "0.35em")
+          .style("fill", "#fff")
+          .style("font-size", "18px")
+          .style("font-weight", "bold")
+          .style("pointer-events", "none")
+          .style("text-shadow", "0 2px 6px rgba(0,0,0,0.9), 0 0 2px rgba(0,0,0,1)")
+          .style("opacity", 0)
+          .text(`${value}%`)
+          .transition()
+          .duration(500)
+          .delay(i * 200 + 1000 + j * 50)
+          .style("opacity", 1);
+      }
     });
+  });
+
+  // Add interactive data points
+  data.forEach((d, i) => {
+    const pointGroup = svg.append("g")
+      .attr("class", "data-point-group")
+      .style("opacity", 0);
+
+    // Add invisible hover area
+    pointGroup.append("rect")
+      .attr("x", x(d.year) - 20)
+      .attr("y", 0)
+      .attr("width", 40)
+      .attr("height", height)
+      .style("fill", "transparent")
+      .style("cursor", "pointer")
+      .on("mouseover", function(event) {
+        tooltip
+          .style("opacity", 1)
+          .html(`
+            <strong>${d.year}</strong><br/>
+            <span style="color: #00D4FF;">●</span> Human: ${d.human}%<br/>
+            <span style="color: #00C896;">●</span> Bad Bot: ${d.badBot}%<br/>
+            <span style="color: #E91E8C;">●</span> Good Bot: ${d.goodBot}%
+          `)
+          .style("left", (event.pageX + 10) + "px")
+          .style("top", (event.pageY - 10) + "px");
+        
+        // Highlight vertical line
+        d3.select(this.parentNode).select("line")
+          .style("opacity", 0.5);
+      })
+      .on("mousemove", function(event) {
+        tooltip
+          .style("left", (event.pageX + 10) + "px")
+          .style("top", (event.pageY - 10) + "px");
+      })
+      .on("mouseout", function() {
+        tooltip.style("opacity", 0);
+        d3.select(this.parentNode).select("line")
+          .style("opacity", 0);
+      });
+
+    // Add subtle vertical line
+    pointGroup.append("line")
+      .attr("x1", x(d.year))
+      .attr("x2", x(d.year))
+      .attr("y1", 0)
+      .attr("y2", height)
+      .style("stroke", "#fff")
+      .style("stroke-width", 2)
+      .style("stroke-dasharray", "4,4")
+      .style("opacity", 0)
+      .style("pointer-events", "none");
+
+    pointGroup
+      .transition()
+      .duration(500)
+      .delay(2500 + i * 50)
+      .style("opacity", 1);
   });
 
   // X Axis
@@ -1021,6 +1119,16 @@ document.addEventListener('DOMContentLoaded', () => {
   svg.selectAll(".domain, .tick line")
     .style("stroke", "#fff");
 
+  // Add X-axis label
+  svg.append("text")
+    .attr("x", width / 2)
+    .attr("y", height + 45)
+    .attr("text-anchor", "middle")
+    .style("font-size", "16px")
+    .style("font-weight", "600")
+    .style("fill", "#fff")
+    .text("Year");
+
   // Y Axis
   const yAxis = d3.axisLeft(y)
     .tickValues([0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100])
@@ -1035,14 +1143,25 @@ document.addEventListener('DOMContentLoaded', () => {
   svg.selectAll(".domain, .tick line")
     .style("stroke", "#fff");
 
+  // Add Y-axis label
+  svg.append("text")
+    .attr("transform", "rotate(-90)")
+    .attr("x", -height / 2)
+    .attr("y", -55)
+    .attr("text-anchor", "middle")
+    .style("font-size", "16px")
+    .style("font-weight", "600")
+    .style("fill", "#fff")
+    .text("Percentage of Internet Traffic");
+
   // Legend
   const legend = svg.append("g")
     .attr("transform", `translate(${width + 30}, ${height / 2 - 60})`);
 
   const legendData = [
-    { key: "human", label: "Human", color: colors.human },
-    { key: "badBot", label: "Bad Bot", color: colors.badBot },
-    { key: "goodBot", label: "Good Bot", color: colors.goodBot }
+    { key: "human", label: "Human" },
+    { key: "badBot", label: "Bad Bot" },
+    { key: "goodBot", label: "Good Bot" }
   ];
 
   legendData.forEach((item, i) => {
@@ -1053,7 +1172,12 @@ document.addEventListener('DOMContentLoaded', () => {
       .attr("cx", 0)
       .attr("cy", 0)
       .attr("r", 10)
-      .style("fill", item.color);
+      .style("fill", solidColors[item.key])
+      .style("opacity", 0)
+      .transition()
+      .duration(500)
+      .delay(2000 + i * 100)
+      .style("opacity", 1);
 
     legendRow.append("text")
       .attr("x", 20)
@@ -1593,16 +1717,21 @@ document.addEventListener('DOMContentLoaded', () => {
     // Clear previous chart
     d3.select('#searchTrendChart').selectAll('*').remove();
     
-    // Set up dimensions - MASSIVE, INTERACTIVE CHART
-    const margin = { top: 80, right: 100, bottom: 120, left: 120 };
-    const width = Math.min(1800, window.innerWidth * 0.95) - margin.left - margin.right;
-    const height = 750 - margin.top - margin.bottom;
+    // Set up dimensions - responsive and centered
+    const margin = { top: 20, right: 25, bottom: 30, left: 30 };
+    const containerWidth = Math.min(300, window.innerWidth * 0.85);
+    const width = containerWidth - margin.left - margin.right;
+    const height = 130 - margin.top - margin.bottom;
     
-    // Create SVG
+    // Create SVG with viewBox for responsiveness
     svg = d3.select('#searchTrendChart')
       .append('svg')
-      .attr('width', width + margin.left + margin.right)
-      .attr('height', height + margin.top + margin.bottom)
+      .attr('width', containerWidth)
+      .attr('height', 130)
+      .attr('viewBox', `0 0 ${containerWidth} 130`)
+      .attr('preserveAspectRatio', 'xMidYMid meet')
+      .style('display', 'block')
+      .style('margin', '0 auto')
       .append('g')
       .attr('transform', `translate(${margin.left},${margin.top})`);
     
@@ -1709,40 +1838,40 @@ document.addEventListener('DOMContentLoaded', () => {
       .call(xAxis)
       .selectAll('text')
       .style('text-anchor', 'end')
-      .style('font-size', '18px')
+      .style('font-size', '10px')
       .style('font-weight', '600')
-      .attr('dx', '-.8em')
-      .attr('dy', '.15em')
+      .attr('dx', '-.7em')
+      .attr('dy', '.12em')
       .attr('transform', 'rotate(-45)');
     
     svg.append('g')
       .attr('class', 'chart-axis')
       .call(yAxis)
       .selectAll('text')
-      .style('font-size', '18px')
+      .style('font-size', '10px')
       .style('font-weight', '600');
     
-    // Add axis labels with large, bold sans-serif text
+    // Add axis labels
     svg.append('text')
       .attr('x', width / 2)
-      .attr('y', height + 100)
+      .attr('y', height + 25)
       .style('text-anchor', 'middle')
       .style('fill', '#E7E9EA')
-      .style('font-size', '24px')
+      .style('font-size', '9px')
       .style('font-weight', '700')
-      .style('letter-spacing', '1.5px')
+      .style('letter-spacing', '0.4px')
       .style('font-family', '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif')
       .text('Time Period');
     
     svg.append('text')
       .attr('transform', 'rotate(-90)')
       .attr('x', -height / 2)
-      .attr('y', -85)
+      .attr('y', -22)
       .style('text-anchor', 'middle')
       .style('fill', '#E7E9EA')
-      .style('font-size', '24px')
+      .style('font-size', '9px')
       .style('font-weight', '700')
-      .style('letter-spacing', '1.5px')
+      .style('letter-spacing', '0.4px')
       .style('font-family', '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif')
       .text('Search Interest (Relative)');
     
@@ -1765,7 +1894,7 @@ document.addEventListener('DOMContentLoaded', () => {
       .transition()
       .duration(400)
       .delay((d, i) => 3000 * (i / dotData.length))
-      .attr('r', 9)
+      .attr('r', 3)
       .style('opacity', 1);
     
     // Re-select dots for interactivity
@@ -1774,7 +1903,7 @@ document.addEventListener('DOMContentLoaded', () => {
         d3.select(this)
           .transition()
           .duration(150)
-          .attr('r', 11);
+          .attr('r', 4);
         
         tooltip
           .html(`
@@ -1790,7 +1919,7 @@ document.addEventListener('DOMContentLoaded', () => {
         d3.select(this)
           .transition()
           .duration(150)
-          .attr('r', 9);
+          .attr('r', 3);
         
         tooltip.classed('visible', false);
       })
@@ -1800,10 +1929,10 @@ document.addEventListener('DOMContentLoaded', () => {
         circle
           .transition()
           .duration(300)
-          .attr('r', 18)
+          .attr('r', 6)
           .transition()
           .duration(300)
-          .attr('r', 9);
+          .attr('r', 3);
       });
     
     // Highlight sustained attention period (2023-2025)
@@ -1934,15 +2063,20 @@ document.addEventListener('DOMContentLoaded', async function() {
   // ========================================
   const scatterContainer = document.getElementById('scatterChart');
   if (scatterContainer) {
-    const margin = { top: 50, right: 150, bottom: 100, left: 100 };
-    const width = Math.min(1600, window.innerWidth * 0.95) - margin.left - margin.right;
-    const height = 750 - margin.top - margin.bottom;
+    const margin = { top: 40, right: 80, bottom: 80, left: 80 };
+    const containerWidth = Math.min(1100, window.innerWidth * 0.85);
+    const width = containerWidth - margin.left - margin.right;
+    const height = 500 - margin.top - margin.bottom;
 
     const svg = d3.select('#scatterChart')
       .append('svg')
-      .attr('width', width + margin.left + margin.right)
-      .attr('height', height + margin.top + margin.bottom)
+      .attr('width', containerWidth)
+      .attr('height', 500)
+      .attr('viewBox', `0 0 ${containerWidth} 500`)
+      .attr('preserveAspectRatio', 'xMidYMid meet')
       .style('background', '#000000')
+      .style('display', 'block')
+      .style('margin', '0 auto')
       .append('g')
       .attr('transform', `translate(${margin.left},${margin.top})`);
 
@@ -1995,7 +2129,7 @@ document.addEventListener('DOMContentLoaded', async function() {
           existingLabel
             .style('opacity', 1)
             .style('font-weight', '900')
-            .style('font-size', '16px')
+            .style('font-size', '15px')
             .style('fill', '#1D9BF0');
         } else {
           // Create temporary label for unlabeled country
@@ -2006,10 +2140,10 @@ document.addEventListener('DOMContentLoaded', async function() {
             .attr('text-anchor', 'start')
             .text(d.country)
             .style('fill', '#1D9BF0')
-            .style('font-size', '15px')
+            .style('font-size', '14px')
             .style('font-weight', '700')
             .style('pointer-events', 'none')
-            .style('text-shadow', '1px 1px 3px rgba(0, 0, 0, 0.9), -1px -1px 3px rgba(0, 0, 0, 0.9), 1px -1px 3px rgba(0, 0, 0, 0.9), -1px 1px 3px rgba(0, 0, 0, 0.9)')
+            .style('text-shadow', '2px 2px 4px rgba(0, 0, 0, 1), -2px -2px 4px rgba(0, 0, 0, 1), 2px -2px 4px rgba(0, 0, 0, 1), -2px 2px 4px rgba(0, 0, 0, 1), 0 0 6px rgba(0, 0, 0, 1)')
             .style('opacity', 0)
             .transition().duration(150).style('opacity', 1);
         }
@@ -2041,7 +2175,7 @@ document.addEventListener('DOMContentLoaded', async function() {
         svg.selectAll('.scatter-label')
           .style('opacity', 1)
           .style('font-weight', '600')
-          .style('font-size', '15px')
+          .style('font-size', '14px')
           .style('fill', '#E7E9EA');
         
         // Remove temporary labels
@@ -2092,7 +2226,7 @@ document.addEventListener('DOMContentLoaded', async function() {
       })
       .text(d => d.country)
       .style('fill', '#E7E9EA')
-      .style('font-size', '15px')
+      .style('font-size', '14px')
       .style('font-weight', '600')
       .style('pointer-events', 'none')
       .style('opacity', 0)
@@ -2107,15 +2241,15 @@ document.addEventListener('DOMContentLoaded', async function() {
       .call(d3.axisLeft(yScale).ticks(10).tickFormat(d => d + '%').tickSize(10));
 
     // Axis labels
-    svg.append('text').attr('x', width / 2).attr('y', height + 70)
+    svg.append('text').attr('x', width / 2).attr('y', height + 60)
       .style('text-anchor', 'middle').style('fill', '#E7E9EA')
-      .style('font-size', '18px').style('font-weight', '700')
+      .style('font-size', '13px').style('font-weight', '700')
       .text('Excited about AI growth (%)');
     
     svg.append('text').attr('transform', 'rotate(-90)')
-      .attr('x', -height / 2).attr('y', -65)
+      .attr('x', -height / 2).attr('y', -55)
       .style('text-anchor', 'middle').style('fill', '#E7E9EA')
-      .style('font-size', '18px').style('font-weight', '700')
+      .style('font-size', '13px').style('font-weight', '700')
       .text('Concerned about AI growth (%)');
   }
 
@@ -2125,8 +2259,8 @@ document.addEventListener('DOMContentLoaded', async function() {
   const mapContainer = document.getElementById('worldMap');
   if (!mapContainer) return;
 
-  const mapWidth = Math.min(1600, window.innerWidth * 0.95);
-  const mapHeight = 750;
+  const mapWidth = Math.min(1100, window.innerWidth * 0.85);
+  const mapHeight = 550;
   const mapSvg = d3.select('#worldMap').append('svg')
     .attr('width', mapWidth).attr('height', mapHeight)
     .attr('viewBox', `0 0 ${mapWidth} ${mapHeight}`)
