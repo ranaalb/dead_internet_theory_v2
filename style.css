@@ -3793,3 +3793,131 @@ svg {
   opacity: 0.9;
   z-index: 1;
 }
+
+/* ========================================
+   HUMAN CONNECTION SECTION STYLES
+   ======================================== */
+.human-connection-section {
+  background: linear-gradient(135deg, #000000 0%, #0a1929 50%, #000814 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem 1rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.human-connection-section::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 300%;
+  height: 300%;
+  background: radial-gradient(circle, rgba(29, 155, 240, 0.08) 0%, transparent 70%);
+  transform: translate(-50%, -50%);
+  animation: pulse-expand 6s ease-in-out infinite;
+}
+
+@keyframes pulse-expand {
+  0%, 100% {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 0.3;
+  }
+  50% {
+    transform: translate(-50%, -50%) scale(1.1);
+    opacity: 0.5;
+  }
+}
+
+.human-connection-container {
+  max-width: 900px;
+  width: 95%;
+  text-align: center;
+  position: relative;
+  z-index: 2;
+  padding: 0 1rem;
+}
+
+.human-connection-title {
+  font-size: 1.4rem;
+  font-weight: 800;
+  color: #fff;
+  margin-bottom: 0.5rem;
+  text-shadow: 0 2px 20px rgba(29, 155, 240, 0.6);
+  background: linear-gradient(135deg, #ffffff 0%, #1D9BF0 50%, #00D4FF 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: fadeInDown 1s ease-out;
+  line-height: 1.2;
+}
+
+.human-connection-subtitle {
+  font-size: 0.95rem;
+  color: rgba(255, 255, 255, 0.7);
+  margin-bottom: 1.5rem;
+  font-weight: 400;
+  font-style: italic;
+  animation: fadeInUp 1s ease-out 0.2s backwards;
+}
+
+.human-connection-viz {
+  margin: 1.5rem auto;
+  min-height: 400px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  opacity: 0;
+  animation: fadeIn 1s ease-out 0.4s forwards;
+}
+
+.human-connection-message {
+  margin-top: 2rem;
+  padding: 2rem;
+  background: rgba(29, 155, 240, 0.08);
+  border: 2px solid rgba(29, 155, 240, 0.3);
+  border-radius: 16px;
+  backdrop-filter: blur(10px);
+  animation: fadeInUp 1.2s ease-out 0.6s backwards;
+}
+
+.connection-text {
+  font-size: 1rem;
+  color: var(--text-primary);
+  line-height: 1.8;
+  margin-bottom: 1rem;
+  text-align: left;
+}
+
+.connection-text:last-child {
+  margin-bottom: 0;
+}
+
+.connection-text strong {
+  color: #1D9BF0;
+  font-weight: 700;
+  text-shadow: 0 0 10px rgba(29, 155, 240, 0.3);
+}
+
+@media (max-width: 768px) {
+  .human-connection-title {
+    font-size: 1.8rem;
+  }
+  
+  .human-connection-subtitle {
+    font-size: 1rem;
+  }
+  
+  .human-connection-viz {
+    min-height: 300px;
+  }
+  
+  .connection-text {
+    font-size: 0.95rem;
+  }
+}
+
+/* ========================================
+   CONCLUSION SECTION STYLES
+   ======================================== */

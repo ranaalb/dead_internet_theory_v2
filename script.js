@@ -2706,3 +2706,544 @@ document.addEventListener('DOMContentLoaded', async () => {
   window.addEventListener('resize', resizeMatrix);
   window.addEventListener('orientationchange', resizeMatrix);
 })();
+
+// ===== Scoped Binary Rain for #sectionHacker =====
+(function () {
+  const section = document.getElementById('sectionHacker');
+  if (!section) return;
+
+  const canvas = document.getElementById('hackerMatrix') || (() => {
+    const c = document.createElement('canvas');
+    c.id = 'hackerMatrix';
+    section.prepend(c);
+    return c;
+  })();
+  const ctx = canvas.getContext('2d');
+
+  const glyphs = '01';
+  const bgFade = 0.08;
+  const color = '#00ff00';
+  const baseFont = 16;
+  let running = false;
+  let rafId = null;
+  let drops = [];
+  let fontSize = baseFont;
+  let cols = 0;
+
+  function resizeMatrix() {
+    const dpr = Math.max(1, Math.floor(window.devicePixelRatio || 1));
+    const { width, height } = section.getBoundingClientRect();
+    canvas.style.width = width + 'px';
+    canvas.style.height = height + 'px';
+    canvas.width = Math.max(1, Math.floor(width * dpr));
+    canvas.height = Math.max(1, Math.floor(height * dpr));
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.scale(dpr, dpr);
+    fontSize = Math.max(12, Math.round(baseFont));
+    cols = Math.max(1, Math.floor(width / fontSize));
+    drops = new Array(cols).fill(1);
+    ctx.font = fontSize + 'px monospace';
+  }
+
+  function tick() {
+    if (!running) return;
+    const { width, height } = section.getBoundingClientRect();
+    ctx.fillStyle = `rgba(0, 0, 0, ${bgFade})`;
+    ctx.fillRect(0, 0, width, height);
+    ctx.fillStyle = color;
+    ctx.textBaseline = 'top';
+    for (let i = 0; i < drops.length; i++) {
+      const char = glyphs[Math.floor(Math.random() * glyphs.length)];
+      const x = i * fontSize;
+      const y = drops[i] * fontSize;
+      ctx.fillText(char, x, y);
+      if (y > height && Math.random() > 0.975) drops[i] = 0;
+      drops[i]++;
+    }
+    rafId = setTimeout(tick, 35)
+  }
+
+  function start() {
+    if (running) return;
+    running = true;
+    resizeMatrix();
+    rafId = requestAnimationFrame(tick);
+  }
+
+  function stop() {
+    running = false;
+    if (rafId) clearTimeout(rafId);  // changed from cancelAnimationFrame
+    rafId = null;
+  }
+
+  const io = new IntersectionObserver(
+    (entries) => {
+      entries.forEach((entry) => {
+        if (entry.target !== section) return;
+        if (entry.isIntersecting) start();
+        else stop();
+      });
+    },
+    { threshold: 0.35 }
+  );
+  io.observe(section);
+
+  const ro = new ResizeObserver(resizeMatrix);
+  ro.observe(section);
+  window.addEventListener('resize', resizeMatrix);
+  window.addEventListener('orientationchange', resizeMatrix);
+})();
+
+// ========================================
+// HUMAN CONNECTION VISUALIZATION
+// ========================================
+// ===== Scoped Binary Rain for #sectionHacker =====
+(function () {
+  const section = document.getElementById('sectionHacker');
+  if (!section) return;
+
+  const canvas = document.getElementById('hackerMatrix') || (() => {
+    const c = document.createElement('canvas');
+    c.id = 'hackerMatrix';
+    section.prepend(c);
+    return c;
+  })();
+  const ctx = canvas.getContext('2d');
+
+  const glyphs = '01';
+  const bgFade = 0.08;
+  const color = '#00ff00';
+  const baseFont = 16;
+  let running = false;
+  let rafId = null;
+  let drops = [];
+  let fontSize = baseFont;
+  let cols = 0;
+
+  function resizeMatrix() {
+    const dpr = Math.max(1, Math.floor(window.devicePixelRatio || 1));
+    const { width, height } = section.getBoundingClientRect();
+    canvas.style.width = width + 'px';
+    canvas.style.height = height + 'px';
+    canvas.width = Math.max(1, Math.floor(width * dpr));
+    canvas.height = Math.max(1, Math.floor(height * dpr));
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.scale(dpr, dpr);
+    fontSize = Math.max(12, Math.round(baseFont));
+    cols = Math.max(1, Math.floor(width / fontSize));
+    drops = new Array(cols).fill(1);
+    ctx.font = fontSize + 'px monospace';
+  }
+
+  function tick() {
+    if (!running) return;
+    const { width, height } = section.getBoundingClientRect();
+    ctx.fillStyle = `rgba(0, 0, 0, ${bgFade})`;
+    ctx.fillRect(0, 0, width, height);
+    ctx.fillStyle = color;
+    ctx.textBaseline = 'top';
+    for (let i = 0; i < drops.length; i++) {
+      const char = glyphs[Math.floor(Math.random() * glyphs.length)];
+      const x = i * fontSize;
+      const y = drops[i] * fontSize;
+      ctx.fillText(char, x, y);
+      if (y > height && Math.random() > 0.975) drops[i] = 0;
+      drops[i]++;
+    }
+    rafId = setTimeout(tick, 35)
+  }
+
+  function start() {
+    if (running) return;
+    running = true;
+    resizeMatrix();
+    rafId = requestAnimationFrame(tick);
+  }
+
+  function stop() {
+    running = false;
+    if (rafId) clearTimeout(rafId);
+    rafId = null;
+  }
+
+  const io = new IntersectionObserver(
+    (entries) => {
+      entries.forEach((entry) => {
+        if (entry.target !== section) return;
+        if (entry.isIntersecting) start();
+        else stop();
+      });
+    },
+    { threshold: 0.35 }
+  );
+  io.observe(section);
+
+  const ro = new ResizeObserver(resizeMatrix);
+  ro.observe(section);
+  window.addEventListener('resize', resizeMatrix);
+  window.addEventListener('orientationchange', resizeMatrix);
+})();
+
+// ===== Scoped Binary Rain for #sectionHacker =====
+(function () {
+  const section = document.getElementById('sectionHacker');
+  if (!section) return;
+
+  const canvas = document.getElementById('hackerMatrix') || (() => {
+    const c = document.createElement('canvas');
+    c.id = 'hackerMatrix';
+    section.prepend(c);
+    return c;
+  })();
+  const ctx = canvas.getContext('2d');
+
+  const glyphs = '01';
+  const bgFade = 0.08;
+  const color = '#00ff00';
+  const baseFont = 16;
+  let running = false;
+  let rafId = null;
+  let drops = [];
+  let fontSize = baseFont;
+  let cols = 0;
+
+  function resizeMatrix() {
+    const dpr = Math.max(1, Math.floor(window.devicePixelRatio || 1));
+    const { width, height } = section.getBoundingClientRect();
+    canvas.style.width = width + 'px';
+    canvas.style.height = height + 'px';
+    canvas.width = Math.max(1, Math.floor(width * dpr));
+    canvas.height = Math.max(1, Math.floor(height * dpr));
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.scale(dpr, dpr);
+    fontSize = Math.max(12, Math.round(baseFont));
+    cols = Math.max(1, Math.floor(width / fontSize));
+    drops = new Array(cols).fill(1);
+    ctx.font = fontSize + 'px monospace';
+  }
+
+  function tick() {
+    if (!running) return;
+    const { width, height } = section.getBoundingClientRect();
+    ctx.fillStyle = `rgba(0, 0, 0, ${bgFade})`;
+    ctx.fillRect(0, 0, width, height);
+    ctx.fillStyle = color;
+    ctx.textBaseline = 'top';
+    for (let i = 0; i < drops.length; i++) {
+      const char = glyphs[Math.floor(Math.random() * glyphs.length)];
+      const x = i * fontSize;
+      const y = drops[i] * fontSize;
+      ctx.fillText(char, x, y);
+      if (y > height && Math.random() > 0.975) drops[i] = 0;
+      drops[i]++;
+    }
+    rafId = setTimeout(tick, 35)
+  }
+
+  function start() {
+    if (running) return;
+    running = true;
+    resizeMatrix();
+    rafId = requestAnimationFrame(tick);
+  }
+
+  function stop() {
+    running = false;
+    if (rafId) clearTimeout(rafId);
+    rafId = null;
+  }
+
+  const io = new IntersectionObserver(
+    (entries) => {
+      entries.forEach((entry) => {
+        if (entry.target !== section) return;
+        if (entry.isIntersecting) start();
+        else stop();
+      });
+    },
+    { threshold: 0.35 }
+  );
+  io.observe(section);
+
+  const ro = new ResizeObserver(resizeMatrix);
+  ro.observe(section);
+  window.addEventListener('resize', resizeMatrix);
+  window.addEventListener('orientationchange', resizeMatrix);
+})();
+
+// ========================================
+// HUMAN CONNECTION VISUALIZATION
+// ========================================
+document.addEventListener('DOMContentLoaded', () => {
+  const humanSection = document.getElementById('sectionHumanConnection');
+  if (!humanSection) return;
+
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        createHumanConnectionViz();
+        observer.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.3 });
+
+  observer.observe(humanSection);
+
+  function createHumanConnectionViz() {
+    const container = d3.select('#humanConnectionViz');
+    const width = Math.min(800, window.innerWidth * 0.9);
+    const height = Math.min(600, window.innerHeight * 0.7);
+
+    const svg = container
+      .append('svg')
+      .attr('width', width)
+      .attr('height', height)
+      .attr('viewBox', `0 0 ${width} ${height}`)
+      .attr('preserveAspectRatio', 'xMidYMid meet');
+
+    // Add gradient for the glow effect
+    const defs = svg.append('defs');
+    
+    const glowGradient = defs.append('radialGradient')
+      .attr('id', 'humanGlow')
+      .attr('cx', '50%')
+      .attr('cy', '50%');
+    glowGradient.append('stop')
+      .attr('offset', '0%')
+      .attr('stop-color', '#FFD700')
+      .attr('stop-opacity', 0.8);
+    glowGradient.append('stop')
+      .attr('offset', '100%')
+      .attr('stop-color', '#FFA500')
+      .attr('stop-opacity', 0);
+
+    // Create two human silhouettes hugging
+    const centerX = width / 2;
+    const centerY = height / 2;
+    const scale = Math.min(width, height) / 500;
+
+    // Left person (simplified silhouette)
+    const leftPerson = svg.append('g')
+      .attr('transform', `translate(${centerX - 60 * scale}, ${centerY})`);
+    
+    // Head
+    leftPerson.append('circle')
+      .attr('cx', 0)
+      .attr('cy', -80 * scale)
+      .attr('r', 35 * scale)
+      .attr('fill', '#1D9BF0')
+      .style('opacity', 0)
+      .transition()
+      .duration(1000)
+      .style('opacity', 1);
+
+    // Body
+    leftPerson.append('ellipse')
+      .attr('cx', 0)
+      .attr('cy', -10 * scale)
+      .attr('rx', 40 * scale)
+      .attr('ry', 60 * scale)
+      .attr('fill', '#1D9BF0')
+      .style('opacity', 0)
+      .transition()
+      .duration(1000)
+      .delay(200)
+      .style('opacity', 1);
+
+    // Arms connecting (hug) - drawn before right person so it's behind
+    const armPath = svg.append('path')
+      .attr('d', `
+        M ${centerX - 40 * scale} ${centerY - 20 * scale}
+        Q ${centerX} ${centerY - 40 * scale} ${centerX + 40 * scale} ${centerY - 20 * scale}
+      `)
+      .attr('stroke', '#1D9BF0')
+      .attr('stroke-width', 20 * scale)
+      .attr('fill', 'none')
+      .attr('stroke-linecap', 'round')
+      .style('opacity', 0)
+      .transition()
+      .duration(1000)
+      .delay(400)
+      .style('opacity', 0.6);
+
+    // Right person - drawn last so it's in front
+    const rightPerson = svg.append('g')
+      .attr('transform', `translate(${centerX + 60 * scale}, ${centerY})`);
+    
+    // Head
+    rightPerson.append('circle')
+      .attr('cx', 0)
+      .attr('cy', -80 * scale)
+      .attr('r', 35 * scale)
+      .attr('fill', '#00D4FF')
+      .style('opacity', 0)
+      .transition()
+      .duration(1000)
+      .style('opacity', 1);
+
+    // Body
+    rightPerson.append('ellipse')
+      .attr('cx', 0)
+      .attr('cy', -10 * scale)
+      .attr('rx', 40 * scale)
+      .attr('ry', 60 * scale)
+      .attr('fill', '#00D4FF')
+      .style('opacity', 0)
+      .transition()
+      .duration(1000)
+      .delay(200)
+      .style('opacity', 1);
+
+    // Heart in the center with beating animation
+    const heartGroup = svg.append('g')
+      .attr('transform', `translate(${centerX}, ${centerY - 50 * scale}) scale(${scale * 0.8})`);
+
+    const heartPath = heartGroup.append('path')
+      .attr('d', 'M12,21.35L10.55,20.03C5.4,15.36 2,12.27 2,8.5C2,5.41 4.42,3 7.5,3C9.24,3 10.91,3.81 12,5.08C13.09,3.81 14.76,3 16.5,3C19.58,3 22,5.41 22,8.5C22,12.27 18.6,15.36 13.45,20.03L12,21.35Z')
+      .attr('fill', '#FFD700')
+      .attr('transform', 'translate(-12, -12)')
+      .style('opacity', 0)
+      .transition()
+      .duration(800)
+      .delay(600)
+      .style('opacity', 1);
+
+    // Heartbeat animation
+    function heartbeat() {
+      heartGroup
+        .transition()
+        .duration(200)
+        .attr('transform', `translate(${centerX}, ${centerY - 50 * scale}) scale(${scale * 0.88})`)
+        .transition()
+        .duration(200)
+        .attr('transform', `translate(${centerX}, ${centerY - 50 * scale}) scale(${scale * 0.8})`)
+        .transition()
+        .duration(200)
+        .attr('transform', `translate(${centerX}, ${centerY - 50 * scale}) scale(${scale * 0.88})`)
+        .transition()
+        .duration(200)
+        .attr('transform', `translate(${centerX}, ${centerY - 50 * scale}) scale(${scale * 0.8})`)
+        .on('end', () => {
+          setTimeout(heartbeat, 1500);
+        });
+    }
+    setTimeout(heartbeat, 2000);
+
+    // Animated words flowing around the silhouettes
+    const words = [
+      'connection', 'authentic', 'human', 'real', 'empathy',
+      'understanding', 'community', 'alive', 'genuine', 'trust',
+      'conversation', 'learning', 'growth', 'compassion', 'together'
+    ];
+
+    const radius = 200 * scale;
+    const wordElements = [];
+
+    words.forEach((word, i) => {
+      const angle = (i / words.length) * Math.PI * 2;
+      const x = centerX + Math.cos(angle) * radius;
+      const y = centerY + Math.sin(angle) * radius;
+
+      const text = svg.append('text')
+        .attr('x', x)
+        .attr('y', y)
+        .text(word)
+        .attr('fill', '#1D9BF0')
+        .attr('font-size', `${14 + Math.random() * 8}px`)
+        .attr('font-weight', '600')
+        .attr('text-anchor', 'middle')
+        .style('opacity', 0)
+        .transition()
+        .duration(800)
+        .delay(800 + i * 100)
+        .style('opacity', 0.8);
+
+      wordElements.push({ text, angle, baseRadius: radius });
+    });
+
+    // Animate words flowing in a circle with breathing effect
+    let breatheOffset = 0;
+    function animateWords() {
+      breatheOffset += 0.02;
+      wordElements.forEach((item, i) => {
+        item.angle += 0.002;
+        const breatheX = Math.sin(breatheOffset + i * 0.5) * 3;
+        const breatheY = Math.cos(breatheOffset + i * 0.5) * 3;
+        const x = centerX + Math.cos(item.angle) * item.baseRadius + breatheX;
+        const y = centerY + Math.sin(item.angle) * item.baseRadius + breatheY;
+        
+        item.text
+          .attr('x', x)
+          .attr('y', y);
+      });
+      requestAnimationFrame(animateWords);
+    }
+
+    setTimeout(() => animateWords(), 2000);
+
+    // Add connecting particles with golden color
+    const particles = [];
+    for (let i = 0; i < 30; i++) {
+      const particle = svg.append('circle')
+        .attr('r', 2 + Math.random() * 3)
+        .attr('fill', i % 3 === 0 ? '#FFD700' : (i % 3 === 1 ? '#FFA500' : '#FFEA00'))
+        .style('opacity', 0);
+      
+      particles.push({
+        element: particle,
+        x: centerX + (Math.random() - 0.5) * 200 * scale,
+        y: centerY + (Math.random() - 0.5) * 200 * scale,
+        vx: (Math.random() - 0.5) * 2,
+        vy: (Math.random() - 0.5) * 2
+      });
+    }
+
+    function animateParticles() {
+      particles.forEach(p => {
+        p.x += p.vx;
+        p.y += p.vy;
+
+        // Bounce off edges
+        if (p.x < centerX - 150 * scale || p.x > centerX + 150 * scale) p.vx *= -1;
+        if (p.y < centerY - 150 * scale || p.y > centerY + 150 * scale) p.vy *= -1;
+
+        p.element
+          .attr('cx', p.x)
+          .attr('cy', p.y);
+      });
+      requestAnimationFrame(animateParticles);
+    }
+
+    setTimeout(() => {
+      particles.forEach(p => {
+        p.element
+          .transition()
+          .duration(1000)
+          .style('opacity', 0.6);
+      });
+      animateParticles();
+    }, 1500);
+
+    // Add pulsing glow effect
+    svg.append('circle')
+      .attr('cx', centerX)
+      .attr('cy', centerY)
+      .attr('r', 250 * scale)
+      .attr('fill', 'url(#humanGlow)')
+      .style('opacity', 0)
+      .transition()
+      .duration(2000)
+      .delay(1000)
+      .style('opacity', 0.3)
+      .on('end', function pulse() {
+        d3.select(this)
+          .transition()
+          .duration(2000)
+          .style('opacity', 0.1)
+          .transition()
+          .duration(2000)
+          .style('opacity', 0.3)
+          .on('end', pulse);
+      });
+  }
+});
