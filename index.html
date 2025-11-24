@@ -217,72 +217,103 @@
     </section>
 
     <!-- Chat Section - Local Boston Perspectives -->
-    <section id="section3" class="section">
-      <h2 style="margin-bottom: 0.8rem; font-size: 1rem;">This is also a local issue: we asked people we know in Boston</h2>
-      <p style="font-size: 0.85rem; margin-bottom: 1rem; color: #E7E9EA; max-width: 800px; margin-left: auto; margin-right: auto;">
-        More than just pieces of data; it's a known public sentiment issue that impacts us directly. 
-        Here's what Harvard students and local community members told us:
-      </p>
+    <section id="section3" class="section chat-section">
+      <div class="chat-header">
+        <h2 class="chat-title">This is also a local issue: we asked people we know in Boston</h2>
+        <p class="chat-subtitle">
+          More than just pieces of data; it's a known public sentiment issue that impacts us directly. 
+          Here's what Harvard students and local community members told us:
+        </p>
+      </div>
       
-      <div class="chat-bubbles" id="chatBubbles">
-        <!-- title question -->
-        <div class="message-container sent" data-delay="0">
-          <div class="bubble bubble-sent">
-            <p>Do you ever wonder who's behind the screen?</p>
+      <div class="imessage-container">
+        <div class="imessage-header">
+          <div class="status-bar">
+            <span class="time">9:41</span>
+            <div class="signal-icons">
+              <i class="fas fa-signal"></i>
+              <i class="fas fa-wifi"></i>
+              <i class="fas fa-battery-three-quarters"></i>
+            </div>
           </div>
+          <div class="chat-info">
+            <h3 class="contact-name">Harvard Community Group</h3>
+            <span class="online-status">4 people</span>
+          </div>
+        </div>
 
-          <div class="message-container received" data-delay="1">
-            <div class="profile-pic">🎓</div>
-            <div class="message-content">
-              <div class="bubble bubble-received">
-                <p>
-                  I'm never sure if I'm talking to a real person online or a bot
-                  anymore.
-                </p>
+        <div class="messages-container">
+          <div class="message-group">
+            <div class="message sent">
+              <div class="message-bubble">
+                Do you ever wonder who's behind the screen?
               </div>
-              <span class="contact-name">Harvard Student, '26</span>
+              <div class="message-time">9:32 AM</div>
             </div>
           </div>
 
-          <div class="message-container received" data-delay="2">
-            <div class="profile-pic">👤</div>
-            <div class="message-content">
-              <div class="bubble bubble-received">
-                <p>
+          <div class="message-group">
+            <div class="message received">
+              <div class="avatar">🎓</div>
+              <div class="message-content">
+                <div class="sender-name">Alex '26</div>
+                <div class="message-bubble">
+                  I'm never sure if I'm talking to a real person online or a bot anymore.
+                </div>
+                <div class="message-time">9:33 AM</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="message-group">
+            <div class="message received">
+              <div class="avatar">👤</div>
+              <div class="message-content">
+                <div class="sender-name">Harvard Sidechat User</div>
+                <div class="message-bubble">
                   It feels like my feed is just random AI-generated stuff now
-                </p>
+                </div>
+                <div class="message-time">9:34 AM</div>
               </div>
-              <span class="contact-name">Harvard Sidechat User</span>
             </div>
           </div>
 
-          <div class="message-container received" data-delay="3">
-            <div class="profile-pic">🎓</div>
-            <div class="message-content">
-              <div class="bubble bubble-received">
-                <p>
-                  It's getting hard to distinguish what's real online and what's
-                  fake
-                </p>
+          <div class="message-group">
+            <div class="message received">
+              <div class="avatar">🎓</div>
+              <div class="message-content">
+                <div class="sender-name">Jordan '25</div>
+                <div class="message-bubble">
+                  It's getting hard to distinguish what's real online and what's fake
+                </div>
+                <div class="message-time">9:35 AM</div>
               </div>
-              <span class="contact-name">Harvard Student, '25</span>
             </div>
           </div>
 
-          <div class="message-container received" data-delay="4">
-            <div class="profile-pic">🎓</div>
-            <div class="message-content">
-              <div class="bubble bubble-received">
-                <p>
-                  I feel like everyone has this perception that everything is
-                  AI-generated now, even when it isn't.
-                </p>
+          <div class="message-group">
+            <div class="message received">
+              <div class="avatar">🎓</div>
+              <div class="message-content">
+                <div class="sender-name">Sam '26</div>
+                <div class="message-bubble">
+                  I feel like everyone has this perception that everything is AI-generated now, even when it isn't.
+                </div>
+                <div class="message-time">9:36 AM</div>
               </div>
-              <span class="contact-name">Harvard Student, '26</span>
             </div>
           </div>
         </div>
 
+        <div class="typing-indicator">
+          <div class="typing-dots">
+            <span></span>
+            <span></span>
+            <span></span>
+          </div>
+          <span class="typing-text">Multiple people are typing...</span>
+        </div>
+      </div>
     </section>
 
     <!-- Question section -->
