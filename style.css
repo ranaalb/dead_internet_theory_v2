@@ -2,7 +2,16 @@
    GLOBAL STYLE GUIDE & DESIGN SYSTEM
    X (Twitter) Dark Mode Aesthetic
    ======================================== */
-
+html {
+  font-size: 16px;  /* lock rem baseline */
+}
+body {
+  margin: 0;
+  height: 100%;
+  font-family: var(--font-system);
+  scroll-behavior: smooth;
+  overflow: hidden;  /* keep your current scroll model for now */
+}
 :root {
   /* X (Twitter) Dark Mode Color Palette */
   --primary-dark: #000000;          /* Pure black background */
@@ -1066,9 +1075,9 @@ svg {
 }
 
 #searchTrendChart {
-  padding: 0.2rem 0;
-  margin: 0 auto 0.8rem;
-  min-height: 175px;
+  padding: 2rem 0 2rem 0; /* remove side padding so chart aligns with container */
+  margin: 0 auto 2rem;
+  min-height: 680px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1086,10 +1095,7 @@ svg {
 }
 
 #searchTrendChart svg {
-  display: block;
-  margin: 0 auto;
-  max-width: 100%;
-  height: auto;
+  overflow: visible;
 }
 
 /* Notice shown when CSV is unavailable */
@@ -1113,8 +1119,8 @@ svg {
 
 .trend-stats {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 0.5rem;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 0.8rem;
   margin-bottom: 0;
   margin-top: 0.3rem;
   width: 100%;

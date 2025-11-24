@@ -1723,15 +1723,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const width = containerWidth - margin.left - margin.right;
     const height = 130 - margin.top - margin.bottom;
     
-    // Create SVG with viewBox for responsiveness
+    // Create SVG
     svg = d3.select('#searchTrendChart')
       .append('svg')
-      .attr('width', containerWidth)
-      .attr('height', 130)
-      .attr('viewBox', `0 0 ${containerWidth} 130`)
-      .attr('preserveAspectRatio', 'xMidYMid meet')
-      .style('display', 'block')
-      .style('margin', '0 auto')
+      .attr('width', width + margin.left + margin.right)
+      .attr('height', height + margin.top + margin.bottom)
       .append('g')
       .attr('transform', `translate(${margin.left},${margin.top})`);
     
