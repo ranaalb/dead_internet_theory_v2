@@ -1598,11 +1598,15 @@ document.addEventListener('DOMContentLoaded', () => {
     const width = Math.min(1800, window.innerWidth * 0.95) - margin.left - margin.right;
     const height = 750 - margin.top - margin.bottom;
     
-    // Create SVG
+    // Create responsive SVG using viewBox so it scales to container width
+    const totalW = width + margin.left + margin.right;
+    const totalH = height + margin.top + margin.bottom;
     svg = d3.select('#searchTrendChart')
       .append('svg')
-      .attr('width', width + margin.left + margin.right)
-      .attr('height', height + margin.top + margin.bottom)
+      .attr('viewBox', `0 0 ${totalW} ${totalH}`)
+      .attr('preserveAspectRatio', 'xMidYMid meet')
+      .style('width', '100%')
+      .style('height', 'auto')
       .append('g')
       .attr('transform', `translate(${margin.left},${margin.top})`);
     
