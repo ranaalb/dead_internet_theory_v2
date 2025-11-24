@@ -1720,8 +1720,12 @@ document.addEventListener('DOMContentLoaded', () => {
     // Set up dimensions - responsive and centered
     const margin = { top: 20, right: 25, bottom: 30, left: 30 };
     const containerWidth = Math.min(300, window.innerWidth * 0.85);
-    const width = containerWidth - margin.left - margin.right;
-    const height = 130 - margin.top - margin.bottom;
+    // FORCE the graph to always fill the screen width
+const width = chartContainer.clientWidth - margin.left - margin.right;
+
+// Give it a reliable height (your call)
+const height = 400;
+
     
     // Create SVG
     svg = d3.select('#searchTrendChart')
