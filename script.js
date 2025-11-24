@@ -1718,13 +1718,10 @@ document.addEventListener('DOMContentLoaded', () => {
     d3.select('#searchTrendChart').selectAll('*').remove();
     
     // Set up dimensions - responsive and centered
-    const margin = { top: 20, right: 25, bottom: 30, left: 30 };
-    const containerWidth = Math.min(300, window.innerWidth * 0.85);
-    // FORCE the graph to always fill the screen width
-const width = chartContainer.clientWidth - margin.left - margin.right;
-
-// Give it a reliable height (your call)
-const height = 400;
+    const margin = { top: 35, right: 50, bottom: 70, left: 60 };
+    const containerWidth = Math.min(1100, chartContainer.clientWidth || 1000);
+    const width = containerWidth - margin.left - margin.right;
+    const height = 400;
 
     
     // Create SVG
@@ -1732,6 +1729,8 @@ const height = 400;
       .append('svg')
       .attr('width', width + margin.left + margin.right)
       .attr('height', height + margin.top + margin.bottom)
+      .style('display', 'block')
+      .style('margin', '0 auto')
       .append('g')
       .attr('transform', `translate(${margin.left},${margin.top})`);
     
@@ -1820,17 +1819,17 @@ const height = 400;
       .ease(d3.easeLinear)
       .attr('stroke-dashoffset', 0);
     
-    // Add axes with larger, more readable text
+    // Add axes with readable text
     const xAxis = d3.axisBottom(xScale)
-      .ticks(14)
+      .ticks(10)
       .tickFormat(d3.timeFormat('%b \'%y'))
-      .tickSize(10)
-      .tickPadding(12);
+      .tickSize(8)
+      .tickPadding(8);
     
     const yAxis = d3.axisLeft(yScale)
-      .ticks(12)
-      .tickSize(10)
-      .tickPadding(12);
+      .ticks(8)
+      .tickSize(8)
+      .tickPadding(8);
     
     svg.append('g')
       .attr('class', 'chart-axis')
@@ -1838,40 +1837,40 @@ const height = 400;
       .call(xAxis)
       .selectAll('text')
       .style('text-anchor', 'end')
-      .style('font-size', '10px')
+      .style('font-size', '11px')
       .style('font-weight', '600')
-      .attr('dx', '-.7em')
-      .attr('dy', '.12em')
+      .attr('dx', '-.8em')
+      .attr('dy', '.15em')
       .attr('transform', 'rotate(-45)');
     
     svg.append('g')
       .attr('class', 'chart-axis')
       .call(yAxis)
       .selectAll('text')
-      .style('font-size', '10px')
+      .style('font-size', '12px')
       .style('font-weight', '600');
     
     // Add axis labels
     svg.append('text')
       .attr('x', width / 2)
-      .attr('y', height + 25)
+      .attr('y', height + 52)
       .style('text-anchor', 'middle')
       .style('fill', '#E7E9EA')
-      .style('font-size', '9px')
+      .style('font-size', '13px')
       .style('font-weight', '700')
-      .style('letter-spacing', '0.4px')
+      .style('letter-spacing', '0.5px')
       .style('font-family', '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif')
       .text('Time Period');
     
     svg.append('text')
       .attr('transform', 'rotate(-90)')
       .attr('x', -height / 2)
-      .attr('y', -22)
+      .attr('y', -35)
       .style('text-anchor', 'middle')
       .style('fill', '#E7E9EA')
-      .style('font-size', '9px')
+      .style('font-size', '13px')
       .style('font-weight', '700')
-      .style('letter-spacing', '0.4px')
+      .style('letter-spacing', '0.5px')
       .style('font-family', '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif')
       .text('Search Interest (Relative)');
     
@@ -1894,7 +1893,7 @@ const height = 400;
       .transition()
       .duration(400)
       .delay((d, i) => 3000 * (i / dotData.length))
-      .attr('r', 3)
+      .attr('r', 5)
       .style('opacity', 1);
     
     // Re-select dots for interactivity
@@ -1903,7 +1902,7 @@ const height = 400;
         d3.select(this)
           .transition()
           .duration(150)
-          .attr('r', 4);
+          .attr('r', 7);
         
         tooltip
           .html(`
@@ -1919,7 +1918,7 @@ const height = 400;
         d3.select(this)
           .transition()
           .duration(150)
-          .attr('r', 3);
+          .attr('r', 5);
         
         tooltip.classed('visible', false);
       })
@@ -1929,10 +1928,10 @@ const height = 400;
         circle
           .transition()
           .duration(300)
-          .attr('r', 6)
+          .attr('r', 9)
           .transition()
           .duration(300)
-          .attr('r', 3);
+          .attr('r', 5);
       });
     
     // Highlight sustained attention period (2023-2025)
@@ -2706,3 +2705,47 @@ document.addEventListener('DOMContentLoaded', async () => {
   window.addEventListener('resize', resizeMatrix);
   window.addEventListener('orientationchange', resizeMatrix);
 })();
+
+// ========== INTERACTIVE CONCLUSION CARDS ==========
+document.addEventListener('DOMContentLoaded', () => {
+  const clickableCards = document.querySelectorAll('.clickable-card');
+  
+  clickableCards.forEach(card => {
+    card.addEventListener('click', function(e) {
+      e.stopPropagation();
+      const isExpanded = this.classList.contains('expanded');
+      
+      // Close all cards first
+      clickableCards.forEach(c => c.classList.remove('expanded'));
+      
+      // Toggle current card
+      if (!isExpanded) {
+        this.classList.add('expanded');
+      }
+    });
+  });
+  
+  // Close cards when clicking outside
+  document.addEventListener('click', (e) => {
+    if (!e.target.closest('.clickable-card')) {
+      clickableCards.forEach(c => c.classList.remove('expanded'));
+    }
+  });
+});
+
+// ========== INTERACTIVE DATA STORYTELLING ==========
+// Add subtle animations when hovering over key stats
+document.addEventListener('DOMContentLoaded', () => {
+  const statCards = document.querySelectorAll('.stat-card, .stat-box');
+  
+  statCards.forEach(card => {
+    card.addEventListener('mouseenter', function() {
+      this.style.transform = 'translateY(-8px) scale(1.02)';
+      this.style.transition = 'all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)';
+    });
+    
+    card.addEventListener('mouseleave', function() {
+      this.style.transform = 'translateY(0) scale(1)';
+    });
+  });
+});
