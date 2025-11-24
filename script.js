@@ -2705,3 +2705,160 @@ document.addEventListener('DOMContentLoaded', async () => {
   window.addEventListener('resize', resizeMatrix);
   window.addEventListener('orientationchange', resizeMatrix);
 })();
+
+// ========================================
+// CLICKABLE CARDS FUNCTIONALITY
+// ========================================
+document.addEventListener('DOMContentLoaded', function() {
+  // Find all clickable cards in the conclusion section
+  const clickableCards = document.querySelectorAll('.clickable-card');
+  
+  clickableCards.forEach(card => {
+    const expandedContent = card.querySelector('.card-expanded-content');
+    const cardHint = card.querySelector('.card-hint');
+    
+    if (expandedContent) {
+      // Initially hide expanded content
+      expandedContent.style.display = 'none';
+      expandedContent.style.maxHeight = '0';
+      expandedContent.style.opacity = '0';
+      expandedContent.style.overflow = 'hidden';
+      expandedContent.style.transition = 'all 0.3s ease-in-out';
+      
+      let isExpanded = false;
+      
+      // Add click event listener
+      card.addEventListener('click', function(e) {
+        e.preventDefault();
+        
+        if (!isExpanded) {
+          // Expand the card
+          expandedContent.style.display = 'block';
+          expandedContent.style.maxHeight = expandedContent.scrollHeight + 'px';
+          expandedContent.style.opacity = '1';
+          expandedContent.style.marginTop = '1rem';
+          
+          // Update hint text
+          if (cardHint) {
+            cardHint.textContent = 'Click to collapse';
+          }
+          
+          // Add expanded class for additional styling
+          card.classList.add('expanded');
+          
+        } else {
+          // Collapse the card
+          expandedContent.style.maxHeight = '0';
+          expandedContent.style.opacity = '0';
+          expandedContent.style.marginTop = '0';
+          
+          // Update hint text
+          if (cardHint) {
+            const isDetailsCard = card.querySelector('.answer-verdict');
+            cardHint.textContent = isDetailsCard ? 'Click for details' : 'Click for tips';
+          }
+          
+          // Remove expanded class
+          card.classList.remove('expanded');
+          
+          // Hide after animation completes
+          setTimeout(() => {
+            if (!isExpanded) {
+              expandedContent.style.display = 'none';
+            }
+          }, 300);
+        }
+        
+        isExpanded = !isExpanded;
+      });
+      
+      // Add hover effects
+      card.addEventListener('mouseenter', function() {
+        card.style.transform = 'translateY(-2px)';
+        card.style.cursor = 'pointer';
+      });
+      
+      card.addEventListener('mouseleave', function() {
+        if (!card.classList.contains('expanded')) {
+          card.style.transform = 'translateY(0)';
+        }
+      });
+    }
+  });
+  
+  // Also handle the message content card (The Takeaway)
+  const messageContent = document.querySelector('.conclusion-message');
+  if (messageContent && !messageContent.classList.contains('clickable-card')) {
+    messageContent.classList.add('clickable-card');
+    
+    const expandedContent = messageContent.querySelector('.card-expanded-content');
+    const cardHint = messageContent.querySelector('.card-hint');
+    
+    if (expandedContent) {
+      // Initially hide expanded content
+      expandedContent.style.display = 'none';
+      expandedContent.style.maxHeight = '0';
+      expandedContent.style.opacity = '0';
+      expandedContent.style.overflow = 'hidden';
+      expandedContent.style.transition = 'all 0.3s ease-in-out';
+      
+      let isExpanded = false;
+      
+      // Add click event listener
+      messageContent.addEventListener('click', function(e) {
+        e.preventDefault();
+        
+        if (!isExpanded) {
+          // Expand the card
+          expandedContent.style.display = 'block';
+          expandedContent.style.maxHeight = expandedContent.scrollHeight + 'px';
+          expandedContent.style.opacity = '1';
+          expandedContent.style.marginTop = '1rem';
+          
+          // Update hint text
+          if (cardHint) {
+            cardHint.textContent = 'Click to collapse';
+          }
+          
+          // Add expanded class for additional styling
+          messageContent.classList.add('expanded');
+          
+        } else {
+          // Collapse the card
+          expandedContent.style.maxHeight = '0';
+          expandedContent.style.opacity = '0';
+          expandedContent.style.marginTop = '0';
+          
+          // Update hint text
+          if (cardHint) {
+            cardHint.textContent = 'Click for tips';
+          }
+          
+          // Remove expanded class
+          messageContent.classList.remove('expanded');
+          
+          // Hide after animation completes
+          setTimeout(() => {
+            if (!isExpanded) {
+              expandedContent.style.display = 'none';
+            }
+          }, 300);
+        }
+        
+        isExpanded = !isExpanded;
+      });
+      
+      // Add hover effects
+      messageContent.addEventListener('mouseenter', function() {
+        messageContent.style.transform = 'translateY(-2px)';
+        messageContent.style.cursor = 'pointer';
+      });
+      
+      messageContent.addEventListener('mouseleave', function() {
+        if (!messageContent.classList.contains('expanded')) {
+          messageContent.style.transform = 'translateY(0)';
+        }
+      });
+    }
+  }
+});
