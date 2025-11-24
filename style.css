@@ -963,9 +963,10 @@ svg {
    ======================================== */
 .trend-section {
   background: var(--secondary-dark);
-  padding: 1rem 0.5rem;
+  padding: 4rem 1rem;
   position: relative;
   overflow: hidden;
+  min-height: 100vh;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -988,8 +989,8 @@ svg {
 }
 
 .trend-container {
-  max-width: 100%;
-  width: 100%;
+  max-width: 1200px;
+  width: 95%;
   text-align: center;
   position: relative;
   z-index: 2;
@@ -997,14 +998,14 @@ svg {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 0;
-  margin: 0;
+  padding: 0 1rem;
+  margin: 0 auto;
   box-sizing: border-box;
 }
 
 .trend-title {
-  font-size: 0.9rem;
-  margin-bottom: 0.15rem;
+  font-size: 2.5rem;
+  margin-bottom: 1rem;
   color: #E7E9EA;
   text-shadow: 0 0 20px rgba(29, 155, 240, 0.4);
   letter-spacing: 0.5px;
@@ -1016,9 +1017,9 @@ svg {
 }
 
 .trend-subtitle {
-  font-size: 0.55rem;
+  font-size: 1.1rem;
   color: var(--text-secondary);
-  margin-bottom: 0.5rem;
+  margin-bottom: 2rem;
   font-style: normal;
   font-weight: 400;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
@@ -1030,8 +1031,8 @@ svg {
 .chart-controls {
   display: flex;
   justify-content: center;
-  gap: 0.4rem;
-  margin-bottom: 0.4rem;
+  gap: 1rem;
+  margin-bottom: 2rem;
   flex-wrap: wrap;
   opacity: 0;
   transform: translateY(15px);
@@ -1039,8 +1040,8 @@ svg {
 }
 
 .chart-btn {
-  padding: 0.25rem 0.5rem;
-  font-size: 0.55rem;
+  padding: 0.8rem 1.5rem;
+  font-size: 1rem;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   background: rgba(100, 149, 237, 0.15);
   border: 1.5px solid rgba(100, 149, 237, 0.3);
@@ -1051,7 +1052,7 @@ svg {
   backdrop-filter: blur(10px);
   display: flex;
   align-items: center;
-  gap: 0.3rem;
+  gap: 0.5rem;
   font-weight: 600;
 }
 
@@ -1071,18 +1072,18 @@ svg {
 }
 
 .chart-btn i {
-  font-size: 0.6rem;
+  font-size: 1rem;
 }
 
 #searchTrendChart {
-  padding: 1rem 0;
+  padding: 2rem 0;
   margin: 0 auto 3rem;
-  min-height: 400px;
+  min-height: 500px;
   display: flex;
   align-items: center;
   justify-content: center;
   width: 100%;
-  max-width: 1100px;
+  max-width: 1200px;
   opacity: 0;
   transform: translateY(20px);
   transition: opacity 0.6s ease-out, transform 0.6s ease-out;
@@ -1119,12 +1120,12 @@ svg {
 
 .trend-stats {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-  gap: 0.8rem;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1.5rem;
   margin-bottom: 3rem;
-  margin-top: 1rem;
+  margin-top: 2rem;
   width: 100%;
-  max-width: 700px;
+  max-width: 900px;
   opacity: 0;
   animation: fadeIn 1s ease-out 1.5s forwards;
 }
@@ -1141,8 +1142,8 @@ svg {
 .stat-card {
   background: rgba(29, 155, 240, 0.08);
   border: 1.5px solid rgba(29, 155, 240, 0.25);
-  border-radius: 8px;
-  padding: 0.5rem;
+  border-radius: 12px;
+  padding: 1.5rem;
   backdrop-filter: blur(10px);
   transition: all 0.3s ease;
   position: relative;
@@ -3999,6 +4000,292 @@ svg {
   
   .connection-text {
     font-size: 0.95rem;
+  }
+}
+
+/* ========================================
+   DIGITAL ARCHEOLOGY STYLES
+   ======================================== */
+.archeology-section {
+  background: linear-gradient(180deg, #1a1a2e 0%, #16213e 100%);
+  padding: 4rem 1rem;
+  color: #fff;
+  position: relative;
+}
+
+.archeology-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  text-align: center;
+}
+
+.archeology-title {
+  font-size: 2.5rem;
+  font-weight: 800;
+  margin-bottom: 1rem;
+  background: linear-gradient(135deg, #fff 0%, #a8b3cf 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.archeology-subtitle {
+  font-size: 1.2rem;
+  color: #8899a6;
+  margin-bottom: 3rem;
+}
+
+.age-input-container {
+  background: rgba(255, 255, 255, 0.05);
+  padding: 2rem;
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  max-width: 500px;
+  margin: 0 auto 3rem;
+}
+
+.age-label {
+  display: block;
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+  color: #e7e9ea;
+}
+
+.age-slider {
+  width: 100%;
+  height: 8px;
+  background: #333;
+  border-radius: 4px;
+  outline: none;
+  -webkit-appearance: none;
+  appearance: none;
+  margin-bottom: 1rem;
+}
+
+.age-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 24px;
+  height: 24px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 50%;
+  cursor: pointer;
+  box-shadow: 0 0 15px rgba(102, 126, 234, 0.5);
+  transition: transform 0.2s;
+}
+
+.age-slider::-webkit-slider-thumb:hover {
+  transform: scale(1.2);
+}
+
+.age-display {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #667eea;
+  margin-bottom: 1.5rem;
+}
+
+.generate-btn {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  padding: 0.8rem 1.5rem;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.generate-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+}
+
+.internet-timeline {
+  margin-top: 3rem;
+  animation: fadeInUp 0.8s ease;
+}
+
+.timeline-header {
+  margin-bottom: 2rem;
+}
+
+.timeline-header h3 {
+  font-size: 2rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+  color: #fff;
+}
+
+.timeline-header p {
+  font-size: 1rem;
+  color: #8899a6;
+}
+
+.timeline-comparison {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  gap: 2rem;
+  align-items: start;
+  margin-bottom: 3rem;
+}
+
+.timeline-period {
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 16px;
+  padding: 2rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.timeline-period.then {
+  background: linear-gradient(135deg, rgba(255, 193, 7, 0.1) 0%, rgba(255, 152, 0, 0.05) 100%);
+  border-color: rgba(255, 193, 7, 0.3);
+}
+
+.timeline-period.now {
+  background: linear-gradient(135deg, rgba(220, 53, 69, 0.1) 0%, rgba(108, 117, 125, 0.05) 100%);
+  border-color: rgba(220, 53, 69, 0.3);
+}
+
+.period-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.period-header h4 {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: #fff;
+}
+
+.period-tag {
+  background: rgba(255, 255, 255, 0.2);
+  padding: 0.3rem 0.8rem;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 1px;
+}
+
+.then .period-tag {
+  background: rgba(255, 193, 7, 0.3);
+  color: #ffc107;
+}
+
+.now .period-tag {
+  background: rgba(220, 53, 69, 0.3);
+  color: #dc3545;
+}
+
+.period-content {
+  text-align: left;
+}
+
+.internet-feature {
+  margin-bottom: 1rem;
+  padding: 0.8rem;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+  border-left: 3px solid rgba(255, 255, 255, 0.3);
+}
+
+.then .internet-feature {
+  border-left-color: #ffc107;
+}
+
+.now .internet-feature {
+  border-left-color: #dc3545;
+}
+
+.feature-title {
+  font-weight: 600;
+  color: #fff;
+  margin-bottom: 0.3rem;
+  font-size: 0.9rem;
+}
+
+.feature-description {
+  font-size: 0.8rem;
+  color: #8899a6;
+  line-height: 1.4;
+}
+
+.timeline-divider {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+}
+
+.divider-line {
+  width: 2px;
+  height: 50px;
+  background: linear-gradient(180deg, transparent 0%, #667eea 50%, transparent 100%);
+}
+
+.divider-icon {
+  font-size: 2rem;
+  margin: 1rem 0;
+  animation: spin 3s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.timeline-insight {
+  margin-top: 2rem;
+}
+
+.insight-box {
+  background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.05) 100%);
+  border: 1px solid rgba(102, 126, 234, 0.3);
+  border-radius: 12px;
+  padding: 1.5rem;
+  text-align: center;
+}
+
+.insight-box h4 {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: 0.8rem;
+  color: #667eea;
+}
+
+.insight-box p {
+  color: #e7e9ea;
+  line-height: 1.6;
+  margin: 0;
+}
+
+@media (max-width: 768px) {
+  .timeline-comparison {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+  
+  .timeline-divider {
+    flex-direction: row;
+    justify-content: center;
+    height: auto;
+  }
+  
+  .divider-line {
+    width: 50px;
+    height: 2px;
+    background: linear-gradient(90deg, transparent 0%, #667eea 50%, transparent 100%);
+  }
+  
+  .archeology-title {
+    font-size: 2rem;
   }
 }
 

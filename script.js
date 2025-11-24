@@ -3290,3 +3290,195 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 });
+
+// ========== DIGITAL ARCHEOLOGY TIMELINE ==========
+document.addEventListener('DOMContentLoaded', () => {
+  const ageInput = document.getElementById('ageInput');
+  const ageValue = document.getElementById('ageValue');
+  const generateBtn = document.getElementById('generateTimeline');
+  const timeline = document.getElementById('internetTimeline');
+  
+  if (!ageInput || !generateBtn) return;
+
+  // Update age display as slider moves
+  ageInput.addEventListener('input', () => {
+    ageValue.textContent = ageInput.value;
+  });
+
+  // Internet evolution data by era
+  const internetEras = {
+    early2000s: {
+      title: "Early 2000s - Wild Web",
+      features: [
+        {
+          title: "Personal Websites & Blogs",
+          description: "GeoCities, Angelfire, and personal blogs were how people expressed themselves online"
+        },
+        {
+          title: "Forum Communities", 
+          description: "Deep discussions in niche forums where people built real relationships over shared interests"
+        },
+        {
+          title: "Flash Games & Art",
+          description: "Newgrounds and creative Flash content made by passionate individuals"
+        },
+        {
+          title: "AIM & MSN Messenger",
+          description: "Real-time chat with friends, custom away messages, and genuine social connection"
+        },
+        {
+          title: "Web Rings",
+          description: "Curated collections of websites linking similar interests - human-driven discovery"
+        }
+      ]
+    },
+    late2000s: {
+      title: "Late 2000s - Social Dawn",
+      features: [
+        {
+          title: "Early Facebook & MySpace",
+          description: "Social networks focused on connecting real friends and self-expression"
+        },
+        {
+          title: "YouTube Creators",
+          description: "Genuine creators sharing passions - no algorithms, just chronological feeds"
+        },
+        {
+          title: "Wikipedia Growth",
+          description: "Collaborative knowledge building by volunteers passionate about sharing information"
+        },
+        {
+          title: "Indie Game Development",
+          description: "Small developers creating unique games without corporate interference"
+        },
+        {
+          title: "Open Source Movement",
+          description: "Developers freely sharing code and collaborating on projects for the greater good"
+        }
+      ]
+    },
+    early2010s: {
+      title: "Early 2010s - Platform Rise",
+      features: [
+        {
+          title: "Twitter Conversations",
+          description: "Real-time global conversations about current events with mostly human participants"
+        },
+        {
+          title: "Instagram Photography", 
+          description: "Authentic photo sharing of real moments and artistic expression"
+        },
+        {
+          title: "Reddit Communities",
+          description: "Diverse communities with human moderation and organic content discovery"
+        },
+        {
+          title: "Crowd-Funded Creativity",
+          description: "Kickstarter and other platforms connecting creators directly with supporters"
+        },
+        {
+          title: "Smartphone Adoption",
+          description: "Mobile internet enabling more authentic, in-the-moment sharing"
+        }
+      ]
+    },
+    today: {
+      title: "Today (2025) - Algorithm World",
+      features: [
+        {
+          title: "Algorithmic Feeds",
+          description: "AI determines what you see based on engagement metrics, not chronological order"
+        },
+        {
+          title: "Bot-Driven Engagement",
+          description: "Automated likes, comments, and shares creating artificial viral content"
+        },
+        {
+          title: "SEO Content Farms",
+          description: "Articles written by AI for search engines, not human readers"
+        },
+        {
+          title: "Influencer Marketing",
+          description: "Sponsored content and artificial authenticity optimized for maximum reach"
+        },
+        {
+          title: "Echo Chamber Algorithms",
+          description: "Filter bubbles created by AI that limit exposure to diverse perspectives"
+        },
+        {
+          title: "Synthetic Media",
+          description: "AI-generated images, videos, and text becoming indistinguishable from human-created content"
+        }
+      ]
+    }
+  };
+
+  generateBtn.addEventListener('click', () => {
+    const age = parseInt(ageInput.value);
+    const currentYear = 2025;
+    const birthYear = currentYear - age;
+    
+    // Determine what era they experienced
+    let thenEra, thenPeriod;
+    if (birthYear <= 1995) { // 30+ years old
+      thenEra = internetEras.early2000s;
+      thenPeriod = "Early 2000s";
+    } else if (birthYear <= 2000) { // 25-30 years old
+      thenEra = internetEras.late2000s;
+      thenPeriod = "Late 2000s";
+    } else if (birthYear <= 2005) { // 20-25 years old
+      thenEra = internetEras.early2010s;
+      thenPeriod = "Early 2010s";
+    } else { // Under 20
+      thenEra = internetEras.early2010s;
+      thenPeriod = "Early 2010s";
+    }
+
+    // Update timeline content
+    document.getElementById('timelineTitle').textContent = `Your Internet Journey (Born ${birthYear})`;
+    document.getElementById('timelineSubtitle').textContent = `This is what the internet looked like when you were growing up`;
+    document.getElementById('thenPeriodTitle').textContent = thenPeriod;
+    
+    // Populate then content
+    const thenContent = document.getElementById('thenContent');
+    thenContent.innerHTML = '';
+    thenEra.features.forEach(feature => {
+      const featureDiv = document.createElement('div');
+      featureDiv.className = 'internet-feature';
+      featureDiv.innerHTML = `
+        <div class="feature-title">${feature.title}</div>
+        <div class="feature-description">${feature.description}</div>
+      `;
+      thenContent.appendChild(featureDiv);
+    });
+
+    // Populate now content  
+    const nowContent = document.getElementById('nowContent');
+    nowContent.innerHTML = '';
+    internetEras.today.features.forEach(feature => {
+      const featureDiv = document.createElement('div');
+      featureDiv.className = 'internet-feature';
+      featureDiv.innerHTML = `
+        <div class="feature-title">${feature.title}</div>
+        <div class="feature-description">${feature.description}</div>
+      `;
+      nowContent.appendChild(featureDiv);
+    });
+
+    // Update insight based on age
+    let insight;
+    if (age >= 30) {
+      insight = "You witnessed the internet's transformation from a creative, human-driven space to an algorithm-dominated environment. Your early internet was about genuine connection and self-expression.";
+    } else if (age >= 20) {
+      insight = "You experienced the transition period where social media began prioritizing engagement over authenticity. You've seen both sides of the digital revolution.";
+    } else {
+      insight = "You've primarily known the algorithm-driven internet. The 'old web' was more chaotic but also more human - every interaction felt more genuine and personal.";
+    }
+    
+    document.getElementById('timelineInsight').textContent = insight;
+    
+    // Show the timeline with animation
+    timeline.style.display = 'block';
+    timeline.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  });
+});
