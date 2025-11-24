@@ -2,7 +2,16 @@
    GLOBAL STYLE GUIDE & DESIGN SYSTEM
    X (Twitter) Dark Mode Aesthetic
    ======================================== */
-
+html {
+  font-size: 16px;  /* lock rem baseline */
+}
+body {
+  margin: 0;
+  height: 100%;
+  font-family: var(--font-system);
+  scroll-behavior: smooth;
+  overflow: hidden;  /* keep your current scroll model for now */
+}
 :root {
   /* X (Twitter) Dark Mode Color Palette */
   --primary-dark: #000000;          /* Pure black background */
