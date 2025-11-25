@@ -376,6 +376,8 @@ if (section6) {
 }
 
 // Wait for DOM content to be loaded before creating the pie chart
+// NOTE: This chart is disabled as the #chart element is commented out in HTML
+/*
 document.addEventListener('DOMContentLoaded', () => {
   try {
     console.log('Creating pie chart...');
@@ -389,13 +391,13 @@ document.addEventListener('DOMContentLoaded', () => {
       .range(["#286cd8ff", "#ec1010ff"]);
 
     // Create the SVG container
-    const chartDiv = document.getElementById('chart-ignored');
+    const chartDiv = document.getElementById('chart');
     if (!chartDiv) {
-      console.error('#chart-ignored element not found');
+      console.error('#chart element not found');
       return;
     }
 
-    const svg = d3.select("#chart-ignored")
+    const svg = d3.select("#chart")
       .append("svg")
       .attr("width", width)
       .attr("height", height)
@@ -451,6 +453,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 });
+*/
 
 // ========== BOT PREDICTION INTERACTIVE ==========
 document.addEventListener('DOMContentLoaded', () => {
@@ -1191,12 +1194,14 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // ========== BOT ENGAGEMENT CHARTS ==========
+// NOTE: This chart is disabled as the #chart-ignored element is commented out in HTML
+/*
 document.addEventListener('DOMContentLoaded', async () => {
-  const chartDiv = d3.select("#chart-ignored");
+  const chartDiv = d3.select("#chart");
   const tooltip = d3.select(".tooltip");
 
   if (chartDiv.empty()) {
-    console.warn('No #chart-ignored element found; skipping chart');
+    console.warn('No #chart element found; skipping chart');
     return;
   }
 
@@ -1539,6 +1544,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       .text('Error loading data. Check console for details.');
   }
 });
+*/
 
 // ========================================
 // PREDICTION SECTION INTERACTION
@@ -1578,9 +1584,26 @@ document.addEventListener('DOMContentLoaded', () => {
 // GOOGLE SEARCH TREND CHART
 // ========================================
 document.addEventListener('DOMContentLoaded', () => {
+  console.log('DOM loaded, checking for chart requirements...');
+  
+  // Check if d3 is available
+  if (typeof d3 === 'undefined') {
+    console.error('D3.js library not loaded!');
+    return;
+  }
+  console.log('D3.js is available:', d3.version);
+  
   const chartContainer = document.getElementById('searchTrendChart');
   
-  if (!chartContainer) return;
+  if (!chartContainer) {
+    console.error('Chart container #searchTrendChart not found!');
+    return;
+  }
+  
+  console.log('Chart container found:', chartContainer);
+  
+  // Add a test element to verify the container is working
+  chartContainer.innerHTML = '<div style="background: rgba(29, 155, 240, 0.2); padding: 20px; text-align: center; color: white;">Chart container is ready...</div>';
   
   let currentData = [];
   let svg, xScale, yScale, line, area, path, dots, peakCircle, peakLabel;
@@ -1614,10 +1637,302 @@ document.addEventListener('DOMContentLoaded', () => {
     if (instr) { instr.style.display = 'none'; instr.setAttribute('aria-hidden', 'true'); }
   }
 
-  d3.text('search_traffic_worldwide_2020.csv').then(text => {
+  // Embedded CSV data from search_traffic_worldwide_2020.csv
+  const csvData = `Category: All categories
+
+Week,Dead Internet Theory: (Worldwide)
+2020-11-22,0
+2020-11-29,0
+2020-12-06,0
+2020-12-13,0
+2020-12-20,0
+2020-12-27,0
+2021-01-03,0
+2021-01-10,0
+2021-01-17,0
+2021-01-24,0
+2021-01-31,0
+2021-02-07,0
+2021-02-14,0
+2021-02-21,0
+2021-02-28,0
+2021-03-07,0
+2021-03-14,0
+2021-03-21,0
+2021-03-28,0
+2021-04-04,0
+2021-04-11,0
+2021-04-18,0
+2021-04-25,0
+2021-05-02,0
+2021-05-09,0
+2021-05-16,0
+2021-05-23,0
+2021-05-30,0
+2021-06-06,0
+2021-06-13,0
+2021-06-20,0
+2021-06-27,0
+2021-07-04,0
+2021-07-11,0
+2021-07-18,0
+2021-07-25,0
+2021-08-01,0
+2021-08-08,0
+2021-08-15,0
+2021-08-22,0
+2021-08-29,0
+2021-09-05,0
+2021-09-12,0
+2021-09-19,0
+2021-09-26,0
+2021-10-03,0
+2021-10-10,0
+2021-10-17,0
+2021-10-24,0
+2021-10-31,0
+2021-11-07,0
+2021-11-14,0
+2021-11-21,0
+2021-11-28,0
+2021-12-05,0
+2021-12-12,0
+2021-12-19,0
+2021-12-26,0
+2022-01-02,0
+2022-01-09,0
+2022-01-16,0
+2022-01-23,0
+2022-01-30,0
+2022-02-06,0
+2022-02-13,0
+2022-02-20,0
+2022-02-27,0
+2022-03-06,0
+2022-03-13,0
+2022-03-20,0
+2022-03-27,0
+2022-04-03,0
+2022-04-10,0
+2022-04-17,0
+2022-04-24,0
+2022-05-01,0
+2022-05-08,0
+2022-05-15,0
+2022-05-22,0
+2022-05-29,0
+2022-06-05,0
+2022-06-12,0
+2022-06-19,0
+2022-06-26,0
+2022-07-03,0
+2022-07-10,0
+2022-07-17,0
+2022-07-24,0
+2022-07-31,0
+2022-08-07,0
+2022-08-14,0
+2022-08-21,0
+2022-08-28,0
+2022-09-04,0
+2022-09-11,0
+2022-09-18,0
+2022-09-25,0
+2022-10-02,0
+2022-10-09,0
+2022-10-16,0
+2022-10-23,0
+2022-10-30,0
+2022-11-06,0
+2022-11-13,0
+2022-11-20,0
+2022-11-27,0
+2022-12-04,0
+2022-12-11,0
+2022-12-18,0
+2022-12-25,0
+2023-01-01,0
+2023-01-08,0
+2023-01-15,0
+2023-01-22,0
+2023-01-29,0
+2023-02-05,0
+2023-02-12,0
+2023-02-19,0
+2023-02-26,0
+2023-03-05,0
+2023-03-12,0
+2023-03-19,0
+2023-03-26,1
+2023-04-02,1
+2023-04-09,1
+2023-04-16,1
+2023-04-23,1
+2023-04-30,1
+2023-05-07,1
+2023-05-14,4
+2023-05-21,2
+2023-05-28,3
+2023-06-04,2
+2023-06-11,1
+2023-06-18,1
+2023-06-25,2
+2023-07-02,2
+2023-07-09,2
+2023-07-16,2
+2023-07-23,2
+2023-07-30,2
+2023-08-06,2
+2023-08-13,1
+2023-08-20,1
+2023-08-27,1
+2023-09-03,1
+2023-09-10,1
+2023-09-17,1
+2023-09-24,1
+2023-10-01,2
+2023-10-08,1
+2023-10-15,1
+2023-10-22,1
+2023-10-29,4
+2023-11-05,5
+2023-11-12,3
+2023-11-19,6
+2023-11-26,10
+2023-12-03,4
+2023-12-10,4
+2023-12-17,4
+2023-12-24,5
+2023-12-31,6
+2024-01-07,13
+2024-01-14,12
+2024-01-21,8
+2024-01-28,6
+2024-02-04,6
+2024-02-11,6
+2024-02-18,10
+2024-02-25,9
+2024-03-03,7
+2024-03-10,13
+2024-03-17,9
+2024-03-24,63
+2024-03-31,100
+2024-04-07,45
+2024-04-14,18
+2024-04-21,16
+2024-04-28,14
+2024-05-05,12
+2024-05-12,10
+2024-05-19,10
+2024-05-26,9
+2024-06-02,7
+2024-06-09,7
+2024-06-16,10
+2024-06-23,8
+2024-06-30,11
+2024-07-07,53
+2024-07-14,23
+2024-07-21,17
+2024-07-28,29
+2024-08-04,23
+2024-08-11,18
+2024-08-18,19
+2024-08-25,18
+2024-09-01,16
+2024-09-08,15
+2024-09-15,16
+2024-09-22,21
+2024-09-29,20
+2024-10-06,24
+2024-10-13,19
+2024-10-20,19
+2024-10-27,17
+2024-11-03,37
+2024-11-10,17
+2024-11-17,14
+2024-11-24,12
+2024-12-01,13
+2024-12-08,18
+2024-12-15,20
+2024-12-22,33
+2024-12-29,59
+2025-01-05,32
+2025-01-12,25
+2025-01-19,29
+2025-01-26,29
+2025-02-02,21
+2025-02-09,27
+2025-02-16,24
+2025-02-23,18
+2025-03-02,22
+2025-03-09,23
+2025-03-16,20
+2025-03-23,21
+2025-03-30,20
+2025-04-06,21
+2025-04-13,22
+2025-04-20,19
+2025-04-27,22
+2025-05-04,27
+2025-05-11,24
+2025-05-18,23
+2025-05-25,25
+2025-06-01,22
+2025-06-08,18
+2025-06-15,20
+2025-06-22,19
+2025-06-29,16
+2025-07-06,19
+2025-07-13,42
+2025-07-20,16
+2025-07-27,21
+2025-08-03,19
+2025-08-10,16
+2025-08-17,16
+2025-08-24,13
+2025-08-31,20
+2025-09-07,26
+2025-09-14,18
+2025-09-21,21
+2025-09-28,19
+2025-10-05,22
+2025-10-12,24
+2025-10-19,27
+2025-10-26,20
+2025-11-02,20
+2025-11-09,14
+2025-11-16,15
+2025-11-23,17`;
+
+  // Try to load the CSV file first, then fall back to embedded data
+  console.log('Starting data loading process...');
+  
+  // For immediate testing, let's create a simple test chart first
+  setTimeout(() => {
+    chartContainer.innerHTML = '<div style="background: rgba(29, 155, 240, 0.2); padding: 20px; text-align: center; color: white;">Loading chart data...</div>';
+    
+    d3.text('search_traffic_worldwide_2020.csv')
+      .then(text => {
+        console.log('Successfully loaded CSV file from disk');
+        chartContainer.innerHTML = '<div style="background: rgba(0, 255, 0, 0.2); padding: 20px; text-align: center; color: white;">CSV loaded successfully</div>';
+        return processCSVText(text);
+      })
+      .catch(error => {
+        console.warn('Could not load CSV file, using embedded data:', error);
+        chartContainer.innerHTML = '<div style="background: rgba(255, 255, 0, 0.2); padding: 20px; text-align: center; color: white;">Using embedded data</div>';
+        return processCSVText(csvData);
+      });
+  }, 1000);
+
+  function processCSVText(text) {
+    console.log('processCSVText function called!');
     try {
+      console.log('Processing CSV text, length:', text.length);
+      chartContainer.innerHTML = '<div style="background: rgba(0, 0, 255, 0.2); padding: 20px; text-align: center; color: white;">Processing data...</div>';
+      
       // Split into lines and find the header row that starts with "Week"
       const lines = text.split('\n');
+      console.log('CSV lines:', lines.length);
       let dataStartIndex = 0;
       
       // Find where the actual data starts (after the "Week,Dead Internet Theory:" header)
@@ -1645,46 +1960,66 @@ document.addEventListener('DOMContentLoaded', () => {
 
       if (allData.length === 0) {
         console.error('No valid data found in CSV');
-        showNotice();
+        // Fallback to realistic sample data
+        const realisticSampleData = createRealisticSampleData();
+        currentData = realisticSampleData;
+        updateStats(realisticSampleData);
+        renderChart(realisticSampleData);
+        setupControls(realisticSampleData);
         return;
       }
 
       console.log(`Successfully loaded ${allData.length} data points from CSV`);
       console.log('First few data points:', allData.slice(0, 5));
       console.log('Last few data points:', allData.slice(-5));
+      console.log('Date range:', d3.extent(allData, d => d.date));
+      console.log('Value range:', d3.extent(allData, d => d.value));
 
       currentData = allData;
+      
+      // Clear the status message
+      chartContainer.innerHTML = '';
+      console.log('Cleared container, about to call functions...');
 
       // Update stats
-      updateStats(allData);
+      console.log('Calling updateStats...');
+      try {
+        updateStats(allData);
+        console.log('updateStats completed');
+      } catch (error) {
+        console.error('Error in updateStats:', error);
+      }
 
+      console.log('About to render chart...');
       // Initial render
-      renderChart(allData);
+      try {
+        renderChart(allData);
+        console.log('renderChart call completed');
+      } catch (error) {
+        console.error('Error in renderChart:', error);
+      }
 
       // Setup interactive controls
-      setupControls(allData);
+      console.log('Setting up controls...');
+      try {
+        setupControls(allData);
+        console.log('setupControls completed');
+      } catch (error) {
+        console.error('Error in setupControls:', error);
+      }
+      
+      console.log('All initialization complete!');
+      
     } catch (e) {
-      console.error('Error parsing search trend data:', e);
-      showNotice();
+      console.error('Error parsing CSV data:', e);
+      // Fallback to realistic sample data
+      const realisticSampleData = createRealisticSampleData();
+      currentData = realisticSampleData;
+      updateStats(realisticSampleData);
+      renderChart(realisticSampleData);
+      setupControls(realisticSampleData);
     }
-
-  }).catch(error => {
-    console.warn('Search trend CSV not available locally, using sample data:', error);
-    // Use realistic sample data based on the actual CSV structure
-    const realisticSampleData = createRealisticSampleData();
-    currentData = realisticSampleData;
-    
-    // Update stats
-    updateStats(realisticSampleData);
-
-    // Initial render
-    renderChart(realisticSampleData);
-
-    // Setup interactive controls
-    setupControls(realisticSampleData);
-    
-    hideNotice(); // Hide the notice since we're loading data automatically
-  });
+  }
   
   function updateStats(data) {
     // Calculate sustained attention metrics (2023-2025)
@@ -1703,9 +2038,15 @@ document.addEventListener('DOMContentLoaded', () => {
     const firstNonZero = data.find(d => d.value > 0);
     const growth = firstNonZero ? (((avgRecent - firstNonZero.value) / Math.max(firstNonZero.value, 1)) * 100).toFixed(0) : '∞';
     
-    document.getElementById('avgRecent').textContent = avgRecent;
-    document.getElementById('consistentMonths').textContent = consistentMonths;
-    document.getElementById('growthRate').textContent = growth === 'Infinity' ? '∞' : `+${growth}%`;
+    const avgRecentEl = document.getElementById('avgRecent');
+    const consistentMonthsEl = document.getElementById('consistentMonths');
+    const growthRateEl = document.getElementById('growthRate');
+    
+    if (avgRecentEl) avgRecentEl.textContent = avgRecent;
+    if (consistentMonthsEl) consistentMonthsEl.textContent = consistentMonths;
+    if (growthRateEl) growthRateEl.textContent = growth === 'Infinity' ? '∞' : `+${growth}%`;
+    
+    console.log('Stats updated:', { avgRecent, consistentMonths, growth });
   }
   
   function setupControls(allData) {
@@ -1742,6 +2083,13 @@ document.addEventListener('DOMContentLoaded', () => {
   }
   
   function renderChart(data) {
+    console.log('renderChart called with data:', data?.length, 'points');
+    
+    if (!data || data.length === 0) {
+      console.error('No data provided to renderChart');
+      return;
+    }
+    
     // Clear previous chart
     d3.select('#searchTrendChart').selectAll('*').remove();
     
@@ -1758,6 +2106,8 @@ document.addEventListener('DOMContentLoaded', () => {
       .attr('width', width + margin.left + margin.right)
       .attr('height', height + margin.top + margin.bottom)
       .style('display', 'block')
+      .style('margin', '0 auto')
+      .style('background', 'rgba(0,0,0,0.1)') // Temporary background to see the chart area
       .style('margin', '0 auto')
       .append('g')
       .attr('transform', `translate(${margin.left},${margin.top})`);
@@ -1847,10 +2197,17 @@ document.addEventListener('DOMContentLoaded', () => {
       .ease(d3.easeLinear)
       .attr('stroke-dashoffset', 0);
     
-    // Add axes with readable text
+    // Add axes with readable text - dynamic formatting based on data range
+    const dataRange = d3.extent(data, d => d.date);
+    const daysDifference = (dataRange[1] - dataRange[0]) / (1000 * 60 * 60 * 24);
+    
+    // Use detailed date format for zoomed views (less than 120 days), month/year for full view
+    const dateFormat = daysDifference <= 120 ? d3.timeFormat('%b %d, %Y') : d3.timeFormat('%b \'%y');
+    const tickCount = daysDifference <= 120 ? 6 : 10;
+    
     const xAxis = d3.axisBottom(xScale)
-      .ticks(10)
-      .tickFormat(d3.timeFormat('%b \'%y'))
+      .ticks(tickCount)
+      .tickFormat(dateFormat)
       .tickSize(8)
       .tickPadding(8);
     
@@ -1864,12 +2221,12 @@ document.addEventListener('DOMContentLoaded', () => {
       .attr('transform', `translate(0,${height})`)
       .call(xAxis)
       .selectAll('text')
-      .style('text-anchor', 'end')
-      .style('font-size', '11px')
+      .style('text-anchor', daysDifference <= 120 ? 'middle' : 'end')
+      .style('font-size', daysDifference <= 120 ? '10px' : '11px')
       .style('font-weight', '600')
-      .attr('dx', '-.8em')
-      .attr('dy', '.15em')
-      .attr('transform', 'rotate(-45)');
+      .attr('dx', daysDifference <= 120 ? '0' : '-.8em')
+      .attr('dy', daysDifference <= 120 ? '1.2em' : '.15em')
+      .attr('transform', daysDifference <= 120 ? 'rotate(0)' : 'rotate(-45)');
     
     svg.append('g')
       .attr('class', 'chart-axis')
@@ -1984,6 +2341,110 @@ document.addEventListener('DOMContentLoaded', () => {
         .duration(800)
         .style('opacity', 1);
     }
+    
+    // Store current scale for zoom functionality
+    window.currentXScale = xScale;
+    window.currentYScale = yScale;
+  }
+
+  // Function to add event line marker
+  function addEventLineMarker(eventKey) {
+    const event = eventsData[eventKey];
+    if (!event || !event.showLine || !window.currentXScale) return;
+    
+    const svg = d3.select('#searchTrendChart svg g');
+    
+    // Remove existing event lines
+    svg.selectAll('.event-line').remove();
+    
+    const x = window.currentXScale(event.date);
+    const height = window.currentYScale.range()[0];
+    
+    // Add vertical line
+    const line = svg.append('line')
+      .attr('class', 'event-line')
+      .attr('x1', x)
+      .attr('x2', x)
+      .attr('y1', 0)
+      .attr('y2', height)
+      .style('stroke', '#ff6b9d')
+      .style('stroke-width', '2px')
+      .style('stroke-dasharray', '5,5')
+      .style('opacity', 0)
+      .transition()
+      .duration(500)
+      .style('opacity', 1);
+    
+    // Add event label with hover functionality
+    const labelText = event.name.split(' (')[0].split(' - ')[0]; // Get short name
+    const label = svg.append('text')
+      .attr('class', 'event-line')
+      .attr('x', x + 10)
+      .attr('y', 20)
+      .style('fill', '#ff6b9d')
+      .style('font-size', '12px')
+      .style('font-weight', '600')
+      .style('cursor', event.articleUrl ? 'pointer' : 'default')
+      .text(labelText)
+      .style('opacity', 0)
+      .transition()
+      .duration(500)
+      .style('opacity', 1);
+    
+    // Add hover functionality only if there's an article URL
+    if (event.articleUrl) {
+      label.on('mouseover', function(event) {
+        d3.select(this).style('text-decoration', 'underline');
+        
+        // Show tooltip with link hint
+        const tooltip = d3.select('.tooltip');
+        tooltip
+          .html(`
+            <div>Click to view more information</div>
+            <div style="font-size: 11px; opacity: 0.8;">Opens external link</div>
+          `)
+          .classed('visible', true);
+        
+        positionTooltip(tooltip, event.pageX, event.pageY, 15, 15);
+      })
+      .on('mouseout', function() {
+        d3.select(this).style('text-decoration', 'none');
+        d3.select('.tooltip').classed('visible', false);
+      })
+      .on('click', function() {
+        window.open(event.articleUrl, '_blank');
+      });
+    }
+  }
+
+  // Function to zoom chart to specific date range
+  function zoomToEvent(eventKey) {
+    const event = eventsData[eventKey];
+    if (!event || !event.zoomRange) {
+      console.log('Event not found or missing zoom range:', eventKey);
+      return;
+    }
+    
+    console.log('Zooming to event:', event.name);
+    console.log('Zoom range:', event.zoomRange.start, 'to', event.zoomRange.end);
+    
+    // Filter data to zoom range
+    const zoomedData = currentData.filter(d => 
+      d.date >= event.zoomRange.start && d.date <= event.zoomRange.end
+    );
+    
+    console.log('Filtered data points:', zoomedData.length);
+    
+    if (zoomedData.length > 0) {
+      renderChart(zoomedData);
+      
+      // Add line marker after a short delay to ensure chart is rendered
+      setTimeout(() => {
+        addEventLineMarker(eventKey);
+      }, 100);
+    } else {
+      console.log('No data points found in zoom range');
+    }
   }
 
   // Generate a realistic dataset based on the actual CSV structure
@@ -2082,6 +2543,332 @@ document.addEventListener('DOMContentLoaded', () => {
   if (chartElement) {
     observer.observe(chartElement);
   }
+
+  // Key AI and Bot Innovation Events with search traffic data
+  const eventsData = {
+    'facebook-ai-policy': {
+      name: 'Facebook Response to "AI Slop" (March 31st, 2024)',
+      date: new Date('2024-03-31'),
+      peakValue: 95,
+      impact: 90,
+      description: 'Very High Impact',
+      articleUrl: 'https://about.fb.com/news/2024/04/metas-approach-to-labeling-ai-generated-content-and-manipulated-media/',
+      showLine: true,
+      zoomRange: {
+        start: new Date('2024-02-20'),
+        end: new Date('2024-05-20')
+      }
+    },
+    'chatgpt-launch': {
+      name: 'ChatGPT Launch (November 30th, 2022)',
+      date: new Date('2022-11-30'),
+      peakValue: 89,
+      impact: 75,
+      description: 'High Impact',
+      showLine: true,
+      zoomRange: {
+        start: new Date('2022-10-15'),
+        end: new Date('2023-01-15')
+      }
+    },
+    'gpt4-release': {
+      name: 'GPT-4 Release (March 14th, 2023)',
+      date: new Date('2023-03-14'),
+      peakValue: 142,
+      impact: 85,
+      description: 'Very High Impact',
+      showLine: true,
+      zoomRange: {
+        start: new Date('2023-01-30'),
+        end: new Date('2023-04-30')
+      }
+    },
+    'openai-board-crisis': {
+      name: 'OpenAI Board Crisis (November 26th, 2023)',
+      date: new Date('2023-11-26'),
+      peakValue: 78,
+      impact: 80,
+      description: 'High Impact',
+      showLine: true,
+      zoomRange: {
+        start: new Date('2023-10-12'),
+        end: new Date('2024-01-12')
+      }
+    },
+    'bing-ai': {
+      name: 'Bing AI Integration (February 7th, 2023)',
+      date: new Date('2023-02-07'),
+      peakValue: 78,
+      impact: 65,
+      description: 'Medium-High Impact',
+      showLine: true,
+      zoomRange: {
+        start: new Date('2022-12-22'),
+        end: new Date('2023-03-22')
+      }
+    },
+    'ai-regulation': {
+      name: 'EU AI Act Discussions (June 2023)',
+      date: new Date('2023-06-15'),
+      peakValue: 45,
+      impact: 55,
+      description: 'Medium Impact',
+      showLine: true,
+      zoomRange: {
+        start: new Date('2023-05-01'),
+        end: new Date('2023-08-01')
+      }
+    },
+    'twitter-bots': {
+      name: 'Twitter Bot Purge (October 2022)',
+      date: new Date('2022-10-15'),
+      peakValue: 35,
+      impact: 45,
+      description: 'Medium Impact',
+      showLine: true,
+      zoomRange: {
+        start: new Date('2022-09-01'),
+        end: new Date('2022-12-01')
+      }
+    }
+  };
+
+  // Function to add event line marker
+  function addEventLineMarker(eventKey) {
+    const event = eventsData[eventKey];
+    if (!event || !event.showLine || !xScale) return;
+    
+    const svgGroup = d3.select('#searchTrendChart svg g');
+    
+    // Remove existing event lines
+    svgGroup.selectAll('.event-line').remove();
+    
+    const x = xScale(event.date);
+    const height = yScale.range()[0];
+    
+    // Add vertical line with hover functionality
+    const line = svgGroup.append('line')
+      .attr('class', 'event-line')
+      .attr('x1', x)
+      .attr('x2', x)
+      .attr('y1', 0)
+      .attr('y2', height)
+      .style('stroke', '#ff6b9d')
+      .style('stroke-width', '2px')
+      .style('stroke-dasharray', '5,5')
+      .style('cursor', 'pointer')
+      .style('opacity', 0)
+      .transition()
+      .duration(500)
+      .style('opacity', 1);
+    
+    // Add hover functionality to the line
+    line.on('mouseover', function(mouseEvent) {
+      // Create tooltip content based on event
+      let tooltipContent = '';
+      if (eventKey === 'facebook-ai-policy') {
+        tooltipContent = `
+          <div style="font-weight: 600; margin-bottom: 8px;">${event.name}</div>
+          <div style="margin-bottom: 6px;">Meta introduces mandatory AI labeling policy requiring all AI-generated content to be clearly marked.</div>
+          <div style="font-size: 11px; opacity: 0.8; font-style: italic;">Click to read Meta's announcement</div>
+        `;
+      } else if (eventKey === 'chatgpt-launch') {
+        tooltipContent = `
+          <div style="font-weight: 600; margin-bottom: 8px;">${event.name}</div>
+          <div style="margin-bottom: 6px;">OpenAI launches ChatGPT to the public, sparking widespread AI adoption and concerns about AI-generated content.</div>
+        `;
+      } else if (eventKey === 'gpt4-release') {
+        tooltipContent = `
+          <div style="font-weight: 600; margin-bottom: 8px;">${event.name}</div>
+          <div style="margin-bottom: 6px;">OpenAI releases GPT-4, a major advancement in language models with improved capabilities and multimodal features.</div>
+        `;
+      } else if (eventKey === 'openai-board-crisis') {
+        tooltipContent = `
+          <div style="font-weight: 600; margin-bottom: 8px;">${event.name}</div>
+          <div style="margin-bottom: 6px;">Sam Altman is briefly ousted then reinstated as OpenAI CEO, highlighting AI governance concerns and industry instability.</div>
+        `;
+      } else if (eventKey === 'bing-ai') {
+        tooltipContent = `
+          <div style="font-weight: 600; margin-bottom: 8px;">${event.name}</div>
+          <div style="margin-bottom: 6px;">Microsoft integrates ChatGPT into Bing search, marking the first major AI integration in web search.</div>
+        `;
+      } else if (eventKey === 'ai-regulation') {
+        tooltipContent = `
+          <div style="font-weight: 600; margin-bottom: 8px;">${event.name}</div>
+          <div style="margin-bottom: 6px;">European Union discusses comprehensive AI regulation, addressing concerns about AI safety and transparency.</div>
+        `;
+      } else if (eventKey === 'twitter-bots') {
+        tooltipContent = `
+          <div style="font-weight: 600; margin-bottom: 8px;">${event.name}</div>
+          <div style="margin-bottom: 6px;">Twitter conducts major bot removal campaign, highlighting the scale of automated content on social platforms.</div>
+        `;
+      } else {
+        tooltipContent = `
+          <div style="font-weight: 600; margin-bottom: 8px;">${event.name}</div>
+          <div>Significant AI or bot-related event affecting internet discourse.</div>
+        `;
+      }
+      
+      // Show tooltip
+      const tooltip = d3.select('body').selectAll('.line-tooltip').data([1]);
+      const tooltipEnter = tooltip.enter().append('div').attr('class', 'line-tooltip');
+      
+      const tooltipMerged = tooltip.merge(tooltipEnter)
+        .style('position', 'absolute')
+        .style('background', 'rgba(0, 0, 0, 0.95)')
+        .style('color', 'white')
+        .style('padding', '12px')
+        .style('border-radius', '8px')
+        .style('font-size', '13px')
+        .style('line-height', '1.4')
+        .style('max-width', '300px')
+        .style('box-shadow', '0 4px 12px rgba(0, 0, 0, 0.3)')
+        .style('border', '1px solid #ff6b9d')
+        .style('z-index', '1000')
+        .style('opacity', 0)
+        .html(tooltipContent);
+      
+      // Position tooltip
+      const tooltipNode = tooltipMerged.node();
+      const rect = tooltipNode.getBoundingClientRect();
+      const x = mouseEvent.pageX;
+      const y = mouseEvent.pageY;
+      
+      let left = x + 15;
+      let top = y - rect.height - 10;
+      
+      // Adjust if tooltip goes off screen
+      if (left + rect.width > window.innerWidth) {
+        left = x - rect.width - 15;
+      }
+      if (top < 0) {
+        top = y + 15;
+      }
+      
+      tooltipMerged
+        .style('left', left + 'px')
+        .style('top', top + 'px')
+        .transition()
+        .duration(200)
+        .style('opacity', 1);
+    })
+    .on('mouseout', function() {
+      d3.select('.line-tooltip')
+        .transition()
+        .duration(200)
+        .style('opacity', 0)
+        .remove();
+    })
+    .on('click', function() {
+      if (event.articleUrl) {
+        window.open(event.articleUrl, '_blank');
+      }
+    });
+    
+    // Add event label with hover functionality
+    const labelText = event.name.split(' (')[0].split(' - ')[0];
+    const label = svgGroup.append('text')
+      .attr('class', 'event-line')
+      .attr('x', x + 10)
+      .attr('y', 20)
+      .style('fill', '#ff6b9d')
+      .style('font-size', '12px')
+      .style('font-weight', '600')
+      .style('cursor', event.articleUrl ? 'pointer' : 'default')
+      .text(labelText)
+      .style('opacity', 0)
+      .transition()
+      .duration(500)
+      .style('opacity', 1);
+    
+    // Add "Hover for more info" text next to the line
+    const hoverText = svgGroup.append('text')
+      .attr('class', 'event-line hover-hint')
+      .attr('x', x + 10)
+      .attr('y', height - 30)
+      .style('fill', '#ff6b9d')
+      .style('font-size', '10px')
+      .style('font-weight', '500')
+      .style('opacity', 0.8)
+      .style('font-style', 'italic')
+      .style('pointer-events', 'none')
+      .text('💡 Hover for info')
+      .style('opacity', 0)
+      .transition()
+      .duration(500)
+      .delay(300)
+      .style('opacity', 0.8);
+    
+    // Add hover functionality only if there's an article URL
+    if (event.articleUrl) {
+      label.on('mouseover', function(mouseEvent) {
+        d3.select(this).style('text-decoration', 'underline');
+      })
+      .on('mouseout', function() {
+        d3.select(this).style('text-decoration', 'none');
+      })
+      .on('click', function() {
+        window.open(event.articleUrl, '_blank');
+      });
+    }
+  }
+
+  // Function to zoom chart to specific date range
+  function zoomToEvent(eventKey) {
+    const event = eventsData[eventKey];
+    if (!event || !event.zoomRange) {
+      console.log('Event not found or missing zoom range:', eventKey);
+      return;
+    }
+    
+    console.log('Zooming to event:', event.name);
+    console.log('Zoom range:', event.zoomRange.start, 'to', event.zoomRange.end);
+    
+    // Filter data to zoom range
+    const zoomedData = currentData.filter(d => 
+      d.date >= event.zoomRange.start && d.date <= event.zoomRange.end
+    );
+    
+    console.log('Filtered data points:', zoomedData.length);
+    
+    if (zoomedData.length > 0) {
+      renderChart(zoomedData);
+      
+      // Add line marker after a short delay to ensure chart is rendered
+      setTimeout(() => {
+        addEventLineMarker(eventKey);
+      }, 200);
+    } else {
+      console.log('No data points found in zoom range');
+    }
+  }
+
+  // Set up event handling for dropdown
+  const eventSelect = document.getElementById('eventSelect');
+
+  if (eventSelect) {
+    eventSelect.addEventListener('change', () => {
+      const selectedEvent = eventSelect.value;
+      console.log('Event selected:', selectedEvent);
+      
+      // If no event selected (placeholder), show full chart
+      if (!selectedEvent || selectedEvent === '') {
+        console.log('Showing full chart');
+        renderChart(currentData);
+        return;
+      }
+      
+      // Find the event data for zoom and line marker functionality
+      const eventData = eventsData[selectedEvent];
+      
+      if (eventData && eventData.zoomRange && eventData.showLine) {
+        console.log('Zooming to event:', eventData.name);
+        zoomToEvent(selectedEvent);
+      } else {
+        console.log('Event data not found or missing zoom properties:', selectedEvent);
+      }
+    });
+  }
 });
 
 // ========================================
@@ -2100,40 +2887,78 @@ document.addEventListener('DOMContentLoaded', () => {
   
   // Key AI and Bot Innovation Events with search traffic data
   const eventsData = {
+    'facebook-ai-policy': {
+      name: 'Facebook adds first AI policy - everything has to say that it is made by AI (April 5th, 2024)',
+      date: new Date('2024-04-05'),
+      peakValue: 95,
+      impact: 90, // Very high impact
+      description: 'Very High Impact',
+      articleUrl: 'https://about.fb.com/news/2024/04/metas-approach-to-labeling-ai-generated-content-and-manipulated-media/',
+      showLine: true,
+      zoomRange: {
+        start: new Date('2024-03-15'),
+        end: new Date('2024-04-25')
+      }
+    },
     'chatgpt-launch': {
       name: 'ChatGPT Launch (November 30th, 2022)',
       date: new Date('2022-11-30'),
       peakValue: 89,
       impact: 75, // Medium-high impact
-      description: 'High Impact'
+      description: 'High Impact',
+      showLine: true,
+      zoomRange: {
+        start: new Date('2022-11-01'),
+        end: new Date('2022-12-31')
+      }
     },
     'gpt4-release': {
       name: 'GPT-4 Release (March 14th, 2023)',
       date: new Date('2023-03-14'),
       peakValue: 142,
       impact: 85, // High impact
-      description: 'Very High Impact'
+      description: 'Very High Impact',
+      showLine: true,
+      zoomRange: {
+        start: new Date('2023-02-15'),
+        end: new Date('2023-04-15')
+      }
     },
     'bing-ai': {
       name: 'Bing AI Integration (February 7th, 2023)',
       date: new Date('2023-02-07'),
       peakValue: 78,
       impact: 45, // Medium impact
-      description: 'Medium Impact'
+      description: 'Medium Impact',
+      showLine: true,
+      zoomRange: {
+        start: new Date('2023-01-15'),
+        end: new Date('2023-03-15')
+      }
     },
     'ai-regulation': {
       name: 'EU AI Act Discussions (June 2023)',
       date: new Date('2023-06-15'),
       peakValue: 156,
       impact: 80, // High impact
-      description: 'High Impact'
+      description: 'High Impact',
+      showLine: true,
+      zoomRange: {
+        start: new Date('2023-05-15'),
+        end: new Date('2023-07-15')
+      }
     },
     'twitter-bots': {
       name: 'Twitter Bot Purge (October 2022)',
       date: new Date('2022-10-15'),
       peakValue: 94,
       impact: 60, // Medium-high impact
-      description: 'Medium-High Impact'
+      description: 'Medium-High Impact',
+      showLine: true,
+      zoomRange: {
+        start: new Date('2022-09-15'),
+        end: new Date('2022-11-15')
+      }
     }
   };
   
@@ -2148,8 +2973,18 @@ document.addEventListener('DOMContentLoaded', () => {
   };
   
   function updateImpactIndicator(eventKey) {
+    if (!impactFill || !impactThumb) return;
+    
+    // Handle empty/placeholder selection
+    if (!eventKey || eventKey === '') {
+      impactFill.style.width = '0%';
+      impactThumb.style.left = '0%';
+      impactFill.style.background = 'linear-gradient(90deg, #71767B, #1D9BF0)';
+      return;
+    }
+    
     const event = eventsData[eventKey];
-    if (!event || !impactFill || !impactThumb || !impactValue) return;
+    if (!event) return;
     
     const impact = event.impact;
     const fillWidth = `${impact}%`;
@@ -2158,7 +2993,6 @@ document.addEventListener('DOMContentLoaded', () => {
     // Update the visual indicator
     impactFill.style.width = fillWidth;
     impactThumb.style.left = thumbPosition;
-    impactValue.textContent = event.description;
     
     // Add visual feedback based on impact level
     let glowColor = '#1D9BF0'; // Default blue
@@ -2457,6 +3291,30 @@ document.addEventListener('DOMContentLoaded', () => {
   // Event handlers
   if (eventSelect) {
     eventSelect.addEventListener('change', () => {
+      const selectedEvent = eventSelect.value;
+      
+      // Update impact indicator for any selection
+      updateImpactIndicator(selectedEvent);
+      
+      // If no event selected (placeholder), show full chart
+      if (!selectedEvent || selectedEvent === '') {
+        renderChart(currentData);
+        return;
+      }
+      
+      // Find the event data for zoom and line marker functionality
+      const eventData = eventsData[selectedEvent];
+      
+      if (eventData && eventData.zoomRange && eventData.showLine) {
+        console.log('Zooming to event:', eventData.name);
+        console.log('Zoom range:', eventData.zoomRange);
+        
+        // Zoom to the event's date range
+        zoomToEvent(selectedEvent);
+        return;
+      }
+      
+      // Fallback for events without zoom/line functionality
       if (baseSearchData.length > 0) {
         const enhancedData = updateVisualizationWithEvent(baseSearchData);
         if (window.updateChart) {
@@ -2479,7 +3337,13 @@ document.addEventListener('DOMContentLoaded', () => {
   
   // Initialize with Trump Georgia Arrest event
   setTimeout(() => {
-    updateImpactIndicator('chatgpt-launch');
+    // Set default impact indicator to neutral state (no event selected)
+    if (impactFill && impactThumb && impactValue) {
+      impactFill.style.width = '0%';
+      impactThumb.style.left = '0%';
+      impactValue.textContent = 'Select an event to see impact';
+      impactFill.style.background = 'linear-gradient(90deg, #71767B, #1D9BF0)';
+    }
     
     // Force chart visibility as fallback
     const chartElement = document.getElementById('searchTrendChart');
