@@ -1175,7 +1175,7 @@ svg {
 
 .impact-display {
   margin-bottom: 1.5rem;
-  padding: 1.25rem;
+  padding: 1.25rem 8px;
   background: linear-gradient(135deg, rgba(29, 155, 240, 0.08), rgba(255, 215, 0, 0.05));
   border-radius: 12px;
   border: 1px solid rgba(29, 155, 240, 0.2);
@@ -1199,15 +1199,16 @@ svg {
 
 .impact-indicator-container {
   margin-bottom: 1rem;
-  padding: 0 2rem;
+  padding: 0;
 }
 
 .impact-track {
   position: relative;
-  width: 100%;
+  width: 110%;
   height: 8px;
   background: linear-gradient(90deg, rgba(22, 24, 28, 0.6), rgba(29, 155, 240, 0.3));
   border-radius: 6px;
+  margin-left: -5%;
   margin-bottom: 1rem;
   overflow: hidden;
   border: 1px solid rgba(29, 155, 240, 0.1);
@@ -1253,7 +1254,7 @@ svg {
 
 .impact-labels {
   display: flex;
-  justify-content: space-between;
+  justify-content: center;
   align-items: center;
   color: var(--text-secondary);
   font-size: 0.75rem;

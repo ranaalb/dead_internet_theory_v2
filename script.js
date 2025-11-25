@@ -1602,6 +1602,10 @@ document.addEventListener('DOMContentLoaded', () => {
   
   console.log('Chart container found:', chartContainer);
   
+  // Global variables for overview chart functionality
+  let fullDataset = null;
+  let currentZoomRange = null;
+  
   // Add a test element to verify the container is working
   chartContainer.innerHTML = '<div style="background: rgba(29, 155, 240, 0.2); padding: 20px; text-align: center; color: white;">Chart container is ready...</div>';
   
@@ -2345,6 +2349,23 @@ Week,Dead Internet Theory: (Worldwide)
     // Store current scale for zoom functionality
     window.currentXScale = xScale;
     window.currentYScale = yScale;
+    
+    // Store full dataset and current zoom range
+    if (!fullDataset || data.length > (fullDataset?.length || 0) * 0.8) {
+      fullDataset = [...data];
+    }
+    
+    if (data.length > 0) {
+      currentZoomRange = {
+        start: d3.min(data, d => d.date),
+        end: d3.max(data, d => d.date)
+      };
+    }
+    
+    // Render overview chart after main chart
+    setTimeout(() => {
+      renderOverviewChart();
+    }, 500);
   }
 
   // Function to add event line marker
@@ -2375,45 +2396,54 @@ Week,Dead Internet Theory: (Worldwide)
       .duration(500)
       .style('opacity', 1);
     
-    // Add event label with hover functionality
-    const labelText = event.name.split(' (')[0].split(' - ')[0]; // Get short name
+    // Add event label next to the line
+    const labelText = event.description || event.name.split(' (')[0];
     const label = svg.append('text')
-      .attr('class', 'event-line')
-      .attr('x', x + 10)
-      .attr('y', 20)
+      .attr('class', 'event-line event-label')
+      .attr('x', x + 15)
+      .attr('y', 30)
       .style('fill', '#ff6b9d')
-      .style('font-size', '12px')
+      .style('font-size', '13px')
       .style('font-weight', '600')
-      .style('cursor', event.articleUrl ? 'pointer' : 'default')
+      .style('cursor', 'pointer')
       .text(labelText)
       .style('opacity', 0)
       .transition()
       .duration(500)
       .style('opacity', 1);
     
-    // Add hover functionality only if there's an article URL
-    if (event.articleUrl) {
-      label.on('mouseover', function(event) {
-        d3.select(this).style('text-decoration', 'underline');
-        
-        // Show tooltip with link hint
-        const tooltip = d3.select('.tooltip');
-        tooltip
-          .html(`
-            <div>Click to view more information</div>
-            <div style="font-size: 11px; opacity: 0.8;">Opens external link</div>
-          `)
-          .classed('visible', true);
-        
-        positionTooltip(tooltip, event.pageX, event.pageY, 15, 15);
-      })
-      .on('mouseout', function() {
-        d3.select(this).style('text-decoration', 'none');
-        d3.select('.tooltip').classed('visible', false);
-      })
-      .on('click', function() {
+    // Add hover functionality for detailed information
+    label.on('mouseover', function(mouseEvent) {
+      d3.select(this).style('text-decoration', 'underline');
+      
+      // Show detailed tooltip
+      const tooltip = d3.select('.tooltip');
+      tooltip
+        .html(`
+          <div style="font-weight: 600; margin-bottom: 8px;">${event.name}</div>
+          <div style="margin-bottom: 6px;">${event.description}</div>
+          <div style="font-size: 11px; opacity: 0.8;">Date: ${event.date.toLocaleDateString()}</div>
+          ${event.articleUrl ? '<div style="font-size: 11px; margin-top: 4px; color: #1D9BF0;">Click to view more information</div>' : ''}
+        `)
+        .classed('visible', true);
+      
+      positionTooltip(tooltip, mouseEvent.pageX, mouseEvent.pageY, 15, 15);
+    })
+    .on('mouseout', function() {
+      d3.select(this).style('text-decoration', 'none');
+      d3.select('.tooltip').classed('visible', false);
+    })
+    .on('click', function() {
+      if (event.articleUrl) {
         window.open(event.articleUrl, '_blank');
-      });
+      }
+    });
+    
+    // Update impact value display
+    const impactValue = document.getElementById('impactValue');
+    if (impactValue) {
+      impactValue.textContent = `${event.name} - High Impact Event`;
+      impactValue.style.color = '#ffd700';
     }
   }
 
@@ -2519,12 +2549,161 @@ Week,Dead Internet Theory: (Worldwide)
   }
   
   function updateChart(data) {
+    // Store current zoom range
+    if (data.length > 0) {
+      currentZoomRange = {
+        start: d3.min(data, d => d.date),
+        end: d3.max(data, d => d.date)
+      };
+    }
+    
     // Update scales
     xScale.domain(d3.extent(data, d => d.date));
     yScale.domain([0, d3.max(data, d => d.value) * 1.15]);
     
     // Clear and re-render
     renderChart(data);
+  }
+  
+  // Overview chart function
+  function renderOverviewChart() {
+    const overviewContainer = document.getElementById('overviewChart');
+    if (!overviewContainer || !fullDataset || fullDataset.length === 0) return;
+    
+    // Clear previous overview chart
+    d3.select('#overviewChart').selectAll('*').remove();
+    
+    const margin = { top: 8, right: 15, bottom: 15, left: 15 };
+    const containerWidth = overviewContainer.clientWidth || 800;
+    const width = containerWidth - margin.left - margin.right;
+    const height = 60 - margin.top - margin.bottom;
+    
+    const svg = d3.select('#overviewChart')
+      .append('svg')
+      .attr('width', containerWidth)
+      .attr('height', 60)
+      .append('g')
+      .attr('transform', `translate(${margin.left},${margin.top})`);
+    
+    // Scales for overview (always based on full dataset)
+    const xScale = d3.scaleTime()
+      .domain(d3.extent(fullDataset, d => d.date))
+      .range([0, width]);
+    
+    const yScale = d3.scaleLinear()
+      .domain(d3.extent(fullDataset, d => d.value))
+      .range([height, 0]);
+    
+    // Create area generator
+    const area = d3.area()
+      .x(d => xScale(d.date))
+      .y0(height)
+      .y1(d => yScale(d.value))
+      .curve(d3.curveMonotoneX);
+    
+    // Create line generator
+    const line = d3.line()
+      .x(d => xScale(d.date))
+      .y(d => yScale(d.value))
+      .curve(d3.curveMonotoneX);
+    
+    // Add area
+    svg.append('path')
+      .datum(fullDataset)
+      .attr('class', 'overview-area')
+      .attr('d', area)
+      .style('fill', 'rgba(29, 155, 240, 0.3)')
+      .style('opacity', 0.6);
+    
+    // Add line
+    svg.append('path')
+      .datum(fullDataset)
+      .attr('class', 'overview-line')
+      .attr('d', line)
+      .style('stroke', '#1D9BF0')
+      .style('stroke-width', '2px')
+      .style('fill', 'none');
+    
+    // Add selection indicator if we have current zoom range
+    if (currentZoomRange && currentZoomRange.start && currentZoomRange.end) {
+      const startX = xScale(currentZoomRange.start);
+      const endX = xScale(currentZoomRange.end);
+      
+      // Clamp values to valid range
+      const clampedStartX = Math.max(0, Math.min(width, startX));
+      const clampedEndX = Math.max(0, Math.min(width, endX));
+      
+      // Add selection rectangle
+      svg.append('rect')
+        .attr('class', 'zoom-selection')
+        .attr('x', clampedStartX)
+        .attr('y', 0)
+        .attr('width', Math.max(2, clampedEndX - clampedStartX))
+        .attr('height', height)
+        .style('fill', 'rgba(255, 107, 157, 0.4)')
+        .style('stroke', '#ff6b9d')
+        .style('stroke-width', '2px')
+        .style('opacity', 0.8);
+      
+      // Add selection handles
+      if (clampedStartX >= 0 && clampedStartX <= width) {
+        svg.append('rect')
+          .attr('class', 'zoom-handle-left')
+          .attr('x', clampedStartX - 2)
+          .attr('y', -2)
+          .attr('width', 4)
+          .attr('height', height + 4)
+          .style('fill', '#ff6b9d')
+          .style('cursor', 'ew-resize');
+      }
+      
+      if (clampedEndX >= 0 && clampedEndX <= width) {
+        svg.append('rect')
+          .attr('class', 'zoom-handle-right')
+          .attr('x', clampedEndX - 2)
+          .attr('y', -2)
+          .attr('width', 4)
+          .attr('height', height + 4)
+          .style('fill', '#ff6b9d')
+          .style('cursor', 'ew-resize');
+      }
+    }
+    
+    // Create brush for zooming
+    const brush = d3.brushX()
+      .extent([[0, 0], [width, height]])
+      .on('brush end', function(event) {
+        if (!event.selection) return;
+        
+        const [x0, x1] = event.selection;
+        const domain = [xScale.invert(x0), xScale.invert(x1)];
+        
+        // Filter data based on brush selection
+        const filteredData = fullDataset.filter(d => d.date >= domain[0] && d.date <= domain[1]);
+        
+        if (filteredData.length > 0) {
+          // Update current zoom range
+          currentZoomRange = {
+            start: domain[0],
+            end: domain[1]
+          };
+          
+          // Update main chart with filtered data
+          updateChart(filteredData);
+        }
+      });
+    
+    // Add brush
+    const brushGroup = svg.append('g')
+      .attr('class', 'brush')
+      .call(brush);
+    
+    // Style brush to be less prominent
+    brushGroup.selectAll('.selection')
+      .style('opacity', 0.1);
+    
+    brushGroup.selectAll('.handle')
+      .style('opacity', 0.3);
   }
   
   // Add scroll animation for chart appearance
@@ -2551,7 +2730,7 @@ Week,Dead Internet Theory: (Worldwide)
       date: new Date('2024-03-31'),
       peakValue: 95,
       impact: 90,
-      description: 'Very High Impact',
+      description: 'Meta introduces AI content labeling',
       articleUrl: 'https://about.fb.com/news/2024/04/metas-approach-to-labeling-ai-generated-content-and-manipulated-media/',
       showLine: true,
       zoomRange: {
@@ -2576,7 +2755,7 @@ Week,Dead Internet Theory: (Worldwide)
       date: new Date('2023-03-14'),
       peakValue: 142,
       impact: 85,
-      description: 'Very High Impact',
+      description: 'Advanced AI model with multimodal capabilities',
       showLine: true,
       zoomRange: {
         start: new Date('2023-01-30'),
@@ -2588,7 +2767,7 @@ Week,Dead Internet Theory: (Worldwide)
       date: new Date('2023-11-26'),
       peakValue: 78,
       impact: 80,
-      description: 'High Impact',
+      description: 'Sam Altman briefly ousted then reinstated',
       showLine: true,
       zoomRange: {
         start: new Date('2023-10-12'),
@@ -2765,21 +2944,28 @@ Week,Dead Internet Theory: (Worldwide)
       }
     });
     
-    // Add event label with hover functionality
-    const labelText = event.name.split(' (')[0].split(' - ')[0];
+    // Add event label with description next to the line
+    const eventDescription = event.description || event.name.split(' (')[0];
     const label = svgGroup.append('text')
-      .attr('class', 'event-line')
-      .attr('x', x + 10)
-      .attr('y', 20)
+      .attr('class', 'event-line event-description')
+      .attr('x', x + 15)
+      .attr('y', 30)
       .style('fill', '#ff6b9d')
-      .style('font-size', '12px')
+      .style('font-size', '13px')
       .style('font-weight', '600')
-      .style('cursor', event.articleUrl ? 'pointer' : 'default')
-      .text(labelText)
+      .style('cursor', 'pointer')
+      .text(eventDescription)
       .style('opacity', 0)
       .transition()
       .duration(500)
       .style('opacity', 1);
+
+    // Update impact value display
+    const impactValue = document.getElementById('impactValue');
+    if (impactValue) {
+      impactValue.textContent = `${event.name} - High Impact Event`;
+      impactValue.style.color = '#ffd700';
+    }
     
     // Add "Hover for more info" text next to the line
     const hoverText = svgGroup.append('text')
@@ -2855,6 +3041,13 @@ Week,Dead Internet Theory: (Worldwide)
       if (!selectedEvent || selectedEvent === '') {
         console.log('Showing full chart');
         renderChart(currentData);
+        
+        // Reset impact value to placeholder
+        const impactValue = document.getElementById('impactValue');
+        if (impactValue) {
+          impactValue.textContent = 'Select an event to see impact';
+          impactValue.style.color = '#ffd700';
+        }
         return;
       }
       
@@ -3065,6 +3258,10 @@ document.addEventListener('DOMContentLoaded', () => {
     return eventData;
   }
   
+  // Store full dataset globally for overview chart
+  let fullDataset = null;
+  let currentZoomRange = null;
+  
   // Store original functions and enhance them
   const originalUpdateChart = window.updateChart;
   const originalRenderChart = window.renderChart;
@@ -3072,6 +3269,20 @@ document.addEventListener('DOMContentLoaded', () => {
   // Enhanced render function
   function enhancedRenderChart(data) {
     baseSearchData = data; // Store the base data
+    
+    // Store full dataset if not already stored or if this is a larger dataset
+    if (!fullDataset || data.length > (fullDataset.length * 0.8)) {
+      fullDataset = [...data];
+    }
+    
+    // Store current zoom range
+    if (data.length > 0) {
+      currentZoomRange = {
+        start: d3.min(data, d => d.date),
+        end: d3.max(data, d => d.date)
+      };
+    }
+    
     const enhancedData = updateVisualizationWithEvent(data);
     
     if (originalRenderChart && typeof originalRenderChart === 'function') {
@@ -3087,15 +3298,23 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     }, 100);
     
-    // Render overview chart after main chart
+    // Always render overview chart with full dataset
     setTimeout(() => {
-      renderOverviewChart(enhancedData);
+      renderOverviewChart(fullDataset || enhancedData);
     }, 200);
   }
   
   // Enhanced update function
   function enhancedUpdateChart(data) {
     if (!data || !Array.isArray(data)) return;
+    
+    // Store current zoom range
+    if (data.length > 0) {
+      currentZoomRange = {
+        start: d3.min(data, d => d.date),
+        end: d3.max(data, d => d.date)
+      };
+    }
     
     // Apply event overlay to the data
     const enhancedData = updateVisualizationWithEvent(data);
@@ -3107,9 +3326,9 @@ document.addEventListener('DOMContentLoaded', () => {
       originalRenderChart.call(this, enhancedData);
     }
     
-    // Update overview chart
+    // Always update overview chart with full dataset
     setTimeout(() => {
-      renderOverviewChart(enhancedData);
+      renderOverviewChart(fullDataset || enhancedData);
     }, 200);
   }
   
@@ -3120,6 +3339,9 @@ document.addEventListener('DOMContentLoaded', () => {
   function renderOverviewChart(data) {
     const overviewContainer = document.getElementById('overviewChart');
     if (!overviewContainer || !data || data.length === 0) return;
+    
+    // Always use full dataset for overview
+    const overviewData = fullDataset || data;
     
     // Clear previous overview chart
     d3.select('#overviewChart').selectAll('*').remove();
@@ -3136,13 +3358,13 @@ document.addEventListener('DOMContentLoaded', () => {
       .append('g')
       .attr('transform', `translate(${margin.left},${margin.top})`);
     
-    // Scales for overview
+    // Scales for overview (always based on full dataset)
     const xScale = d3.scaleTime()
-      .domain(d3.extent(data, d => d.date))
+      .domain(d3.extent(overviewData, d => d.date))
       .range([0, width]);
     
     const yScale = d3.scaleLinear()
-      .domain(d3.extent(data, d => d.value))
+      .domain(d3.extent(overviewData, d => d.value))
       .range([height, 0]);
     
     // Create line generator
@@ -3160,15 +3382,52 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Add area
     svg.append('path')
-      .datum(data)
+      .datum(overviewData)
       .attr('class', 'overview-area')
       .attr('d', area);
     
     // Add line
     svg.append('path')
-      .datum(data)
+      .datum(overviewData)
       .attr('class', 'overview-line')
       .attr('d', line);
+    
+    // Add selection indicator if we have current zoom range
+    if (currentZoomRange && currentZoomRange.start && currentZoomRange.end) {
+      const startX = xScale(currentZoomRange.start);
+      const endX = xScale(currentZoomRange.end);
+      
+      // Add selection rectangle
+      svg.append('rect')
+        .attr('class', 'zoom-selection')
+        .attr('x', startX)
+        .attr('y', 0)
+        .attr('width', Math.max(2, endX - startX))
+        .attr('height', height)
+        .style('fill', 'rgba(29, 155, 240, 0.3)')
+        .style('stroke', '#1D9BF0')
+        .style('stroke-width', '2px')
+        .style('opacity', 0.8);
+      
+      // Add selection handles
+      svg.append('rect')
+        .attr('class', 'zoom-handle-left')
+        .attr('x', startX - 2)
+        .attr('y', -2)
+        .attr('width', 4)
+        .attr('height', height + 4)
+        .style('fill', '#1D9BF0')
+        .style('cursor', 'ew-resize');
+      
+      svg.append('rect')
+        .attr('class', 'zoom-handle-right')
+        .attr('x', endX - 2)
+        .attr('y', -2)
+        .attr('width', 4)
+        .attr('height', height + 4)
+        .style('fill', '#1D9BF0')
+        .style('cursor', 'ew-resize');
+    }
     
     // Create brush for zooming
     const brush = d3.brushX()
@@ -3180,9 +3439,15 @@ document.addEventListener('DOMContentLoaded', () => {
         const domain = [xScale.invert(x0), xScale.invert(x1)];
         
         // Filter data based on brush selection
-        const filteredData = data.filter(d => d.date >= domain[0] && d.date <= domain[1]);
+        const filteredData = overviewData.filter(d => d.date >= domain[0] && d.date <= domain[1]);
         
         if (filteredData.length > 0) {
+          // Update current zoom range
+          currentZoomRange = {
+            start: domain[0],
+            end: domain[1]
+          };
+          
           // Update main chart with filtered data
           updateMainChartWithBrush(filteredData);
         }
@@ -3198,19 +3463,13 @@ document.addEventListener('DOMContentLoaded', () => {
       .style('cursor', 'crosshair');
     
     brushGroup.selectAll('.selection')
-      .attr('class', 'overview-brush');
+      .attr('class', 'overview-brush')
+      .style('opacity', 0.1); // Make brush selection less prominent since we have our own indicator
     
     brushGroup.selectAll('.handle')
       .attr('class', 'overview-brush-handle')
-      .style('width', '6px');
-    
-    // Initialize brush to show recent data (last 6 months)
-    const endDate = d3.max(data, d => d.date);
-    const startDate = new Date(endDate);
-    startDate.setMonth(startDate.getMonth() - 6);
-    
-    const initialSelection = [xScale(startDate), xScale(endDate)];
-    brush.move(brushGroup, initialSelection);
+      .style('width', '6px')
+      .style('opacity', 0.3); // Make brush handles less prominent
   }
   
   function updateMainChartWithBrush(filteredData) {
