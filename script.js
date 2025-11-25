@@ -1612,9 +1612,169 @@ document.addEventListener('DOMContentLoaded', () => {
   let currentData = [];
   let svg, xScale, yScale, line, area, path, dots, peakCircle, peakLabel;
   
-  // Load the CSV data using d3.text to handle custom format
-  // We'll show an in-page notice if the CSV is missing or can't be parsed.
-  let sampleData = createSampleData();
+  // Country data configuration
+  const countryData = {
+    'us': { name: 'United States', flag: '🇺🇸', color: '#1f77b4', file: 'us_search.csv' },
+    'uk': { name: 'United Kingdom', flag: '🇬🇧', color: '#ff7f0e', file: 'uk_search.csv' },
+    'canada': { name: 'Canada', flag: '🇨🇦', color: '#2ca02c', file: 'canada_search.csv' },
+    'australia': { name: 'Australia', flag: '🇦🇺', color: '#d62728', file: 'aus_search.csv' },
+    'russia': { name: 'Russia', flag: '🇷🇺', color: '#9467bd', file: 'russia_search.csv' }
+  };
+  
+  // Track which countries are currently visible
+  let visibleCountries = new Set(['us', 'uk', 'canada', 'australia', 'russia']);
+  let allCountryData = {};
+
+  // Load data from CSV files
+  async function loadCountryData() {
+    try {
+      console.log('Loading country data...');
+      
+      for (const [countryCode, country] of Object.entries(countryData)) {
+        try {
+          const data = await d3.csv(`Datasets/${country.file}`);
+          
+          const processedData = data
+            .map(d => {
+              // Handle the column name which includes the country name
+              const dateStr = d.Week;
+              const valueStr = Object.values(d).find(v => v !== dateStr);
+              
+              if (!dateStr || !valueStr) return null;
+              
+              const date = d3.timeParse('%Y-%m-%d')(dateStr.trim());
+              const value = +valueStr;
+              
+              return { date, value, country: countryCode };
+            })
+            .filter(d => d && d.date && !isNaN(d.value));
+          
+          allCountryData[countryCode] = processedData;
+          console.log(`Loaded ${processedData.length} data points for ${country.name}`);
+        } catch (error) {
+          console.error(`Error loading ${country.name} data:`, error);
+          // Use sample data as fallback
+          allCountryData[countryCode] = createSampleDataForCountry(countryCode);
+        }
+      }
+      
+      // Combine visible country data
+      updateChartData();
+      
+    } catch (error) {
+      console.error('Error in loadCountryData:', error);
+      // Fallback to sample data for all countries
+      for (const countryCode of Object.keys(countryData)) {
+        allCountryData[countryCode] = createSampleDataForCountry(countryCode);
+      }
+      updateChartData();
+    }
+  }
+
+  // Start loading data
+  loadCountryData();
+
+  
+  function createSampleDataForCountry(countryCode) {
+    const baseData = createRealisticSampleData();
+    const multiplier = countryData[countryCode] === 'us' ? 1.0 : Math.random() * 0.8 + 0.4;
+    
+    return baseData.map(d => ({
+      date: d.date,
+      value: Math.round(d.value * multiplier),
+      country: countryCode
+    }));
+  }
+  
+  function updateChartData() {
+    // Combine data from all visible countries
+    currentData = [];
+    
+    for (const countryCode of visibleCountries) {
+      if (allCountryData[countryCode]) {
+        currentData = currentData.concat(allCountryData[countryCode]);
+      }
+    }
+    
+    if (currentData.length === 0) {
+      console.error('No data available');
+      return;
+    }
+    
+    console.log(`Combined data from ${visibleCountries.size} countries: ${currentData.length} points`);
+    
+    // Clear the container and render
+    chartContainer.innerHTML = '';
+    
+    // Update stats, render chart, and setup controls
+    updateStats(currentData);
+    renderChart(currentData);
+    setupControls(currentData);
+    createCountryControls();
+  }
+  
+  // Create flag button controls
+  function createCountryControls() {
+    const existingControls = document.getElementById('countryControls');
+    if (existingControls) {
+      existingControls.remove();
+    }
+    
+    const controlsContainer = document.createElement('div');
+    controlsContainer.id = 'countryControls';
+    controlsContainer.style.cssText = `
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      margin: 20px 0;
+      flex-wrap: wrap;
+    `;
+    
+    for (const [countryCode, country] of Object.entries(countryData)) {
+      const button = document.createElement('button');
+      button.innerHTML = `${country.flag} ${country.name}`;
+      button.style.cssText = `
+        padding: 8px 16px;
+        border: 2px solid ${country.color};
+        border-radius: 25px;
+        background: ${visibleCountries.has(countryCode) ? country.color + '30' : 'transparent'};
+        color: ${visibleCountries.has(countryCode) ? 'white' : country.color};
+        cursor: pointer;
+        font-size: 14px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      `;
+      
+      button.addEventListener('click', () => toggleCountry(countryCode));
+      button.addEventListener('mouseenter', () => {
+        button.style.background = country.color + '50';
+        button.style.transform = 'translateY(-2px)';
+      });
+      button.addEventListener('mouseleave', () => {
+        button.style.background = visibleCountries.has(countryCode) ? country.color + '30' : 'transparent';
+        button.style.transform = 'translateY(0)';
+      });
+      
+      controlsContainer.appendChild(button);
+    }
+    
+    // Insert controls before the chart
+    const chartContainer = document.getElementById('searchTrendChart');
+    chartContainer.parentNode.insertBefore(controlsContainer, chartContainer);
+  }
+  
+  function toggleCountry(countryCode) {
+    if (visibleCountries.has(countryCode)) {
+      visibleCountries.delete(countryCode);
+    } else {
+      visibleCountries.add(countryCode);
+    }
+    
+    updateChartData();
+  }
 
   function showNotice() {
     const notice = document.getElementById('searchTrendNotice');
@@ -2442,7 +2602,8 @@ Week,Dead Internet Theory: (Worldwide)
     // Update impact value display
     const impactValue = document.getElementById('impactValue');
     if (impactValue) {
-      impactValue.textContent = `${event.name} - High Impact Event`;
+      const impactText = getImpactLevelText(event.impact);
+      impactValue.textContent = `${event.name} - ${impactText}`;
       impactValue.style.color = '#ffd700';
     }
   }
@@ -2743,7 +2904,7 @@ Week,Dead Internet Theory: (Worldwide)
       date: new Date('2022-11-30'),
       peakValue: 89,
       impact: 75,
-      description: 'High Impact',
+      description: 'OpenAI launches ChatGPT to public',
       showLine: true,
       zoomRange: {
         start: new Date('2022-10-15'),
@@ -2811,6 +2972,23 @@ Week,Dead Internet Theory: (Worldwide)
       }
     }
   };
+  
+  // Function to determine impact level text based on numeric impact value
+  function getImpactLevelText(impactValue) {
+    if (impactValue >= 90) {
+      return 'Very High Impact';
+    } else if (impactValue >= 80) {
+      return 'High Impact';
+    } else if (impactValue >= 60) {
+      return 'Medium-High Impact';
+    } else if (impactValue >= 40) {
+      return 'Medium Impact';
+    } else if (impactValue >= 20) {
+      return 'Low-Medium Impact';
+    } else {
+      return 'Low Impact';
+    }
+  }
 
   // Function to add event line marker
   function addEventLineMarker(eventKey) {
@@ -2963,7 +3141,8 @@ Week,Dead Internet Theory: (Worldwide)
     // Update impact value display
     const impactValue = document.getElementById('impactValue');
     if (impactValue) {
-      impactValue.textContent = `${event.name} - High Impact Event`;
+      const impactText = getImpactLevelText(event.impact);
+      impactValue.textContent = `${event.name} - ${impactText}`;
       impactValue.style.color = '#ffd700';
     }
     
@@ -3155,6 +3334,23 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   };
   
+  // Function to determine impact level text based on numeric impact value
+  function getImpactLevelText(impactValue) {
+    if (impactValue >= 90) {
+      return 'Very High Impact';
+    } else if (impactValue >= 80) {
+      return 'High Impact';
+    } else if (impactValue >= 60) {
+      return 'Medium-High Impact';
+    } else if (impactValue >= 40) {
+      return 'Medium Impact';
+    } else if (impactValue >= 20) {
+      return 'Low-Medium Impact';
+    } else {
+      return 'Low Impact';
+    }
+  }
+  
   // Country multipliers to simulate different regional interests
   const countryMultipliers = {
     'worldwide': 1.0,
@@ -3173,6 +3369,13 @@ document.addEventListener('DOMContentLoaded', () => {
       impactFill.style.width = '0%';
       impactThumb.style.left = '0%';
       impactFill.style.background = 'linear-gradient(90deg, #71767B, #1D9BF0)';
+      
+      // Reset impact value text to placeholder
+      const impactValue = document.getElementById('impactValue');
+      if (impactValue) {
+        impactValue.textContent = 'Select an event to see impact';
+        impactValue.style.color = '#ffd700';
+      }
       return;
     }
     
@@ -3186,6 +3389,14 @@ document.addEventListener('DOMContentLoaded', () => {
     // Update the visual indicator
     impactFill.style.width = fillWidth;
     impactThumb.style.left = thumbPosition;
+    
+    // Update impact value text
+    const impactValue = document.getElementById('impactValue');
+    if (impactValue) {
+      const impactText = getImpactLevelText(event.impact);
+      impactValue.textContent = `${event.name} - ${impactText}`;
+      impactValue.style.color = '#ffd700';
+    }
     
     // Add visual feedback based on impact level
     let glowColor = '#1D9BF0'; // Default blue
