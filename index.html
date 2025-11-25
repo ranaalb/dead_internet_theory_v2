@@ -68,61 +68,95 @@
     <!-- Google Search Trend Section -->
     <section id="sectionTrend" class="section trend-section">
       <div class="trend-container">
-        <h2 class="trend-title">Dead Internet Theory" is gaining popularity</h2>
-        <p class="trend-subtitle">Google Search Interest: "Dead Internet Theory" (2020-2025)</p>
+        <h2 class="trend-title">Dead Internet Theory Has Been Trending Worldwide</h2>
+        <p class="trend-subtitle">Search traffic peaks correlated with major AI and bot innovation events</p>
         
-        <div class="chart-controls">
-          <button class="chart-btn active" data-view="all">
-            <i class="fas fa-chart-area"></i> Full Timeline
-          </button>
-          <button class="chart-btn" data-view="recent">
-            <i class="fas fa-calendar-alt"></i> Last 2 Years
-          </button>
-          <button class="chart-btn" data-view="peak">
-            <i class="fas fa-mountain"></i> Peak Period
-          </button>
-        </div>
+        <div class="trend-layout">
+          <!-- Charts Area (Main + Overview) -->
+          <div class="charts-area">
+            <div class="chart-controls">
+              <!-- Chart controls can go here if needed -->
+            </div>
 
-        <!-- Notice shown when local CSV can't be loaded -->
-        <div id="searchTrendNotice" class="chart-notice" style="display: none;" aria-live="polite">
-          <p>Local CSV for the search trend chart is not available on this machine.</p>
-          <div class="chart-notice-actions">
-            <button id="useSampleBtn" class="btn">Use sample data</button>
-            <button id="howFetchBtn" class="btn btn-secondary">How to fetch real data</button>
-          </div>
-        </div>
+            <!-- Notice shown when local CSV can't be loaded -->
+            <div id="searchTrendNotice" class="chart-notice" style="display: none;" aria-live="polite">
+              <p>Local CSV for the search trend chart is not available on this machine.</p>
+              <div class="chart-notice-actions">
+                <button id="useSampleBtn" class="btn">Use sample data</button>
+                <button id="howFetchBtn" class="btn btn-secondary">How to fetch real data</button>
+              </div>
+            </div>
 
-        <div id="fetchInstructions" class="fetch-instructions" style="display: none;" aria-hidden="true">
-          <h4>How to fetch the real CSV (git LFS)</h4>
-          <p>Because the CSV is large it's stored with Git LFS. To fetch it locally:</p>
-          <ol>
-            <li>Install Git LFS: <code>git lfs install</code></li>
-            <li>Fetch the dataset: <code>git lfs pull --include "search_traffic_google.csv"</code></li>
-            <li>Or fetch all LFS files: <code>git lfs pull</code></li>
-          </ol>
-          <div class="fetch-instructions-actions">
-            <button id="closeInstrBtn" class="btn btn-link">Close</button>
-            <button id="useSampleFromInstrBtn" class="btn">Use sample data</button>
-          </div>
-        </div>
+            <div id="fetchInstructions" class="fetch-instructions" style="display: none;" aria-hidden="true">
+              <h4>How to fetch the real CSV (git LFS)</h4>
+              <p>Because the CSV is large it's stored with Git LFS. To fetch it locally:</p>
+              <ol>
+                <li>Install Git LFS: <code>git lfs install</code></li>
+                <li>Fetch the dataset: <code>git lfs pull --include "search_traffic_worldwide_2020.csv"</code></li>
+                <li>Or fetch all LFS files: <code>git lfs pull</code></li>
+              </ol>
+              <div class="fetch-instructions-actions">
+                <button id="closeInstrBtn" class="btn btn-link">Close</button>
+                <button id="useSampleFromInstrBtn" class="btn">Use sample data</button>
+              </div>
+            </div>
 
-        <div id="searchTrendChart"></div>
-        
-        <div class="trend-stats">
-          <div class="stat-card">
-            <div class="stat-icon"><i class="fas fa-chart-line"></i></div>
-            <div class="stat-value" id="avgRecent">--</div>
-            <div class="stat-label">Average Interest (2023-2025)</div>
+            <!-- Main Chart -->
+            <div id="searchTrendChart"></div>
+            
+            <!-- Overview Chart positioned directly below main chart -->
+            <div class="overview-container">
+              <div id="overviewChart" class="overview-chart"></div>
+            </div>
           </div>
-          <div class="stat-card">
-            <div class="stat-icon"><i class="fas fa-calendar-check"></i></div>
-            <div class="stat-value" id="consistentMonths">--</div>
-            <div class="stat-label">Months of Sustained Attention</div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-icon"><i class="fas fa-arrow-up"></i></div>
-            <div class="stat-value" id="growthRate">--</div>
-            <div class="stat-label">Growth Since 2020</div>
+          
+          <!-- Controls Panel -->
+          <div class="controls-panel">
+            <h3>Make Your Own Adjustments</h3>
+            
+            <div class="adjustment-question">
+              <p>How did the 
+                <select id="eventSelect" class="inline-event-dropdown">
+                  <option value="chatgpt-launch">ChatGPT Launch (November 30th, 2022)</option>
+                  <option value="gpt4-release">GPT-4 Release (March 14th, 2023)</option>
+                  <option value="bing-ai">Bing AI Integration (February 7th, 2023)</option>
+                  <option value="ai-regulation">EU AI Act Discussions (June 2023)</option>
+                  <option value="twitter-bots">Twitter Bot Purge (October 2022)</option>
+                </select>
+              </p>
+            </div>
+            
+            <div class="impact-display">
+              <div class="impact-section">
+                <label>Impact the</label>
+                <div class="impact-indicator-container">
+                  <div class="impact-track">
+                    <div class="impact-fill" id="impactFill"></div>
+                    <div class="impact-thumb" id="impactThumb"></div>
+                  </div>
+                  <div class="impact-labels">
+                    <span>Low</span>
+                    <span>Number of Mentions</span>
+                    <span>High</span>
+                  </div>
+                </div>
+                <div class="impact-value" id="impactValue">High Impact Event</div>
+              </div>
+            </div>
+            
+            <div class="control-group">
+              <label for="countrySelect" class="control-label">
+                <i class="fas fa-globe"></i> Country Filter
+              </label>
+              <select id="countrySelect" class="country-dropdown">
+                <option value="worldwide">Worldwide</option>
+                <option value="united-states">United States</option>
+                <option value="united-kingdom">United Kingdom</option>
+                <option value="canada">Canada</option>
+                <option value="australia">Australia</option>
+                <option value="russia">Russia</option>
+              </select>
+            </div>
           </div>
         </div>
       </div>
