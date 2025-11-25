@@ -1614,15 +1614,16 @@ document.addEventListener('DOMContentLoaded', () => {
   
   // Country data configuration
   const countryData = {
-    'us': { name: 'United States', flag: '🇺🇸', color: '#1f77b4', file: 'us_search.csv' },
-    'uk': { name: 'United Kingdom', flag: '🇬🇧', color: '#ff7f0e', file: 'uk_search.csv' },
-    'canada': { name: 'Canada', flag: '🇨🇦', color: '#2ca02c', file: 'canada_search.csv' },
-    'australia': { name: 'Australia', flag: '🇦🇺', color: '#d62728', file: 'aus_search.csv' },
-    'russia': { name: 'Russia', flag: '🇷🇺', color: '#9467bd', file: 'russia_search.csv' }
+    'worldwide': { name: 'Worldwide', flag: '🌍', color: '#00ffff', file: 'search_traffic_worldwide_2020.csv' },
+    'us': { name: 'United States', flag: '🇺🇸', color: '#1f77b4', file: 'Datasets/search_country/us_search.csv' },
+    'uk': { name: 'United Kingdom', flag: '🇬🇧', color: '#ff7f0e', file: 'Datasets/search_country/uk_search.csv' },
+    'canada': { name: 'Canada', flag: '🇨🇦', color: '#2ca02c', file: 'Datasets/search_country/canada_search.csv' },
+    'australia': { name: 'Australia', flag: '🇦🇺', color: '#d62728', file: 'Datasets/search_country/aus_search.csv' },
+    'russia': { name: 'Russia', flag: '🇷🇺', color: '#9467bd', file: 'Datasets/search_country/russia_search.csv' }
   };
   
   // Track which countries are currently visible
-  let visibleCountries = new Set(['us', 'uk', 'canada', 'australia', 'russia']);
+  let visibleCountries = new Set(['worldwide', 'us', 'uk', 'canada', 'australia', 'russia']);
   let allCountryData = {};
 
   // Load data from CSV files
@@ -1632,18 +1633,18 @@ document.addEventListener('DOMContentLoaded', () => {
       
       for (const [countryCode, country] of Object.entries(countryData)) {
         try {
-          const data = await d3.csv(`Datasets/${country.file}`);
+          const text = await d3.text(country.file);
           
-          const processedData = data
-            .map(d => {
-              // Handle the column name which includes the country name
-              const dateStr = d.Week;
-              const valueStr = Object.values(d).find(v => v !== dateStr);
-              
+          // Parse like the working CSV loader
+          const lines = text.split('\n').slice(2); // Skip first 2 lines (category and empty line)
+          
+          const processedData = lines
+            .map(line => {
+              const [dateStr, valueStr] = line.split(',');
               if (!dateStr || !valueStr) return null;
               
               const date = d3.timeParse('%Y-%m-%d')(dateStr.trim());
-              const value = +valueStr;
+              const value = +valueStr.trim();
               
               return { date, value, country: countryCode };
             })
@@ -1696,15 +1697,18 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     }
     
-    if (currentData.length === 0) {
-      console.error('No data available');
-      return;
-    }
-    
     console.log(`Combined data from ${visibleCountries.size} countries: ${currentData.length} points`);
     
-    // Clear the container and render
+    // Clear the container
     chartContainer.innerHTML = '';
+    
+    if (currentData.length === 0) {
+      // Show message when no countries are selected
+      chartContainer.innerHTML = '<div style="display: flex; align-items: center; justify-content: center; height: 400px; color: #71767B; font-size: 16px; font-weight: 600;">Select countries to view data</div>';
+      // Clear overview chart too
+      d3.select('#overviewChart').selectAll('*').remove();
+      return;
+    }
     
     // Update stats, render chart, and setup controls
     updateStats(currentData);
@@ -1715,29 +1719,31 @@ document.addEventListener('DOMContentLoaded', () => {
   
   // Create flag button controls
   function createCountryControls() {
-    const existingControls = document.getElementById('countryControls');
-    if (existingControls) {
-      existingControls.remove();
+    const controlsContainer = document.getElementById('countryControls');
+    if (!controlsContainer) {
+      console.error('Country controls container not found');
+      return;
     }
     
-    const controlsContainer = document.createElement('div');
-    controlsContainer.id = 'countryControls';
+    // Clear existing content
+    controlsContainer.innerHTML = '';
     controlsContainer.style.cssText = `
       display: flex;
       gap: 10px;
-      justify-content: center;
-      margin: 20px 0;
+      justify-content: flex-start;
+      margin: 10px 0;
       flex-wrap: wrap;
     `;
     
     for (const [countryCode, country] of Object.entries(countryData)) {
       const button = document.createElement('button');
       button.innerHTML = `${country.flag} ${country.name}`;
+      button.className = `country-btn ${visibleCountries.has(countryCode) ? 'active' : ''}`;
       button.style.cssText = `
         padding: 8px 16px;
         border: 2px solid ${country.color};
         border-radius: 25px;
-        background: ${visibleCountries.has(countryCode) ? country.color + '30' : 'transparent'};
+        background: ${visibleCountries.has(countryCode) ? country.color : 'transparent'};
         color: ${visibleCountries.has(countryCode) ? 'white' : country.color};
         cursor: pointer;
         font-size: 14px;
@@ -1746,6 +1752,8 @@ document.addEventListener('DOMContentLoaded', () => {
         display: flex;
         align-items: center;
         gap: 8px;
+        min-width: 120px;
+        justify-content: center;
       `;
       
       button.addEventListener('click', () => toggleCountry(countryCode));
@@ -1754,16 +1762,15 @@ document.addEventListener('DOMContentLoaded', () => {
         button.style.transform = 'translateY(-2px)';
       });
       button.addEventListener('mouseleave', () => {
-        button.style.background = visibleCountries.has(countryCode) ? country.color + '30' : 'transparent';
+        button.style.background = visibleCountries.has(countryCode) ? country.color : 'transparent';
         button.style.transform = 'translateY(0)';
       });
       
       controlsContainer.appendChild(button);
     }
     
-    // Insert controls before the chart
-    const chartContainer = document.getElementById('searchTrendChart');
-    chartContainer.parentNode.insertBefore(controlsContainer, chartContainer);
+    // Buttons are already in the sidebar, no need to insert anywhere
+    console.log('Country controls created in sidebar');
   }
   
   function toggleCountry(countryCode) {
@@ -2069,9 +2076,11 @@ Week,Dead Internet Theory: (Worldwide)
 2025-11-23,17`;
 
   // Try to load the CSV file first, then fall back to embedded data
-  console.log('Starting data loading process...');
+  // console.log('Starting data loading process...');
   
+  // OLD SINGLE-COUNTRY LOADER DISABLED - Using multi-country loader instead
   // For immediate testing, let's create a simple test chart first
+  /*
   setTimeout(() => {
     chartContainer.innerHTML = '<div style="background: rgba(29, 155, 240, 0.2); padding: 20px; text-align: center; color: white;">Loading chart data...</div>';
     
@@ -2087,6 +2096,7 @@ Week,Dead Internet Theory: (Worldwide)
         return processCSVText(csvData);
       });
   }, 1000);
+  */
 
   function processCSVText(text) {
     console.log('processCSVText function called!');
@@ -2271,54 +2281,26 @@ Week,Dead Internet Theory: (Worldwide)
       .attr('height', height + margin.top + margin.bottom)
       .style('display', 'block')
       .style('margin', '0 auto')
-      .style('background', 'rgba(0,0,0,0.1)') // Temporary background to see the chart area
+      .style('background', 'rgba(0,0,0,0.05)')
       .style('margin', '0 auto')
       .append('g')
       .attr('transform', `translate(${margin.left},${margin.top})`);
     
-    // Create gradient for area
-    const gradient = svg.append('defs')
-      .append('linearGradient')
-      .attr('id', 'areaGradient')
-      .attr('x1', '0%')
-      .attr('y1', '0%')
-      .attr('x2', '0%')
-      .attr('y2', '100%');
+    // Group data by country
+    const dataByCountry = d3.group(data, d => d.country);
     
-    gradient.append('stop')
-      .attr('offset', '0%')
-      .attr('stop-color', '#1D9BF0')
-      .attr('stop-opacity', 0.8);
+    // Get date extent across all countries
+    const xExtent = d3.extent(data, d => d.date);
+    const yExtent = [0, d3.max(data, d => d.value)];
     
-    gradient.append('stop')
-      .attr('offset', '100%')
-      .attr('stop-color', '#1D9BF0')
-      .attr('stop-opacity', 0.1);
-    
-    // Set up scales
+    // Create scales
     xScale = d3.scaleTime()
-      .domain(d3.extent(data, d => d.date))
+      .domain(xExtent)
       .range([0, width]);
     
     yScale = d3.scaleLinear()
-      .domain([0, d3.max(data, d => d.value) * 1.15])
+      .domain(yExtent)
       .range([height, 0]);
-    
-    // Add horizontal grid lines
-    svg.append('g')
-      .attr('class', 'chart-grid')
-      .call(d3.axisLeft(yScale)
-        .tickSize(-width)
-        .tickFormat(''));
-    
-    // Add vertical grid lines for better clarity
-    svg.append('g')
-      .attr('class', 'chart-grid')
-      .attr('transform', `translate(0,${height})`)
-      .call(d3.axisBottom(xScale)
-        .ticks(14)
-        .tickSize(-height)
-        .tickFormat(''));
     
     // Create line generator
     line = d3.line()
@@ -2326,208 +2308,180 @@ Week,Dead Internet Theory: (Worldwide)
       .y(d => yScale(d.value))
       .curve(d3.curveMonotoneX);
     
-    // Create area generator
-    area = d3.area()
-      .x(d => xScale(d.date))
-      .y0(height)
-      .y1(d => yScale(d.value))
-      .curve(d3.curveMonotoneX);
-    
-    // Add area with fade-in animation
-    const areaPath = svg.append('path')
-      .datum(data)
-      .attr('class', 'line-chart-area')
-      .attr('d', area)
-      .style('opacity', 0);
-    
-    areaPath.transition()
-      .delay(500)
-      .duration(1500)
-      .style('opacity', 1);
-    
-    // Add line with enhanced drawing animation
-    path = svg.append('path')
-      .datum(data)
-      .attr('class', 'line-chart-path')
-      .attr('d', line);
-    
-    // Animate line drawing with stroke-dasharray
-    const pathLength = path.node().getTotalLength();
-    path
-      .attr('stroke-dasharray', pathLength + ' ' + pathLength)
-      .attr('stroke-dashoffset', pathLength)
-      .transition()
-      .duration(3000)
-      .ease(d3.easeLinear)
-      .attr('stroke-dashoffset', 0);
-    
-    // Add axes with readable text - dynamic formatting based on data range
-    const dataRange = d3.extent(data, d => d.date);
-    const daysDifference = (dataRange[1] - dataRange[0]) / (1000 * 60 * 60 * 24);
-    
-    // Use detailed date format for zoomed views (less than 120 days), month/year for full view
-    const dateFormat = daysDifference <= 120 ? d3.timeFormat('%b %d, %Y') : d3.timeFormat('%b \'%y');
-    const tickCount = daysDifference <= 120 ? 6 : 10;
-    
-    const xAxis = d3.axisBottom(xScale)
-      .ticks(tickCount)
-      .tickFormat(dateFormat)
-      .tickSize(8)
-      .tickPadding(8);
-    
-    const yAxis = d3.axisLeft(yScale)
-      .ticks(8)
-      .tickSize(8)
-      .tickPadding(8);
-    
+    // Add X axis
     svg.append('g')
-      .attr('class', 'chart-axis')
       .attr('transform', `translate(0,${height})`)
-      .call(xAxis)
+      .call(d3.axisBottom(xScale)
+        .tickFormat(d3.timeFormat('%Y-%m'))
+        .ticks(d3.timeMonth.every(6)))
       .selectAll('text')
-      .style('text-anchor', daysDifference <= 120 ? 'middle' : 'end')
-      .style('font-size', daysDifference <= 120 ? '10px' : '11px')
-      .style('font-weight', '600')
-      .attr('dx', daysDifference <= 120 ? '0' : '-.8em')
-      .attr('dy', daysDifference <= 120 ? '1.2em' : '.15em')
-      .attr('transform', daysDifference <= 120 ? 'rotate(0)' : 'rotate(-45)');
+      .style('fill', '#ffffff')
+      .attr('transform', 'rotate(-45)')
+      .style('text-anchor', 'end');
     
+    // Add Y axis
     svg.append('g')
-      .attr('class', 'chart-axis')
-      .call(yAxis)
+      .call(d3.axisLeft(yScale))
       .selectAll('text')
-      .style('font-size', '12px')
-      .style('font-weight', '600');
+      .style('fill', '#ffffff');
     
     // Add axis labels
     svg.append('text')
-      .attr('x', width / 2)
-      .attr('y', height + 52)
+      .attr('transform', 'rotate(-90)')
+      .attr('y', 0 - margin.left)
+      .attr('x', 0 - (height / 2))
+      .attr('dy', '1em')
       .style('text-anchor', 'middle')
-      .style('fill', '#E7E9EA')
-      .style('font-size', '13px')
-      .style('font-weight', '700')
-      .style('letter-spacing', '0.5px')
-      .style('font-family', '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif')
-      .text('Time Period');
+      .style('fill', '#ffffff')
+      .text('Search Interest');
     
     svg.append('text')
-      .attr('transform', 'rotate(-90)')
-      .attr('x', -height / 2)
-      .attr('y', -35)
+      .attr('transform', `translate(${width / 2}, ${height + margin.bottom - 10})`)
       .style('text-anchor', 'middle')
-      .style('fill', '#E7E9EA')
-      .style('font-size', '13px')
-      .style('font-weight', '700')
-      .style('letter-spacing', '0.5px')
-      .style('font-family', '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif')
-      .text('Search Interest (Relative)');
+      .style('fill', '#ffffff')
+      .text('Time');
     
     // Create tooltip
     const tooltip = d3.select('body')
-      .append('div')
-      .attr('class', 'chart-tooltip');
-    
-    // Add interactive dots - larger and more prominent with sequential animation
-    const dotData = data.filter((d, i) => i % 3 === 0 || d.value > 30);
-    dots = svg.selectAll('.chart-dot')
-      .data(dotData)
-      .enter()
-      .append('circle')
-      .attr('class', 'chart-dot')
-      .attr('cx', d => xScale(d.date))
-      .attr('cy', d => yScale(d.value))
-      .attr('r', 0)
-      .style('opacity', 0)
-      .transition()
-      .duration(400)
-      .delay((d, i) => 3000 * (i / dotData.length))
-      .attr('r', 5)
-      .style('opacity', 1);
-    
-    // Re-select dots for interactivity
-    svg.selectAll('.chart-dot')
-      .on('mouseover', function(event, d) {
-        d3.select(this)
-          .transition()
-          .duration(150)
-          .attr('r', 7);
-        
-        tooltip
-          .html(`
-            <div class="tooltip-date">${d3.timeFormat('%B %d, %Y')(d.date)}</div>
-            <div class="tooltip-value">Search Interest: <strong>${d.value}</strong></div>
-          `)
-          .classed('visible', true);
-
-        // Position tooltip and clamp to viewport so it doesn't get cut off
-        positionTooltip(tooltip, event.pageX, event.pageY, 15, 15);
-      })
-      .on('mouseout', function() {
-        d3.select(this)
-          .transition()
-          .duration(150)
-          .attr('r', 5);
-        
-        tooltip.classed('visible', false);
-      })
-      .on('click', function(event, d) {
-        // Add click effect
-        const circle = d3.select(this);
-        circle
-          .transition()
-          .duration(300)
-          .attr('r', 9)
-          .transition()
-          .duration(300)
-          .attr('r', 5);
-      });
-    
-    // Highlight sustained attention period (2023-2025)
-    const sustainedStartDate = new Date('2023-01-01');
-    const sustainedData = data.filter(d => d.date >= sustainedStartDate);
-    
-    // Add shaded region to show consistent attention
-    if (sustainedData.length > 0) {
-      const sustainedArea = svg.append('path')
-        .datum(sustainedData)
-        .attr('class', 'sustained-attention-area')
-        .attr('d', d3.area()
-          .x(d => xScale(d.date))
-          .y0(height)
-          .y1(d => yScale(d.value))
-          .curve(d3.curveMonotoneX)
-        )
-        .style('fill', 'rgba(29, 155, 240, 0.15)')
+      .select('.chart-tooltip')
+      .empty() ? 
+      d3.select('body')
+        .append('div')
+        .attr('class', 'chart-tooltip')
+        .style('position', 'absolute')
+        .style('background', 'rgba(0, 0, 0, 0.9)')
+        .style('color', 'white')
+        .style('padding', '8px 12px')
+        .style('border-radius', '6px')
+        .style('font-size', '14px')
+        .style('font-weight', '600')
+        .style('pointer-events', 'none')
         .style('opacity', 0)
-        .transition()
-        .delay(3200)
-        .duration(800)
-        .style('opacity', 1);
-    }
+        .style('z-index', 1000) :
+      d3.select('.chart-tooltip');
     
-    // Store current scale for zoom functionality
+    // Draw lines for each country
+    dataByCountry.forEach((countryDataArray, country) => {
+      const color = countryData[country]?.color || '#1f77b4';
+      const countryName = countryData[country]?.name || country;
+      const flag = countryData[country]?.flag || '';
+      
+      // Sort data by date
+      const sortedData = countryDataArray.sort((a, b) => a.date - b.date);
+      
+      // Add the line path with special styling for worldwide
+      const isWorldwide = country === 'worldwide';
+      const linePath = svg.append('path')
+        .datum(sortedData)
+        .attr('class', `country-line country-${country}`)
+        .attr('fill', 'none')
+        .attr('stroke', color)
+        .attr('stroke-width', isWorldwide ? 3 : 2)
+        .attr('stroke-dasharray', isWorldwide ? '0' : '0')
+        .attr('d', line)
+        .style('opacity', isWorldwide ? 1 : 0.8)
+        .style('cursor', 'pointer');
+      
+      // Add hover effects to the line with improved stability
+      linePath
+        .attr('stroke-width', isWorldwide ? 6 : 4) // Make invisible stroke wider for easier hovering
+        .style('stroke-opacity', 0) // Make the hover area invisible
+        .clone(true) // Clone for the visible line
+        .attr('stroke-width', isWorldwide ? 3 : 2)
+        .style('stroke-opacity', 1)
+        .style('pointer-events', 'none'); // Only the thicker invisible line handles events
+      
+      linePath
+        .on('mouseenter', function(event) {
+          // Find and highlight the visible line
+          svg.select(`.country-${country}[stroke-opacity="1"]`)
+            .transition()
+            .duration(100)
+            .attr('stroke-width', isWorldwide ? 4 : 3)
+            .style('opacity', 1);
+          
+          tooltip
+            .style('opacity', 1)
+            .html(`${flag} ${countryName}`);
+        })
+        .on('mouseleave', function() {
+          svg.select(`.country-${country}[stroke-opacity="1"]`)
+            .transition()
+            .duration(100)
+            .attr('stroke-width', isWorldwide ? 3 : 2)
+            .style('opacity', isWorldwide ? 1 : 0.8);
+          
+          tooltip.style('opacity', 0);
+        })
+        .on('mousemove', function(event) {
+          tooltip
+            .style('left', (event.pageX + 15) + 'px')
+            .style('top', (event.pageY - 10) + 'px');
+        });
+      
+      // Add dots for data points
+      svg.selectAll(`.dot-${country}`)
+        .data(sortedData)
+        .enter().append('circle')
+        .attr('class', `dot dot-${country}`)
+        .attr('cx', d => xScale(d.date))
+        .attr('cy', d => yScale(d.value))
+        .attr('r', isWorldwide ? 4 : 3)
+        .attr('fill', color)
+        .style('opacity', isWorldwide ? 1 : 0.7)
+        .style('cursor', 'pointer')
+        .on('mouseenter', function(event, d) {
+          d3.select(this)
+            .transition()
+            .duration(100)
+            .attr('r', isWorldwide ? 6 : 5)
+            .style('opacity', 1);
+          
+          tooltip
+            .style('opacity', 1)
+            .html(`
+              <div>${flag} ${countryName}</div>
+              <div style="margin-top: 4px; font-size: 12px;">
+                ${d3.timeFormat('%B %d, %Y')(d.date)}<br>
+                Search Interest: <strong>${d.value}</strong>
+              </div>
+            `);
+        })
+        .on('mouseleave', function() {
+          d3.select(this)
+            .transition()
+            .duration(100)
+            .attr('r', isWorldwide ? 4 : 3)
+            .style('opacity', isWorldwide ? 1 : 0.7);
+          
+          tooltip.style('opacity', 0);
+        })
+        .on('mousemove', function(event) {
+          tooltip
+            .style('left', (event.pageX + 15) + 'px')
+            .style('top', (event.pageY - 10) + 'px');
+        });
+    });
+    
+    // Store global variables for overview chart
     window.currentXScale = xScale;
     window.currentYScale = yScale;
     
-    // Store full dataset and current zoom range
+    // Store data for overview
     if (!fullDataset || data.length > (fullDataset?.length || 0) * 0.8) {
       fullDataset = [...data];
     }
     
-    if (data.length > 0) {
-      currentZoomRange = {
-        start: d3.min(data, d => d.date),
-        end: d3.max(data, d => d.date)
-      };
-    }
-    
-    // Render overview chart after main chart
+    // Render overview chart
     setTimeout(() => {
       renderOverviewChart();
     }, 500);
+    
+    console.log(`Chart rendered with ${dataByCountry.size} countries`);
   }
-
+  
+  // Additional chart functions and utilities
+  
   // Function to add event line marker
   function addEventLineMarker(eventKey) {
     const event = eventsData[eventKey];
@@ -2729,7 +2683,14 @@ Week,Dead Internet Theory: (Worldwide)
   // Overview chart function
   function renderOverviewChart() {
     const overviewContainer = document.getElementById('overviewChart');
-    if (!overviewContainer || !fullDataset || fullDataset.length === 0) return;
+    if (!overviewContainer) return;
+    
+    // Use current filtered data instead of fullDataset
+    const overviewData = currentData;
+    if (!overviewData || overviewData.length === 0) {
+      d3.select('#overviewChart').selectAll('*').remove();
+      return;
+    }
     
     // Clear previous overview chart
     d3.select('#overviewChart').selectAll('*').remove();
@@ -2746,21 +2707,17 @@ Week,Dead Internet Theory: (Worldwide)
       .append('g')
       .attr('transform', `translate(${margin.left},${margin.top})`);
     
-    // Scales for overview (always based on full dataset)
+    // Group data by country
+    const dataByCountry = d3.group(overviewData, d => d.country);
+    
+    // Scales for overview
     const xScale = d3.scaleTime()
-      .domain(d3.extent(fullDataset, d => d.date))
+      .domain(d3.extent(overviewData, d => d.date))
       .range([0, width]);
     
     const yScale = d3.scaleLinear()
-      .domain(d3.extent(fullDataset, d => d.value))
+      .domain(d3.extent(overviewData, d => d.value))
       .range([height, 0]);
-    
-    // Create area generator
-    const area = d3.area()
-      .x(d => xScale(d.date))
-      .y0(height)
-      .y1(d => yScale(d.value))
-      .curve(d3.curveMonotoneX);
     
     // Create line generator
     const line = d3.line()
@@ -2768,22 +2725,21 @@ Week,Dead Internet Theory: (Worldwide)
       .y(d => yScale(d.value))
       .curve(d3.curveMonotoneX);
     
-    // Add area
-    svg.append('path')
-      .datum(fullDataset)
-      .attr('class', 'overview-area')
-      .attr('d', area)
-      .style('fill', 'rgba(29, 155, 240, 0.3)')
-      .style('opacity', 0.6);
-    
-    // Add line
-    svg.append('path')
-      .datum(fullDataset)
-      .attr('class', 'overview-line')
-      .attr('d', line)
-      .style('stroke', '#1D9BF0')
-      .style('stroke-width', '2px')
-      .style('fill', 'none');
+    // Draw lines for each visible country
+    dataByCountry.forEach((countryDataArray, country) => {
+      const color = countryData[country]?.color || '#1f77b4';
+      const sortedData = countryDataArray.sort((a, b) => a.date - b.date);
+      const isWorldwide = country === 'worldwide';
+      
+      svg.append('path')
+        .datum(sortedData)
+        .attr('class', `overview-line overview-${country}`)
+        .attr('fill', 'none')
+        .attr('stroke', color)
+        .attr('stroke-width', isWorldwide ? 1.5 : 1)
+        .attr('d', line)
+        .style('opacity', isWorldwide ? 1 : 0.8);
+    });
     
     // Add selection indicator if we have current zoom range
     if (currentZoomRange && currentZoomRange.start && currentZoomRange.end) {
