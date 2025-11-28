@@ -64,6 +64,15 @@ html, body {
   overflow-y: scroll;
   scroll-snap-type: y mandatory;
   scroll-behavior: smooth;
+
+    /* hide scrollbar (Firefox) */
+  scrollbar-width: none;
+}
+
+/* hide scrollbar (Chrome, Edge, Safari) */
+.container::-webkit-scrollbar {
+  display: none;
+
 }
 
 /* Typography System */
@@ -109,6 +118,7 @@ p {
 #section3 { background: var(--primary-dark); }
 #section4 { background: var(--primary-dark); }
 #section5 { background: var(--primary-dark); }
+#sectionBotFlow { background: var(--primary-dark); }
 #section6 { background: var(--primary-dark); }
 #section7 { background: var(--primary-dark); }
 #section8 { background: var(--primary-dark); }
@@ -143,6 +153,11 @@ p {
 #section5 { 
   background: linear-gradient(135deg, var(--secondary-dark) 0%, var(--primary-dark) 100%);
 }
+#sectionBotFlow { 
+  background: linear-gradient(135deg, var(--secondary-dark) 0%, var(--primary-dark) 100%);
+}
+
+
 #section6 { 
   background: linear-gradient(135deg, var(--primary-dark) 0%, var(--secondary-dark) 100%);
 }
@@ -166,7 +181,7 @@ p {
 .nav-dots {
   position: fixed;
   top: 50%;
-  right: 30px;
+  right: 10px;
   transform: translateY(-50%);
   display: flex;
   flex-direction: column;
@@ -3777,6 +3792,7 @@ svg {
   font-weight: 700;
   animation: fadeInDown 1s ease;
   text-transform: none;
+  text-align: center;
 }
 
 .traffic-subtitle {
@@ -3793,6 +3809,7 @@ svg {
   gap: 0.5rem;
   animation: fadeInUp 1s ease 0.2s backwards;
   flex-wrap: wrap;
+  text-align: center;
 }
 
 .subtitle-icon {
@@ -5141,6 +5158,128 @@ svg {
     max-height: 400px;
   }
 }
+
+/*Sankey Diagram*/
+.bot-container {
+    max-width: 1600px;
+    width: 100%;
+    margin: 0 auto;
+    padding: 0 1rem;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .bot-header {
+    text-align: center;
+    margin-bottom: 25px;
+  }
+
+  .bot-title {
+    font-size: 32px;
+    font-weight: 700;
+    color: #ffffff;
+    margin-bottom: 8px;
+  }
+
+  .bot-highlight {
+    color: #60a5fa;
+  }
+
+  .bot-subtitle {
+    font-size: 15px;
+    color: #60a5fa;
+    font-weight: 500;
+    margin-top: 8px;
+  }
+
+  .bot-description {
+    max-width: 800px;
+    margin: 20px auto;
+    padding: 15px;
+    background: rgba(96, 165, 250, 0.08);
+    border: 1px solid rgba(96, 165, 250, 0.2);
+    border-radius: 8px;
+    font-size: 13px;
+    line-height: 1.6;
+    color: #d1d5db;
+  }
+
+  #botVizContainer {
+    background: #0f0f0f;
+    border-radius: 12px;
+    border: 1px solid #2a2a2a;
+    padding: 25px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+    flex: 1;
+    min-height: 500px;
+  }
+
+  #botFlowCanvas {
+    max-width: 100%;
+    max-height: 100%;
+    width: auto;
+    height: auto;
+    cursor: pointer;
+  }
+
+  .bot-legend {
+    display: flex;
+    justify-content: center;
+    gap: 30px;
+    margin-top: 20px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+  }
+
+  @media (max-width: 768px) {
+    .bot-title {
+      font-size: 24px;
+    }
+    
+    .bot-subtitle {
+      font-size: 13px;
+    }
+    
+    .bot-description {
+      font-size: 12px;
+      padding: 12px;
+    }
+    
+    .bot-legend {
+      gap: 15px;
+    }
+    
+    .bot-legend-item {
+      font-size: 11px;
+    }
+  }
+
+  .bot-legend-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+  }
+
+  .bot-legend-color {
+    width: 18px;
+    height: 18px;
+    border-radius: 4px;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+  }
+
+  .bot-instruction {
+    text-align: center;
+    margin-top: 15px;
+    color: #9ca3af;
+    font-size: 12px;
+    font-style: italic;
+  }
 
 /* ========================================
    CONCLUSION SECTION STYLES

@@ -4693,3 +4693,246 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   }
 });
+
+
+const botCanvas = document.getElementById('botFlowCanvas');
+const botCtx = botCanvas.getContext('2d');
+
+// Data - you can load this from data.json if you want
+const botData = {
+  stages: [
+    {
+      name: 'Origin',
+      nodes: [
+        { name: 'Data Center', value: 56, color: '#ef4444' },
+        { name: 'Residential Proxy', value: 26, color: '#dc2626' },
+        { name: 'Mobile ISP', value: 21, color: '#b91c1c' }
+      ]
+    },
+    {
+      name: 'Sophistication',
+      nodes: [
+        { name: 'Simple', value: 40, color: '#fbbf24' },
+        { name: 'Moderate', value: 15, color: '#f59e0b' },
+        { name: 'Advanced', value: 48, color: '#d97706' }
+      ]
+    },
+    {
+      name: 'Industry',
+      nodes: [
+        { name: 'Retail', value: 24, color: '#60a5fa' },
+        { name: 'Travel', value: 25, color: '#3b82f6' },
+        { name: 'Financial', value: 26, color: '#2563eb' },
+        { name: 'Business', value: 13, color: '#1d4ed8' },
+        { name: 'Computing', value: 8, color: '#1e40af' }
+      ]
+    },
+    {
+      name: 'Country',
+      nodes: [
+        { name: 'United States', value: 77, color: '#a855f7' },
+        { name: 'Netherlands', value: 10, color: '#9333ea' },
+        { name: 'Australia', value: 14, color: '#7e22ce' }
+      ]
+    }
+  ],
+  flows: [
+    // Origin to Sophistication
+    { from: [0, 0], to: [1, 0], value: 20, color: '#ef4444' },
+    { from: [0, 0], to: [1, 1], value: 8, color: '#ef4444' },
+    { from: [0, 0], to: [1, 2], value: 28, color: '#ef4444' },
+    { from: [0, 1], to: [1, 0], value: 12, color: '#dc2626' },
+    { from: [0, 1], to: [1, 1], value: 4, color: '#dc2626' },
+    { from: [0, 1], to: [1, 2], value: 10, color: '#dc2626' },
+    { from: [0, 2], to: [1, 0], value: 8, color: '#b91c1c' },
+    { from: [0, 2], to: [1, 1], value: 3, color: '#b91c1c' },
+    { from: [0, 2], to: [1, 2], value: 10, color: '#b91c1c' },
+    
+    // Sophistication to Industry
+    { from: [1, 0], to: [2, 0], value: 15, color: '#fbbf24' },
+    { from: [1, 0], to: [2, 1], value: 10, color: '#fbbf24' },
+    { from: [1, 0], to: [2, 4], value: 8, color: '#fbbf24' },
+    { from: [1, 2], to: [2, 2], value: 26, color: '#d97706' },
+    { from: [1, 2], to: [2, 1], value: 12, color: '#d97706' },
+    { from: [1, 2], to: [2, 3], value: 10, color: '#d97706' },
+    { from: [1, 1], to: [2, 0], value: 6, color: '#f59e0b' },
+    { from: [1, 1], to: [2, 1], value: 3, color: '#f59e0b' },
+    { from: [1, 1], to: [2, 3], value: 3, color: '#f59e0b' },
+    
+    // Industry to Country
+    { from: [2, 0], to: [3, 0], value: 18, color: '#60a5fa' },
+    { from: [2, 0], to: [3, 1], value: 3, color: '#60a5fa' },
+    { from: [2, 0], to: [3, 2], value: 3, color: '#60a5fa' },
+    { from: [2, 1], to: [3, 0], value: 12, color: '#3b82f6' },
+    { from: [2, 1], to: [3, 2], value: 8, color: '#3b82f6' },
+    { from: [2, 2], to: [3, 0], value: 25, color: '#2563eb' },
+    { from: [2, 3], to: [3, 0], value: 8, color: '#1d4ed8' },
+    { from: [2, 3], to: [3, 1], value: 2, color: '#1d4ed8' },
+    { from: [2, 4], to: [3, 0], value: 7, color: '#1e40af' },
+    { from: [2, 4], to: [3, 1], value: 1, color: '#1e40af' }
+  ]
+};
+
+// Layout calculations
+const botWidth = botCanvas.width;
+const botHeight = botCanvas.height;
+const botStageWidth = botWidth / 4;
+const botNodeWidth = 100;
+const botPadding = 60;
+const botBottomPadding = 100;
+
+// Calculate positions with better spacing
+const botPositions = botData.stages.map((stage, stageIdx) => {
+  const x = stageIdx * botStageWidth + botStageWidth / 2;
+  const totalHeight = stage.nodes.reduce((sum, n) => sum + n.value, 0) * 3.5;
+  const availableHeight = botHeight - botPadding - botBottomPadding;
+  const scale = Math.min(1, availableHeight / totalHeight);
+  const scaledHeight = totalHeight * scale;
+  const startY = botPadding + (availableHeight - scaledHeight) / 2;
+  
+  let currentY = startY;
+  return stage.nodes.map(node => {
+    const nodeHeight = node.value * 3.5 * scale;
+    const pos = { x, y: currentY + nodeHeight / 2, height: nodeHeight };
+    currentY += nodeHeight + 18;
+    return pos;
+  });
+});
+
+let botHoveredNode = null;
+
+// Find node at mouse position
+function getBotNodeAtPosition(x, y) {
+  for (let stageIdx = 0; stageIdx < botData.stages.length; stageIdx++) {
+    for (let nodeIdx = 0; nodeIdx < botData.stages[stageIdx].nodes.length; nodeIdx++) {
+      const pos = botPositions[stageIdx][nodeIdx];
+      if (x >= pos.x - botNodeWidth / 2 && x <= pos.x + botNodeWidth / 2 &&
+          y >= pos.y - pos.height / 2 && y <= pos.y + pos.height / 2) {
+        return [stageIdx, nodeIdx];
+      }
+    }
+  }
+  return null;
+}
+
+// Get flows connected to a node
+function getBotConnectedFlows(stageIdx, nodeIdx) {
+  return botData.flows.filter(flow => 
+    (flow.from[0] === stageIdx && flow.from[1] === nodeIdx) ||
+    (flow.to[0] === stageIdx && flow.to[1] === nodeIdx)
+  );
+}
+
+function drawBotVisualization() {
+  botCtx.clearRect(0, 0, botWidth, botHeight);
+  
+  const connectedFlows = botHoveredNode ? getBotConnectedFlows(botHoveredNode[0], botHoveredNode[1]) : [];
+  
+  // Draw flows
+  botData.flows.forEach(flow => {
+    const isConnected = connectedFlows.includes(flow);
+    const fromPos = botPositions[flow.from[0]][flow.from[1]];
+    const toPos = botPositions[flow.to[0]][flow.to[1]];
+    
+    const thickness = Math.max(2, flow.value / 1.5);
+    
+    botCtx.strokeStyle = flow.color;
+    botCtx.lineWidth = thickness;
+    botCtx.globalAlpha = isConnected ? 0.8 : 0.25;
+    
+    botCtx.beginPath();
+    botCtx.moveTo(fromPos.x + botNodeWidth / 2, fromPos.y);
+    
+    const cpX1 = fromPos.x + botStageWidth / 2;
+    const cpX2 = toPos.x - botStageWidth / 2;
+    
+    botCtx.bezierCurveTo(
+      cpX1, fromPos.y,
+      cpX2, toPos.y,
+      toPos.x - botNodeWidth / 2, toPos.y
+    );
+    botCtx.stroke();
+  });
+  
+  botCtx.globalAlpha = 1;
+  
+  // Draw nodes and stage titles
+  botData.stages.forEach((stage, stageIdx) => {
+    // Draw stage title
+    botCtx.fillStyle = '#9ca3af';
+    botCtx.font = 'bold 14px sans-serif';
+    botCtx.textAlign = 'center';
+    botCtx.fillText(stage.name.toUpperCase(), stageIdx * botStageWidth + botStageWidth / 2, 40);
+    
+    stage.nodes.forEach((node, nodeIdx) => {
+      const pos = botPositions[stageIdx][nodeIdx];
+      const isHovered = botHoveredNode && botHoveredNode[0] === stageIdx && botHoveredNode[1] === nodeIdx;
+      
+      // Draw node rectangle
+      botCtx.fillStyle = node.color;
+      if (isHovered) {
+        botCtx.shadowColor = node.color;
+        botCtx.shadowBlur = 20;
+      }
+      botCtx.fillRect(pos.x - botNodeWidth / 2, pos.y - pos.height / 2, botNodeWidth, pos.height);
+      botCtx.shadowBlur = 0;
+      
+      // Draw border
+      botCtx.strokeStyle = isHovered ? '#ffffff' : '#000';
+      botCtx.lineWidth = isHovered ? 3 : 2;
+      botCtx.strokeRect(pos.x - botNodeWidth / 2, pos.y - pos.height / 2, botNodeWidth, pos.height);
+      
+      // Draw node name
+      botCtx.fillStyle = '#ffffff';
+      botCtx.font = 'bold 11px sans-serif';
+      botCtx.textAlign = 'center';
+      botCtx.shadowColor = 'rgba(0, 0, 0, 0.8)';
+      botCtx.shadowBlur = 4;
+      
+      const words = node.name.split(' ');
+      words.forEach((word, i) => {
+        botCtx.fillText(word, pos.x, pos.y - (words.length - 1) * 6 + i * 14);
+      });
+      
+      botCtx.shadowBlur = 0;
+    });
+  });
+  
+  // Draw all numbers on top (separate pass to avoid being covered by other nodes)
+  botData.stages.forEach((stage, stageIdx) => {
+    stage.nodes.forEach((node, nodeIdx) => {
+      const pos = botPositions[stageIdx][nodeIdx];
+      
+      botCtx.font = 'bold 15px sans-serif';
+      botCtx.fillStyle = '#60a5fa';
+      botCtx.textAlign = 'center';
+      botCtx.fillText(node.value, pos.x, pos.y + pos.height / 2 + 16);
+    });
+  });
+}
+
+// Mouse interaction
+botCanvas.addEventListener('mousemove', (e) => {
+  const rect = botCanvas.getBoundingClientRect();
+  const scaleX = botCanvas.width / rect.width;
+  const scaleY = botCanvas.height / rect.height;
+  const x = (e.clientX - rect.left) * scaleX;
+  const y = (e.clientY - rect.top) * scaleY;
+  
+  const newHoveredNode = getBotNodeAtPosition(x, y);
+  if (JSON.stringify(newHoveredNode) !== JSON.stringify(botHoveredNode)) {
+    botHoveredNode = newHoveredNode;
+    drawBotVisualization();
+  }
+});
+
+botCanvas.addEventListener('mouseleave', () => {
+  if (botHoveredNode) {
+    botHoveredNode = null;
+    drawBotVisualization();
+  }
+});
+
+// Initial draw
+drawBotVisualization();
+console.log('✅ Bot visualization rendered successfully!');
