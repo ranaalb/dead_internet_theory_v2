@@ -434,7 +434,7 @@
     </section>
 
     <!-- Global Internet Traffic Section -->
-    <section id="section5" class="section traffic-section">
+    <!--<section id="section5" class="section traffic-section">
       <div class="traffic-container">
         <h2 class="traffic-title">Also, bot traffic is growing steadily...</h2>
         <p class="traffic-subtitle">
@@ -445,8 +445,57 @@
         </div>
         <p class="traffic-source">Source: Internet Traffic Analysis 2015-2024</p>
       </div>
-    </section>
+    </section>-->
+    <section id="section5" class="section traffic-section">
+    <div class="observatory-container">
+    <header class="observatory-header">
+      <h1>The Bot Behavior Observatory</h1>
+      <p class="subtitle">Interactive Analysis of Internet Bot Behavior Patterns</p>
+      <div class="active-filters" id="activeFilters"></div>
+    </header>
 
+    <div class="visualization-grid">
+      <div class="viz-card">
+        <div class="viz-header">
+          <h2>Sophistication Distribution</h2>
+          <p class="viz-description">Click to filter by sophistication level</p>
+        </div>
+        <div class="viz-content" id="treemap"></div>
+      </div>
+
+      <div class="viz-card">
+        <div class="viz-header">
+          <h2>24-Hour Activity Timeline</h2>
+          <p class="viz-description">Hover to see hourly patterns</p>
+        </div>
+        <div class="viz-content" id="timeline"></div>
+      </div>
+
+      <div class="viz-card">
+        <div class="viz-header">
+          <h2>Attack Purpose Matrix</h2>
+          <p class="viz-description">Click to filter by attack type</p>
+        </div>
+        <div class="viz-content" id="matrix"></div>
+      </div>
+
+      <div class="viz-card">
+        <div class="viz-header">
+          <h2>Geographic Origin Network</h2>
+          <p class="viz-description">Click countries to filter by origin</p>
+        </div>
+        <div class="viz-content" id="network"></div>
+      </div>
+    </div>
+
+    <div class="reset-controls">
+      <button id="resetFilters" class="reset-btn">Reset All Filters</button>
+    </div>
+  </div>
+  </section>
+
+
+  <!--SANKEY MAP VISUALIZATION SECTION-->
   <section id="sectionBotFlow" class="section">
   <div class="bot-container">
 
@@ -460,8 +509,6 @@
     <div id="botVizContainer">
       <canvas id="botFlowCanvas" width="1600" height="400"></canvas>
     </div>
-
-    
     <div class="bot-legend">
       <div class="bot-legend-item">
         <div class="bot-legend-color" style="background: #ef4444;"></div>

@@ -3774,7 +3774,280 @@ svg {
 /* ========================================
    TRAFFIC SECTION STYLES
    ======================================== */
-.traffic-section {
+   .observatory-container {
+      max-width: 1400px;      /* page width you like */
+      width: 90vw; 
+      margin: 40px auto;      /* center with top/bottom spacing */
+      padding: 0 32px;  
+    }
+
+    .observatory-header {
+      text-align: center;
+      margin-bottom: 40px;
+      padding: 30px 20px;
+      background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+      border-radius: 12px;
+      border: 1px solid #334155;
+    }
+
+    .observatory-header h1 {
+      font-size: 36px;
+      font-weight: 700;
+      color: #60a5fa;
+      margin-bottom: 8px;
+      text-shadow: 0 2px 10px rgba(96, 165, 250, 0.3);
+    }
+
+    .subtitle {
+      font-size: 16px;
+      color: #94a3b8;
+      margin-bottom: 20px;
+    }
+
+    .active-filters {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      flex-wrap: wrap;
+      min-height: 30px;
+    }
+
+    .filter-tag {
+      background: #3b82f6;
+      color: white;
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      animation: slideIn 0.3s ease;
+    }
+
+    .filter-tag .remove {
+      cursor: pointer;
+      font-weight: bold;
+      opacity: 0.8;
+    }
+
+    .filter-tag .remove:hover {
+      opacity: 1;
+    }
+
+    @keyframes slideIn {
+      from {
+        opacity: 0;
+        transform: translateY(-10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .visualization-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 20px;
+      margin-bottom: 20px;
+    }
+
+    .viz-card {
+      background: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 12px;
+      padding: 20px;
+      transition: all 0.3s ease;
+
+      display: flex;
+      flex-direction: column;
+      min-height: 320px;    /* make cards taller */
+
+    }
+
+    .viz-card:hover {
+      border-color: #60a5fa;
+      box-shadow: 0 4px 20px rgba(96, 165, 250, 0.1);
+    }
+
+    .viz-header {
+      margin-bottom: 15px;
+    }
+
+    .viz-header h2 {
+      font-size: 18px;
+      font-weight: 600;
+      color: #f1f5f9;
+      margin-bottom: 4px;
+    }
+
+    .viz-description {
+      font-size: 12px;
+      color: #64748b;
+      font-style: italic;
+    }
+
+    .viz-content {
+      position: relative;
+      flex: 1;          /* SVG fills the remaining space */
+      overflow: hidden; 
+
+        }
+
+    svg {
+      overflow: visible;
+    }
+
+    .treemap-cell {
+      stroke: #0f172a;
+      stroke-width: 2px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .treemap-cell:hover {
+      opacity: 0.8;
+      stroke: #60a5fa;
+      stroke-width: 3px;
+    }
+
+    .treemap-cell.active {
+      stroke: #f59e0b;
+      stroke-width: 4px;
+    }
+
+    .treemap-cell.dimmed {
+      opacity: 0.3;
+    }
+
+    .treemap-text {
+      pointer-events: none;
+      font-weight: 600;
+      text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+    }
+
+    .timeline-path {
+      fill: none;
+      stroke-width: 2.5;
+      transition: all 0.3s ease;
+    }
+
+    .timeline-path.dimmed {
+      opacity: 0.2;
+      stroke-width: 1;
+    }
+
+    .timeline-path:hover {
+      stroke-width: 4;
+    }
+
+    .timeline-area {
+      opacity: 0.2;
+      transition: all 0.3s ease;
+    }
+
+    .timeline-area.dimmed {
+      opacity: 0.05;
+    }
+
+    .axis {
+      font-size: 11px;
+      color: #94a3b8;
+    }
+
+    .axis path,
+    .axis line {
+      stroke: #334155;
+    }
+
+    .axis text {
+      fill: #94a3b8;
+    }
+
+    .grid line {
+      stroke: #1e293b;
+      stroke-opacity: 0.5;
+    }
+
+    .matrix-bar {
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .matrix-bar:hover {
+      opacity: 0.8;
+    }
+
+    .matrix-bar.active {
+      stroke: #f59e0b;
+      stroke-width: 3px;
+    }
+
+    .matrix-bar.dimmed {
+      opacity: 0.2;
+    }
+
+    .node {
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .node:hover circle {
+      stroke: #60a5fa;
+      stroke-width: 3px;
+    }
+
+    .node.active circle {
+      stroke: #f59e0b;
+      stroke-width: 4px;
+    }
+
+    .node.dimmed {
+      opacity: 0.3;
+    }
+
+    .node text {
+      pointer-events: none;
+      font-size: 11px;
+      font-weight: 600;
+      fill: #e5e7eb;
+      text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.9);
+    }
+
+    .reset-controls {
+      text-align: center;
+      padding: 20px;
+    }
+
+    .reset-btn {
+      background: #3b82f6;
+      color: white;
+      border: none;
+      padding: 12px 30px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .reset-btn:hover {
+      background: #2563eb;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+    }
+
+    .reset-btn:active {
+      transform: translateY(0);
+    }
+
+    @media (max-width: 1200px) {
+      .visualization-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+/*.traffic-section {
   background: linear-gradient(180deg, #0a0a1a 0%, #050510 100%);
   padding: 2rem 1rem;
 }
@@ -3821,7 +4094,7 @@ svg {
   color: #666;
   margin-top: 0.2rem;
   font-style: italic;
-}
+}*/
 
 /* ========================================
    CONCLUSION SECTION STYLES
