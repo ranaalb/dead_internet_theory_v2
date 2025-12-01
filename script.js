@@ -2069,6 +2069,9 @@ document.addEventListener('DOMContentLoaded', () => {
   
   // Global variables for overview chart functionality
   let fullDataset = null;
+  let overviewBrush = null;
+  let overviewXScale = null;
+  let overviewSVG = null;
   let currentZoomRange = null;
   
   // Add a test element to verify the container is working
@@ -2124,6 +2127,15 @@ document.addEventListener('DOMContentLoaded', () => {
         }
       }
       
+      // Set fullDataset to all loaded data (unfiltered, all countries)
+      fullDataset = [];
+      for (const countryCode of Object.keys(countryData)) {
+        if (allCountryData[countryCode]) {
+          fullDataset = fullDataset.concat(allCountryData[countryCode]);
+        }
+      }
+      fullDataset.sort((a, b) => a.date - b.date);
+
       // Combine visible country data
       updateChartData();
       
@@ -2153,32 +2165,53 @@ document.addEventListener('DOMContentLoaded', () => {
   }
   
   function updateChartData() {
+    // Store current zoom range before updating
+    const preservedZoomRange = currentZoomRange ? { ...currentZoomRange } : null;
+
     // Combine data from all visible countries
     currentData = [];
-    
     for (const countryCode of visibleCountries) {
       if (allCountryData[countryCode]) {
         currentData = currentData.concat(allCountryData[countryCode]);
       }
     }
-    
+    currentData.sort((a, b) => a.date - b.date); // Ensure sorted
+
     console.log(`Combined data from ${visibleCountries.size} countries: ${currentData.length} points`);
-    
+
     // Clear the container
     chartContainer.innerHTML = '';
-    
+
     if (currentData.length === 0) {
       // Show message when no countries are selected
       chartContainer.innerHTML = '<div style="display: flex; align-items: center; justify-content: center; height: 400px; color: #71767B; font-size: 16px; font-weight: 600;">Select countries to view data</div>';
       // Clear overview chart too
       d3.select('#overviewChart').selectAll('*').remove();
+      currentZoomRange = null;
       return;
     }
-    
+
+    // If we had a zoom range, try to preserve it visually, but do NOT reset it here
+    let displayData = currentData;
+    if (currentZoomRange && currentZoomRange.start && currentZoomRange.end) {
+      // Clamp zoom range to available data for display, but do not reset currentZoomRange
+      const minDate = d3.min(currentData, d => d.date);
+      const maxDate = d3.max(currentData, d => d.date);
+      let start = currentZoomRange.start < minDate ? minDate : currentZoomRange.start;
+      let end = currentZoomRange.end > maxDate ? maxDate : currentZoomRange.end;
+      // If clamped range is valid, use it; else, use all data
+      if (start <= end) {
+        displayData = currentData.filter(d => d.date >= start && d.date <= end);
+      } else {
+        displayData = currentData;
+      }
+    }
+
     // Update stats, render chart, and setup controls
-    updateStats(currentData);
-    renderChart(currentData);
-    setupControls(currentData);
+    updateStats(displayData.length > 0 ? displayData : currentData);
+    renderChart(displayData.length > 0 ? displayData : currentData);
+    renderOverviewChart(); // Always update overview after zoom/filter
+    setupControls(currentData); // Always use full data for controls
     createCountryControls();
   }
   
@@ -2757,28 +2790,49 @@ Week,Dead Internet Theory: (Worldwide)
     // Get date extent across all countries
     const xExtent = d3.extent(data, d => d.date);
     const yExtent = [0, d3.max(data, d => d.value)];
-    
-    // Create scales
+
+    // Use zoom range if available, else full data extent
+    let xDomain = xExtent;
+    if (currentZoomRange && currentZoomRange.start && currentZoomRange.end) {
+      xDomain = [currentZoomRange.start, currentZoomRange.end];
+    }
+
     xScale = d3.scaleTime()
-      .domain(xExtent)
+      .domain(xDomain)
       .range([0, width]);
-    
+
     yScale = d3.scaleLinear()
       .domain(yExtent)
       .range([height, 0]);
-    
+
     // Create line generator
     line = d3.line()
       .x(d => xScale(d.date))
       .y(d => yScale(d.value))
       .curve(d3.curveMonotoneX);
-    
+
+    // Dynamically choose tick interval for x-axis
+    const msPerMonth = 30 * 24 * 60 * 60 * 1000;
+    const msPerWeek = 7 * 24 * 60 * 60 * 1000;
+    const rangeMs = xDomain[1] - xDomain[0];
+    let tickInterval, tickFormat;
+    if (rangeMs < msPerMonth * 2) {
+      tickInterval = d3.timeWeek.every(1);
+      tickFormat = d3.timeFormat('%b %d, %Y');
+    } else if (rangeMs < msPerMonth * 12) {
+      tickInterval = d3.timeMonth.every(1);
+      tickFormat = d3.timeFormat('%b %Y');
+    } else {
+      tickInterval = d3.timeMonth.every(6);
+      tickFormat = d3.timeFormat('%Y-%m');
+    }
+
     // Add X axis
     svg.append('g')
       .attr('transform', `translate(0,${height})`)
       .call(d3.axisBottom(xScale)
-        .tickFormat(d3.timeFormat('%Y-%m'))
-        .ticks(d3.timeMonth.every(6)))
+        .tickFormat(tickFormat)
+        .ticks(tickInterval))
       .selectAll('text')
       .style('fill', '#ffffff')
       .attr('transform', 'rotate(-45)')
@@ -3129,20 +3183,13 @@ Week,Dead Internet Theory: (Worldwide)
   }
   
   function updateChart(data) {
-    // Store current zoom range
-    if (data.length > 0) {
-      currentZoomRange = {
-        start: d3.min(data, d => d.date),
-        end: d3.max(data, d => d.date)
-      };
-    }
-    
+    // Do NOT set currentZoomRange here; only set by brush or explicit zoom
     // Update scales
     xScale.domain(d3.extent(data, d => d.date));
     yScale.domain([0, d3.max(data, d => d.value) * 1.15]);
-    
     // Clear and re-render
     renderChart(data);
+    renderOverviewChart(); // Always update overview after zoom
   }
   
   // Overview chart function
@@ -3150,53 +3197,54 @@ Week,Dead Internet Theory: (Worldwide)
     const overviewContainer = document.getElementById('overviewChart');
     if (!overviewContainer) return;
     
-    // Use current filtered data instead of fullDataset
-    const overviewData = currentData;
+    // Always use the true full dataset for the overview xScale
+    const overviewData = fullDataset && fullDataset.length ? fullDataset : currentData;
     if (!overviewData || overviewData.length === 0) {
       d3.select('#overviewChart').selectAll('*').remove();
       return;
     }
-    
-    // Clear previous overview chart
-    d3.select('#overviewChart').selectAll('*').remove();
-    
+
+    // Only create the SVG and brush once
     const margin = { top: 8, right: 15, bottom: 15, left: 15 };
     const containerWidth = overviewContainer.clientWidth || 800;
     const width = containerWidth - margin.left - margin.right;
     const height = 60 - margin.top - margin.bottom;
-    
-    const svg = d3.select('#overviewChart')
+
+    // Remove previous SVG if it exists
+    d3.select('#overviewChart').selectAll('svg').remove();
+    overviewSVG = d3.select('#overviewChart')
       .append('svg')
       .attr('width', containerWidth)
       .attr('height', 60)
       .append('g')
       .attr('transform', `translate(${margin.left},${margin.top})`);
-    
+
     // Group data by country
     const dataByCountry = d3.group(overviewData, d => d.country);
-    
-    // Scales for overview
-    const xScale = d3.scaleTime()
-      .domain(d3.extent(overviewData, d => d.date))
+
+    // Scales for overview (always use full min/max date)
+    const minDate = d3.min(fullDataset, d => d.date);
+    const maxDate = d3.max(fullDataset, d => d.date);
+    overviewXScale = d3.scaleTime()
+      .domain([minDate, maxDate])
       .range([0, width]);
-    
+
     const yScale = d3.scaleLinear()
       .domain(d3.extent(overviewData, d => d.value))
       .range([height, 0]);
-    
+
     // Create line generator
     const line = d3.line()
-      .x(d => xScale(d.date))
+      .x(d => overviewXScale(d.date))
       .y(d => yScale(d.value))
       .curve(d3.curveMonotoneX);
-    
+
     // Draw lines for each visible country
     dataByCountry.forEach((countryDataArray, country) => {
       const color = countryData[country]?.color || '#1f77b4';
       const sortedData = countryDataArray.sort((a, b) => a.date - b.date);
       const isWorldwide = country === 'worldwide';
-      
-      svg.append('path')
+      overviewSVG.append('path')
         .datum(sortedData)
         .attr('class', `overview-line overview-${country}`)
         .attr('fill', 'none')
@@ -3205,87 +3253,37 @@ Week,Dead Internet Theory: (Worldwide)
         .attr('d', line)
         .style('opacity', isWorldwide ? 1 : 0.8);
     });
-    
-    // Add selection indicator if we have current zoom range
-    if (currentZoomRange && currentZoomRange.start && currentZoomRange.end) {
-      const startX = xScale(currentZoomRange.start);
-      const endX = xScale(currentZoomRange.end);
-      
-      // Clamp values to valid range
-      const clampedStartX = Math.max(0, Math.min(width, startX));
-      const clampedEndX = Math.max(0, Math.min(width, endX));
-      
-      // Add selection rectangle
-      svg.append('rect')
-        .attr('class', 'zoom-selection')
-        .attr('x', clampedStartX)
-        .attr('y', 0)
-        .attr('width', Math.max(2, clampedEndX - clampedStartX))
-        .attr('height', height)
-        .style('fill', 'rgba(255, 107, 157, 0.4)')
-        .style('stroke', '#ff6b9d')
-        .style('stroke-width', '2px')
-        .style('opacity', 0.8);
-      
-      // Add selection handles
-      if (clampedStartX >= 0 && clampedStartX <= width) {
-        svg.append('rect')
-          .attr('class', 'zoom-handle-left')
-          .attr('x', clampedStartX - 2)
-          .attr('y', -2)
-          .attr('width', 4)
-          .attr('height', height + 4)
-          .style('fill', '#ff6b9d')
-          .style('cursor', 'ew-resize');
-      }
-      
-      if (clampedEndX >= 0 && clampedEndX <= width) {
-        svg.append('rect')
-          .attr('class', 'zoom-handle-right')
-          .attr('x', clampedEndX - 2)
-          .attr('y', -2)
-          .attr('width', 4)
-          .attr('height', height + 4)
-          .style('fill', '#ff6b9d')
-          .style('cursor', 'ew-resize');
-      }
-    }
-    
-    // Create brush for zooming
-    const brush = d3.brushX()
-      .extent([[0, 0], [width, height]])
-      .on('brush end', function(event) {
-        if (!event.selection) return;
-        
-        const [x0, x1] = event.selection;
-        const domain = [xScale.invert(x0), xScale.invert(x1)];
-        
-        // Filter data based on brush selection
-        const filteredData = fullDataset.filter(d => d.date >= domain[0] && d.date <= domain[1]);
-        
-        if (filteredData.length > 0) {
-          // Update current zoom range
+
+    // Persistent brush instance
+    if (!overviewBrush) {
+      overviewBrush = d3.brushX()
+        .extent([[0, 0], [width, height]])
+        .on('brush end', function(event) {
+          if (!event.selection) return;
+          const [x0, x1] = event.selection;
+          const domain = [overviewXScale.invert(x0), overviewXScale.invert(x1)];
+          // Update current zoom range and main chart
           currentZoomRange = {
             start: domain[0],
             end: domain[1]
           };
-          
-          // Update main chart with filtered data
-          updateChart(filteredData);
-        }
-      });
-    
+          updateChart(currentData.filter(d => d.date >= domain[0] && d.date <= domain[1]));
+        });
+    }
     // Add brush
-    const brushGroup = svg.append('g')
+    const brushGroup = overviewSVG.append('g')
       .attr('class', 'brush')
-      .call(brush);
-    
-    // Style brush to be less prominent
-    brushGroup.selectAll('.selection')
-      .style('opacity', 0.1);
-    
-    brushGroup.selectAll('.handle')
-      .style('opacity', 0.3);
+      .call(overviewBrush);
+    // Style brush
+    brushGroup.selectAll('.selection').style('opacity', 0.1);
+    brushGroup.selectAll('.handle').style('opacity', 0.3);
+
+    // If we have a zoom range, update the brush selection programmatically
+    if (currentZoomRange && currentZoomRange.start && currentZoomRange.end) {
+      let start = currentZoomRange.start < minDate ? minDate : currentZoomRange.start;
+      let end = currentZoomRange.end > maxDate ? maxDate : currentZoomRange.end;
+      overviewSVG.select('.brush').call(overviewBrush.move, [overviewXScale(start), overviewXScale(end)]);
+    }
   }
   
   // Add scroll animation for chart appearance
@@ -5357,3 +5355,813 @@ botCanvas.addEventListener('mouseleave', () => {
 // Initial draw
 drawBotVisualization();
 console.log('✅ Bot visualization rendered successfully!');
+
+// ========================================
+// SOCIAL MEDIA PLATFORM DASHBOARD
+// ========================================
+
+document.addEventListener('DOMContentLoaded', () => {
+  const platformIcons = document.querySelectorAll('.platform-icon');
+  const modal = document.getElementById('platformDashboard');
+  const closeBtn = document.getElementById('closeDashboard');
+  const platformSelector = document.getElementById('platformSelector');
+  const dashboardContent = document.getElementById('dashboardContent');
+  const tabTitle = document.getElementById('tabTitle');
+
+  // Platform data
+  const platformData = {
+    twitter: {
+      name: 'Twitter/X',
+      category: 'Microblogging & Social Networking',
+      icon: `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>`,
+      colorClass: 'twitter-icon',
+      stats: {
+        estimatedBotRate: '5-15%',
+        activeUsers: '550M',
+        auditResult: 'Failed 2024 Tests',
+        enforcement: 'Reactive Only'
+      },
+      impact: 'Twitter/X faces challenges with automated accounts, particularly spam bots, engagement bots, and misinformation spreaders. The platform has implemented various detection systems and verification processes to combat bot activity.',
+      platformClaims: [
+        'Automated bot-detection using machine-learning',
+        'Removing fake/spam accounts in "purges"',
+        'Labeling "automated" accounts (rarely used now)',
+        'Rate-limits & verification changes intended to reduce bot activity'
+      ],
+      researchFindings: [
+        'Bots are still highly active, including political bots',
+        'A 2024 audit found X failed all bot-policy enforcement tests: test bots posted freely',
+        'Advanced bots that mimic human timing and linguistic patterns are especially hard to detect at scale',
+        'Enforcement is largely reactive rather than proactive'
+      ],
+      researchSource: 'Social Media Bot Policies: Passive and Active Enforcement (2024) - https://arxiv.org/pdf/2409.18931',
+      strategies: [
+        'Blue checkmark verification system for authentic accounts',
+        'Advanced machine learning algorithms to detect suspicious behavior patterns',
+        'Rate limiting and CAPTCHA challenges for suspicious activities',
+        'Community-driven reporting and moderation systems',
+        'API restrictions to prevent automated mass posting'
+      ]
+    },
+    facebook: {
+      name: 'Facebook',
+      category: 'Social Networking',
+      icon: `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>`,
+      colorClass: 'facebook-icon',
+      stats: {
+        estimatedBotRate: '5-10%',
+        activeUsers: '3.07B',
+        quarterlyRemovals: '1.3-2.2B',
+        dataSource: 'Meta Reports'
+      },
+      impact: 'Facebook removes billions of fake accounts quarterly. Despite aggressive measures, the platform continues to battle sophisticated bot networks that create fake accounts for spam, scams, and misinformation campaigns.',
+      platformClaims: [
+        'Large-scale bot takedowns (billions of fake accounts removed yearly)',
+        'Machine-learning detection of fake engagement',
+        'Authenticity policies banning coordinated inauthentic behavior (CIB)',
+        'Hundreds of millions of fake accounts removed per quarter'
+      ],
+      researchFindings: [
+        'Facebook has removed 2–3 billion fake accounts per quarter, but these numbers suggest automation is constantly making new ones',
+        'Bot networks repeatedly influence political discourse and misinformation campaigns',
+        'Detection is harder on Facebook due to private groups & mixed content',
+        'Independent studies estimate a 5–10% fake account rate among active users'
+      ],
+      researchSource: 'Meta Transparency Reports - https://transparency.fb.com/data/community-standards-enforcement/fake-accounts/',
+      strategies: [
+        'AI-powered detection systems that identify fake accounts before they become active',
+        'Quarterly transparency reports on fake account removals',
+        'Two-factor authentication for enhanced security',
+        'Continuous monitoring of suspicious behavior patterns',
+        'Partnership with cybersecurity organizations'
+      ],
+      hasChart: true
+    },
+    instagram: {
+      name: 'Instagram',
+      category: 'Photo & Video Sharing',
+      icon: `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>`,
+      colorClass: 'instagram-icon',
+      stats: {
+        fakFollowerRate: 'Up to 45%',
+        activeUsers: '2B+',
+        influencerFraud: '50%+',
+        fraudType: 'Follower/Engagement'
+      },
+      impact: 'Instagram battles engagement pods, follower bots, and spam accounts. Fake likes, comments, and followers are common, affecting content visibility and platform authenticity.',
+      platformClaims: [
+        'Fake follower & fake like detection',
+        'Removing "inauthentic likes" from automation services',
+        'Blocking mass-follow / mass-unfollow bot behaviors',
+        'Crackdowns on "bot farms" that generate engagement'
+      ],
+      researchFindings: [
+        'Instagram has one of the highest fake follower rates of any platform',
+        'Up to 45% of influencer followers may be bots or inactive accounts',
+        'Bots are heavily used for influencer marketing fraud',
+        'Machine-learning detection struggles because content is image-heavy',
+        'More than half of influencers show some form of follower or engagement fraud'
+      ],
+      researchSource: 'Various marketing-analytics firms & Anura bot analysis - https://www.anura.io/blog/how-to-tell-if-facebook-instagram-or-tik-tok-bots-are-following-you',
+      strategies: [
+        'Machine learning to detect inauthentic engagement patterns',
+        'Removal of fake likes, follows, and comments',
+        'Account verification badges for authentic profiles',
+        'Shadowbanning suspicious automation tools',
+        'Regular purges of inactive and fake accounts'
+      ]
+    },
+    tiktok: {
+      name: 'TikTok',
+      category: 'Short-Form Video',
+      icon: `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.15 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.01 2.19-.66 2.77-1.61.19-.33.4-.67.41-1.06.1-1.79.06-3.57.07-5.36.01-4.03-.01-8.05.02-12.07z"/></svg>`,
+      colorClass: 'tiktok-icon',
+      hasChart: true,
+      stats: {
+        fakeEngagement: '20-30%',
+        activeUsers: '1.5B+',
+        detectionDifficulty: 'Highest',
+        contentType: 'Video-Based'
+      },
+      impact: 'TikTok faces significant bot challenges with view bots, follower bots, and automated comment spam. The platform\'s algorithm-driven content discovery makes it particularly vulnerable to artificial engagement manipulation.',
+      platformClaims: [
+        'Automated detection for bots & spam accounts',
+        'Limits on commenting/posting frequency',
+        'Bans on automated engagement-boosting tools',
+        'Transparency about "coordinated influence operations"'
+      ],
+      researchFindings: [
+        'TikTok is considered VERY bot-heavy, especially in comment sections',
+        'Marketing studies estimate up to 20–30% of engagement for some creators may be bots',
+        'Advanced bots use AI-generated video captions, reuse audio, and post at human-like intervals',
+        'Hardest platform for bot detection because content is short-form video (not text)',
+        'Fake-follower audits frequently show inflated engagement'
+      ],
+      researchSource: 'Performance-marketing analyses and platform-agnostic audits',
+      strategies: [
+        'Advanced AI to detect view manipulation and fake engagement',
+        'Content authenticity verification systems',
+        'Creator verification programs',
+        'Automated spam filtering and shadowbanning',
+        'Regular security audits and bot detection updates'
+      ]
+    },
+    reddit: {
+      name: 'Reddit',
+      category: 'Forum & Discussion Platform',
+      icon: `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0zm5.01 4.744c.688 0 1.25.561 1.25 1.249a1.25 1.25 0 0 1-2.498.056l-2.597-.547-.8 3.747c1.824.07 3.48.632 4.674 1.488.308-.309.73-.491 1.207-.491.968 0 1.754.786 1.754 1.754 0 .716-.435 1.333-1.01 1.614a3.111 3.111 0 0 1 .042.52c0 2.694-3.13 4.87-7.004 4.87-3.874 0-7.004-2.176-7.004-4.87 0-.183.015-.366.043-.534A1.748 1.748 0 0 1 4.028 12c0-.968.786-1.754 1.754-1.754.463 0 .898.196 1.207.49 1.207-.883 2.878-1.43 4.744-1.487l.885-4.182a.342.342 0 0 1 .14-.197.35.35 0 0 1 .238-.042l2.906.617a1.214 1.214 0 0 1 1.108-.701zM9.25 12C8.561 12 8 12.562 8 13.25c0 .687.561 1.248 1.25 1.248.687 0 1.248-.561 1.248-1.249 0-.688-.561-1.249-1.249-1.249zm5.5 0c-.687 0-1.248.561-1.248 1.25 0 .687.561 1.248 1.249 1.248.688 0 1.249-.561 1.249-1.249 0-.687-.562-1.249-1.25-1.249zm-5.466 3.99a.327.327 0 0 0-.231.094.33.33 0 0 0 0 .463c.842.842 2.484.913 2.961.913.477 0 2.105-.056 2.961-.913a.361.361 0 0 0 .029-.463.33.33 0 0 0-.464 0c-.547.533-1.684.73-2.512.73-.828 0-1.979-.196-2.512-.73a.326.326 0 0 0-.232-.095z"/></svg>`,
+      colorClass: 'reddit-icon',
+      stats: {
+        botLikeBehavior: '5-15%',
+        activeUsers: '430M+',
+        auditResult: 'Failed 2024',
+        allowsGoodBots: 'Yes'
+      },
+      impact: 'Reddit deals with karma-farming bots, repost bots, and comment spam. Some bots serve useful purposes (like moderator bots), but malicious bots spread misinformation and manipulate discussions.',
+      platformClaims: [
+        'Detection of automated accounts via behavior signals',
+        'Banning bots that violate rules (spam, manipulation)',
+        'Some legitimate bots (AutoModerator, utility bots) are allowed',
+        'Anti-brigading & anti-manipulation rules'
+      ],
+      researchFindings: [
+        'Reddit hosts both "good bots" (helpful) and "malicious bots" (brigading, spam)',
+        'Studies show bots often influence political threads',
+        'Estimates vary: 5–15% of Reddit accounts exhibit bot-like behavior',
+        'A 2024 audit showed Reddit failed enforcement tests for new AI-generated bots',
+        'Harder to detect because Reddit allows some automation, creating ambiguity'
+      ],
+      researchSource: '2024 enforcement audit - Social Media Bot Policies study',
+      strategies: [
+        'Karma and account age requirements for posting',
+        'Community-specific automoderator rules',
+        'CAPTCHA challenges for new accounts',
+        'Shadowbanning and bot detection algorithms',
+        'User-powered reporting and moderation'
+      ]
+    },
+    youtube: {
+      name: 'YouTube',
+      category: 'Video Sharing & Streaming',
+      icon: `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>`,
+      colorClass: 'youtube-icon',
+      stats: {
+        fakeViewRate: 'Up to 30%',
+        activeUsers: '2.7B+',
+        fakeSubscribers: '5-20%',
+        targetContent: 'Monetized'
+      },
+      impact: 'YouTube battles view bots, subscriber bots, and spam comment bots. Fake engagement affects creator monetization and content recommendations, prompting ongoing detection improvements.',
+      platformClaims: [
+        'Machine-learning to detect fake views',
+        'Removing fake subscribers & view-bots',
+        'Blocking comment-spam bots',
+        'Removing "coordinated influence networks" on political content'
+      ],
+      researchFindings: [
+        'YouTube is heavily targeted by view-bots and comment bots',
+        'Studies estimate up to 30% of views on some videos may be inauthentic',
+        'Bot networks can artificially promote music videos, influencer channels, or political commentary',
+        'Estimates of fake subscribers vary from 5–20% for mid-tier creators',
+        'Detection is more difficult because YouTube primarily analyzes watch-time patterns'
+      ],
+      researchSource: 'YouTube Transparency Reports - https://transparencyreport.google.com/youtube-policy/removals & Industry analysis of view-fraud',
+      strategies: [
+        'Advanced spam filters for comments and engagement',
+        'View validation systems to detect artificial inflation',
+        'Creator verification and authentication',
+        'Automated content moderation with AI',
+        'Regular audits of subscriber counts and engagement metrics'
+      ]
+    }
+  };
+
+  function renderDashboard(platform) {
+    const data = platformData[platform];
+    if (!data) return;
+
+    platformSelector.value = platform;
+    tabTitle.textContent = `${data.name} Dashboard`;
+
+    dashboardContent.innerHTML = `
+      <div class="platform-header">
+        <div class="platform-logo-large ${data.colorClass}">
+          ${data.icon}
+        </div>
+        <div class="platform-info">
+          <h2>${data.name}</h2>
+          <span class="platform-category">${data.category}</span>
+        </div>
+      </div>
+
+      <div class="stats-grid">
+        ${Object.entries(data.stats).map(([key, value]) => `
+          <div class="stat-card interactive-stat" data-stat="${key}" data-value="${value}" title="Click to copy">
+            <div class="stat-value">${value}</div>
+            <div class="stat-label">${key.replace(/([A-Z])/g, ' $1').trim().replace(/^./, str => str.toUpperCase())}</div>
+            <div class="copy-indicator">📋 Click to copy</div>
+          </div>
+        `).join('')}
+      </div>
+
+      ${data.hasChart && platform === 'facebook' ? '<div id="facebookBotChart" class="platform-chart"></div>' : ''}
+      ${data.hasChart && platform === 'tiktok' ? '<div id="tiktokBotChart" class="platform-chart"></div>' : ''}
+
+      <div class="bot-impact">
+        <h3>🤖 Bot Impact & Challenges</h3>
+        <p>${data.impact}</p>
+      </div>
+
+      <div class="claims-vs-reality">
+        <div class="claims-section">
+          <h3>🛡️ What ${data.name} Claims They Do</h3>
+          <ul class="claims-list">
+            ${data.platformClaims.map(claim => `<li>${claim}</li>`).join('')}
+          </ul>
+        </div>
+        
+        <div class="reality-section">
+          <h3>🔎 What Independent Studies Show</h3>
+          <ul class="findings-list">
+            ${data.researchFindings.map(finding => `<li>${finding}</li>`).join('')}
+          </ul>
+          ${data.researchSource ? `<p class="research-source"><strong>Source:</strong> ${data.researchSource}</p>` : ''}
+        </div>
+      </div>
+
+      <div class="mitigation-strategies">
+        <h3>🛡️ Current Mitigation Strategies</h3>
+        <ul class="strategy-list">
+          ${data.strategies.map(strategy => `<li>${strategy}</li>`).join('')}
+        </ul>
+      </div>
+    `;
+
+    // Load Facebook chart if applicable
+    if (platform === 'facebook' && data.hasChart) {
+      loadFacebookBotChart();
+    }
+    
+    // Load TikTok chart if applicable
+    if (platform === 'tiktok' && data.hasChart) {
+      loadTikTokBotChart();
+    }
+  }
+
+  async function loadTikTokBotChart() {
+    try {
+      const response = await fetch('Datasets/search_country/tiktok.csv');
+      const csvText = await response.text();
+      const lines = csvText.split('\n').slice(1); // Skip header
+      
+      const accountsRemovedData = [];
+      
+      lines.forEach(line => {
+        if (!line.trim()) return;
+        const parts = line.split(',');
+        
+        // Look for "Accounts removed" with "Other accounts removed" (fake/inauthentic accounts)
+        if (parts[0] === 'Accounts removed' && parts[4] === 'Other accounts removed') {
+          const period = parts[2]; // e.g., "Jul-Sep 2020"
+          const value = parseFloat(parts[9]);
+          
+          if (period && !isNaN(value)) {
+            accountsRemovedData.push({ period, value });
+          }
+        }
+      });
+      
+      // Sort by period
+      accountsRemovedData.sort((a, b) => {
+        const [monthsA, yearA] = a.period.split(' ');
+        const [monthsB, yearB] = b.period.split(' ');
+        
+        const yearDiff = parseInt(yearA) - parseInt(yearB);
+        if (yearDiff !== 0) return yearDiff;
+        
+        const monthOrder = { 'Jan': 1, 'Apr': 4, 'Jul': 7, 'Oct': 10 };
+        const monthA = monthOrder[monthsA.split('-')[0]];
+        const monthB = monthOrder[monthsB.split('-')[0]];
+        return monthA - monthB;
+      });
+      
+      renderTikTokChart(accountsRemovedData);
+    } catch (error) {
+      console.error('Error loading TikTok data:', error);
+      document.getElementById('tiktokBotChart').innerHTML = 
+        '<p style="text-align: center; color: #888;">Unable to load chart data</p>';
+    }
+  }
+
+  async function loadFacebookBotChart() {
+    try {
+      const response = await fetch('Datasets/facebook_report.csv');
+      const csvText = await response.text();
+      
+      // Parse CSV
+      const lines = csvText.split('\n');
+      const fakeAccountsData = [];
+      
+      lines.forEach(line => {
+        if (line.includes('Fake Accounts,Content Actioned')) {
+          const parts = line.split(',');
+          const period = parts[3];
+          const value = parts[4].replace(/"/g, '').replace(/,/g, '');
+          
+          if (period && value && value !== 'N/A') {
+            fakeAccountsData.push({
+              period: period,
+              value: parseInt(value)
+            });
+          }
+        }
+      });
+
+      // Sort by period
+      fakeAccountsData.sort((a, b) => {
+        const getYearQuarter = (period) => {
+          const year = parseInt(period.substring(0, 4));
+          const quarter = parseInt(period.substring(5, 6));
+          return year * 10 + quarter;
+        };
+        return getYearQuarter(a.period) - getYearQuarter(b.period);
+      });
+
+      renderFacebookChart(fakeAccountsData);
+    } catch (error) {
+      console.error('Error loading Facebook data:', error);
+      document.getElementById('facebookBotChart').innerHTML = 
+        '<p style="text-align: center; color: #888;">Unable to load chart data</p>';
+    }
+  }
+
+  function renderTikTokChart(data) {
+    const container = document.getElementById('tiktokBotChart');
+    container.innerHTML = '<h3 style="margin-bottom: 1rem; color: #202124;">Fake & Inauthentic Accounts Removed (Quarterly)</h3>';
+    
+    const margin = { top: 20, right: 30, bottom: 60, left: 70 };
+    const width = container.offsetWidth - margin.left - margin.right;
+    const height = 350 - margin.top - margin.bottom;
+
+    const svg = d3.select('#tiktokBotChart')
+      .append('svg')
+      .attr('width', width + margin.left + margin.right)
+      .attr('height', height + margin.top + margin.bottom)
+      .append('g')
+      .attr('transform', `translate(${margin.left},${margin.top})`);
+
+    // Scales
+    const x = d3.scaleBand()
+      .domain(data.map(d => d.period))
+      .range([0, width])
+      .padding(0.3);
+
+    const y = d3.scaleLinear()
+      .domain([0, d3.max(data, d => d.value) * 1.1])
+      .range([height, 0]);
+
+    // Gradient for bars
+    const gradient = svg.append('defs')
+      .append('linearGradient')
+      .attr('id', 'tiktokBarGradient')
+      .attr('x1', '0%')
+      .attr('y1', '0%')
+      .attr('x2', '0%')
+      .attr('y2', '100%');
+
+    gradient.append('stop')
+      .attr('offset', '0%')
+      .attr('stop-color', '#00f2ea')
+      .attr('stop-opacity', 0.9);
+
+    gradient.append('stop')
+      .attr('offset', '100%')
+      .attr('stop-color', '#ff0050')
+      .attr('stop-opacity', 0.9);
+
+    // X Axis
+    svg.append('g')
+      .attr('transform', `translate(0,${height})`)
+      .call(d3.axisBottom(x))
+      .selectAll('text')
+      .attr('transform', 'rotate(-45)')
+      .style('text-anchor', 'end')
+      .style('font-size', '10px')
+      .style('fill', '#202124');
+
+    // Y Axis
+    svg.append('g')
+      .call(d3.axisLeft(y).ticks(6).tickFormat(d => {
+        if (d >= 1000000) return (d / 1000000).toFixed(1) + 'M';
+        if (d >= 1000) return (d / 1000).toFixed(1) + 'K';
+        return d;
+      }))
+      .selectAll('text')
+      .style('fill', '#202124');
+
+    // Grid lines
+    svg.append('g')
+      .attr('class', 'grid')
+      .call(d3.axisLeft(y)
+        .ticks(6)
+        .tickSize(-width)
+        .tickFormat('')
+      )
+      .selectAll('line')
+      .style('stroke', '#e8eaed')
+      .style('stroke-opacity', 0.3);
+
+    // Bars
+    svg.selectAll('.bar')
+      .data(data)
+      .enter()
+      .append('rect')
+      .attr('class', 'bar')
+      .attr('x', d => x(d.period))
+      .attr('y', d => y(d.value))
+      .attr('width', x.bandwidth())
+      .attr('height', d => height - y(d.value))
+      .attr('fill', 'url(#tiktokBarGradient)')
+      .attr('rx', 4)
+      .style('cursor', 'pointer')
+      .on('mouseover', function(event, d) {
+        d3.select(this).style('opacity', 0.7);
+        
+        const tooltip = d3.select('body').append('div')
+          .attr('class', 'chart-tooltip')
+          .style('position', 'absolute')
+          .style('background', 'rgba(0, 0, 0, 0.8)')
+          .style('color', '#fff')
+          .style('padding', '8px 12px')
+          .style('border-radius', '4px')
+          .style('font-size', '12px')
+          .style('pointer-events', 'none')
+          .style('z-index', '10000');
+        
+        tooltip.html(`
+          <strong>${d.period}</strong><br/>
+          Accounts Removed: ${(d.value / 1000000).toFixed(2)}M
+        `)
+        .style('left', (event.pageX + 10) + 'px')
+        .style('top', (event.pageY - 28) + 'px');
+      })
+      .on('mouseout', function() {
+        d3.select(this).style('opacity', 1);
+        d3.selectAll('.chart-tooltip').remove();
+      });
+
+    // Y-axis label
+    svg.append('text')
+      .attr('transform', 'rotate(-90)')
+      .attr('y', 0 - margin.left + 15)
+      .attr('x', 0 - (height / 2))
+      .attr('dy', '1em')
+      .style('text-anchor', 'middle')
+      .style('fill', '#202124')
+      .style('font-size', '12px')
+      .text('Accounts Removed');
+  }
+
+  function renderFacebookChart(data) {
+    const container = document.getElementById('facebookBotChart');
+    
+    // Add interactive controls and title
+    container.innerHTML = `
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+        <h3 style="margin: 0; color: #202124;">Fake Accounts Removed (Meta Transparency Data)</h3>
+        <div style="display: flex; gap: 0.5rem;">
+          <button id="fbChartToggle" style="padding: 0.5rem 1rem; background: #1877f2; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 0.9rem;">Toggle Animation</button>
+        </div>
+      </div>
+      <div id="fbChartContainer"></div>
+    `;
+    
+    const margin = { top: 20, right: 30, bottom: 70, left: 90 };
+    const width = container.offsetWidth - margin.left - margin.right;
+    const height = 400 - margin.top - margin.bottom;
+
+    const svg = d3.select('#fbChartContainer')
+      .append('svg')
+      .attr('width', width + margin.left + margin.right)
+      .attr('height', height + margin.top + margin.bottom)
+      .append('g')
+      .attr('transform', `translate(${margin.left},${margin.top})`);
+
+    // X scale
+    const x = d3.scaleBand()
+      .domain(data.map(d => d.period))
+      .range([0, width])
+      .padding(0.2);
+
+    // Y scale
+    const y = d3.scaleLinear()
+      .domain([0, d3.max(data, d => d.value) * 1.1])
+      .nice()
+      .range([height, 0]);
+
+    // Add gradient for bars
+    const gradient = svg.append('defs')
+      .append('linearGradient')
+      .attr('id', 'fbBarGradient')
+      .attr('x1', '0%')
+      .attr('y1', '0%')
+      .attr('x2', '0%')
+      .attr('y2', '100%');
+
+    gradient.append('stop')
+      .attr('offset', '0%')
+      .attr('stop-color', '#1877f2')
+      .attr('stop-opacity', 1);
+
+    gradient.append('stop')
+      .attr('offset', '100%')
+      .attr('stop-color', '#0c5bb5')
+      .attr('stop-opacity', 1);
+
+    // Add grid lines
+    svg.append('g')
+      .attr('class', 'grid')
+      .call(d3.axisLeft(y)
+        .ticks(8)
+        .tickSize(-width)
+        .tickFormat('')
+      )
+      .selectAll('line')
+      .style('stroke', '#e8eaed')
+      .style('stroke-opacity', 0.5);
+
+    // Draw bars with animation
+    const bars = svg.selectAll('.bar')
+      .data(data)
+      .enter()
+      .append('rect')
+      .attr('class', 'fb-bar')
+      .attr('x', d => x(d.period))
+      .attr('width', x.bandwidth())
+      .attr('y', height)
+      .attr('height', 0)
+      .attr('fill', 'url(#fbBarGradient)')
+      .attr('rx', 4)
+      .style('cursor', 'pointer')
+      .on('mouseover', function(event, d) {
+        d3.select(this)
+          .transition()
+          .duration(200)
+          .style('opacity', 0.7)
+          .attr('y', y(d.value) - 5)
+          .attr('height', height - y(d.value) + 5);
+
+        const tooltip = d3.select('body').append('div')
+          .attr('class', 'chart-tooltip')
+          .style('position', 'absolute')
+          .style('background', 'rgba(0, 0, 0, 0.9)')
+          .style('color', '#fff')
+          .style('padding', '12px 16px')
+          .style('border-radius', '8px')
+          .style('font-size', '13px')
+          .style('pointer-events', 'none')
+          .style('z-index', '10000')
+          .style('box-shadow', '0 4px 12px rgba(0,0,0,0.3)');
+
+        const text = (d.value >= 1e9) 
+          ? (d.value / 1e9).toFixed(2) + ' Billion' 
+          : (d.value / 1e6).toFixed(0) + ' Million';
+
+        tooltip.html(`
+          <div style="font-weight: 600; margin-bottom: 4px;">${d.period}</div>
+          <div>Accounts Removed: <strong>${text}</strong></div>
+        `)
+        .style('left', (event.pageX + 15) + 'px')
+        .style('top', (event.pageY - 28) + 'px');
+      })
+      .on('mouseout', function(event, d) {
+        d3.select(this)
+          .transition()
+          .duration(200)
+          .style('opacity', 1)
+          .attr('y', y(d.value))
+          .attr('height', height - y(d.value));
+        
+        d3.selectAll('.chart-tooltip').remove();
+      })
+      .on('click', function(event, d) {
+        alert(`${d.period}: ${(d.value / 1e9).toFixed(2)} Billion fake accounts removed\n\nSource: Meta Transparency Report`);
+      });
+
+    // Animate bars on load
+    bars.transition()
+      .duration(1000)
+      .delay((d, i) => i * 30)
+      .attr('y', d => y(d.value))
+      .attr('height', d => height - y(d.value));
+
+    // X axis
+    svg.append('g')
+      .attr('transform', `translate(0,${height})`)
+      .call(d3.axisBottom(x).tickValues(
+        data.filter((d, i) => i % 2 === 0).map(d => d.period)
+      ))
+      .selectAll('text')
+      .attr('transform', 'rotate(-45)')
+      .style('text-anchor', 'end')
+      .style('fill', '#202124')
+      .style('font-size', '11px')
+      .style('font-weight', '500');
+
+    // Y axis
+    svg.append('g')
+      .call(d3.axisLeft(y)
+        .ticks(8)
+        .tickFormat(d => {
+          if (d >= 1e9) return (d / 1e9).toFixed(1) + 'B';
+          if (d >= 1e6) return (d / 1e6).toFixed(0) + 'M';
+          return d;
+        })
+      )
+      .selectAll('text')
+      .style('fill', '#202124')
+      .style('font-size', '12px')
+      .style('font-weight', '500');
+
+    // Y axis label
+    svg.append('text')
+      .attr('transform', 'rotate(-90)')
+      .attr('y', 0 - margin.left + 20)
+      .attr('x', 0 - (height / 2))
+      .attr('dy', '1em')
+      .style('text-anchor', 'middle')
+      .style('fill', '#202124')
+      .style('font-size', '13px')
+      .style('font-weight', '600')
+      .text('Fake Accounts Removed');
+
+    // Toggle button functionality
+    const toggleBtn = document.getElementById('fbChartToggle');
+    let animationEnabled = true;
+    
+    if (toggleBtn) {
+      toggleBtn.addEventListener('click', function() {
+        animationEnabled = !animationEnabled;
+        toggleBtn.textContent = animationEnabled ? 'Disable Animation' : 'Enable Animation';
+        toggleBtn.style.background = animationEnabled ? 
+          'linear-gradient(135deg, #1877f2, #0c5bb5)' : 
+          'linear-gradient(135deg, #5f6368, #3c4043)';
+      });
+    }
+
+    // Stats summary
+    const maxVal = d3.max(data, d => d.value);
+    const minVal = d3.min(data, d => d.value);
+    const avgVal = d3.mean(data, d => d.value);
+    const totalVal = d3.sum(data, d => d.value);
+
+    const statsDiv = d3.select(container)
+      .append('div')
+      .style('margin-top', '20px')
+      .style('padding', '16px')
+      .style('background', '#f8f9fa')
+      .style('border-radius', '8px')
+      .style('display', 'grid')
+      .style('grid-template-columns', 'repeat(auto-fit, minmax(150px, 1fr))')
+      .style('gap', '12px');
+
+    const stats = [
+      { label: 'Peak Quarter', value: `${(maxVal / 1e9).toFixed(2)}B` },
+      { label: 'Lowest Quarter', value: `${(minVal / 1e6).toFixed(0)}M` },
+      { label: 'Average/Quarter', value: `${(avgVal / 1e9).toFixed(2)}B` },
+      { label: 'Total Removed', value: `${(totalVal / 1e9).toFixed(1)}B` }
+    ];
+
+    stats.forEach(stat => {
+      const statBox = statsDiv.append('div')
+        .style('text-align', 'center')
+        .style('padding', '8px');
+      
+      statBox.append('div')
+        .style('font-size', '11px')
+        .style('color', '#5f6368')
+        .style('margin-bottom', '4px')
+        .text(stat.label);
+      
+      statBox.append('div')
+        .style('font-size', '20px')
+        .style('font-weight', '700')
+        .style('color', '#1877f2')
+        .text(stat.value);
+    });
+  }
+
+  // Open dashboard when clicking platform icon
+  platformIcons.forEach(icon => {
+    icon.addEventListener('click', () => {
+      const platform = icon.dataset.platform;
+      renderDashboard(platform);
+      modal.style.display = 'flex';
+      document.body.style.overflow = 'hidden';
+    });
+  });
+
+  // Change platform via dropdown
+  platformSelector.addEventListener('change', (e) => {
+    renderDashboard(e.target.value);
+  });
+
+  // Close dashboard
+  function closeDashboardModal() {
+    modal.style.display = 'none';
+    document.body.style.overflow = 'auto';
+  }
+
+  closeBtn.addEventListener('click', closeDashboardModal);
+  
+  modal.addEventListener('click', (e) => {
+    if (e.target === modal) {
+      closeDashboardModal();
+    }
+  });
+
+  // ESC key to close
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && modal.style.display === 'flex') {
+      closeDashboardModal();
+    }
+  });
+
+  // Search dropdown functionality
+  const searchTrigger = document.getElementById('searchDropdownTrigger');
+  const searchDropdown = document.getElementById('searchDropdown');
+  const searchInput = document.getElementById('platformSearch');
+
+  if (searchTrigger && searchDropdown && searchInput) {
+    searchTrigger.addEventListener('click', (e) => {
+      e.stopPropagation();
+      searchTrigger.classList.toggle('active');
+      searchDropdown.classList.toggle('active');
+      if (searchDropdown.classList.contains('active')) {
+        setTimeout(() => searchInput.focus(), 100);
+      }
+    });
+
+    // Close dropdown when clicking outside
+    document.addEventListener('click', (e) => {
+      if (!searchTrigger.contains(e.target) && !searchDropdown.contains(e.target)) {
+        searchTrigger.classList.remove('active');
+        searchDropdown.classList.remove('active');
+      }
+    });
+
+    // Optional: Filter platforms as user types
+    searchInput.addEventListener('input', (e) => {
+      const searchTerm = e.target.value.toLowerCase();
+      platformIcons.forEach(icon => {
+        const platformName = icon.dataset.platform.toLowerCase();
+        const label = icon.querySelector('.icon-label').textContent.toLowerCase();
+        if (platformName.includes(searchTerm) || label.includes(searchTerm)) {
+          icon.style.display = 'flex';
+        } else {
+          icon.style.display = searchTerm ? 'none' : 'flex';
+        }
+      });
+    });
+  }
+});
