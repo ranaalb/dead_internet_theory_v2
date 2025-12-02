@@ -4794,11 +4794,12 @@ document.addEventListener('DOMContentLoaded', async function() {
       .attr('d', path)
       .attr('fill', d => {
         const data = sentimentData[normalizeCountryName(d.properties.name)];
-        return data ? nervousColorScale(data.nervous) : '#111827';
+        return data ? nervousColorScale(data.nervous) : '#2d3748';
       })
       .attr('stroke', '#020617')
       .attr('stroke-width', 0.4)
-      .style('opacity', d => sentimentData[normalizeCountryName(d.properties.name)] ? 0.96 : 0.3);
+      .style('opacity', d => sentimentData[normalizeCountryName(d.properties.name)] ? 0.96 : 0.4)
+      .style('pointer-events', d => sentimentData[normalizeCountryName(d.properties.name)] ? 'auto' : 'none');
 
     // Hover tooltip with tiny vertical bar chart
     countryPaths
@@ -4847,11 +4848,14 @@ document.addEventListener('DOMContentLoaded', async function() {
         positionTooltip(mapTooltip, event.pageX, event.pageY, 15, 28);
       })
       .on('mouseout', function() {
+        const data = sentimentData[normalizeCountryName(d3.select(this).datum().properties.name)];
+        if (!data) return;
+        
         d3.select(this)
           .transition()
           .duration(150)
           .attr('stroke-width', 0.4)
-          .style('opacity', d => sentimentData[normalizeCountryName(d.properties.name)] ? 0.96 : 0.3);
+          .style('opacity', 0.96);
 
         mapTooltip.classed('visible', false).style('opacity', 0);
       });
@@ -4864,6 +4868,17 @@ document.addEventListener('DOMContentLoaded', async function() {
 
       const centroid = d3.geoCentroid(target); // [lon, lat]
       stopGlobeRotation();
+
+      // Reset all country strokes first
+      countryPaths.style('stroke-width', 0.4).style('stroke', '#020617');
+
+      // Find and highlight the target country path
+      const targetIndex = countryFeatures.findIndex(f => f === target);
+      if (targetIndex !== -1) {
+        d3.select(countryPaths.nodes()[targetIndex])
+          .style('stroke-width', 2)
+          .style('stroke', '#1D9BF0');
+      }
 
       d3.transition()
         .duration(1250)
