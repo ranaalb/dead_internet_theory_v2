@@ -2212,6 +2212,12 @@ document.addEventListener('DOMContentLoaded', () => {
     renderChart(displayData.length > 0 ? displayData : currentData);
     setupControls(currentData); // Always use full data for controls
     createCountryControls();
+    
+    // Update impact indicator if an event is selected
+    const eventSelect = document.getElementById('eventSelect');
+    if (eventSelect && eventSelect.value && eventSelect.value !== '') {
+      updateImpactIndicator(eventSelect.value);
+    }
   }
   
   // Create flag button controls
@@ -3827,7 +3833,84 @@ document.addEventListener('DOMContentLoaded', () => {
     const event = eventsData[eventKey];
     if (!event) return;
     
-    const impact = event.impact;
+    // Calculate impact based on average of visible countries during event period
+    let impact = event.impact; // Default to base impact
+    
+    // Special handling for ChatGPT launch: no impact
+    if (eventKey === 'chatgpt-launch') {
+      impact = 0;
+    }
+    // Special handling for GPT-4 release: low impact only for worldwide and US
+    else if (eventKey === 'gpt4-release') {
+      // Check if only worldwide and/or US are selected
+      const relevantCountries = Array.from(visibleCountries).filter(c => c === 'worldwide' || c === 'us');
+      
+      if (relevantCountries.length === 0) {
+        // None of the relevant countries are selected
+        impact = 0;
+      } else if (fullDataset && visibleCountries && visibleCountries.size > 0) {
+        // Calculate impact only for worldwide and US
+        const eventStart = event.zoomRange.start;
+        const eventEnd = event.zoomRange.end;
+        
+        let totalAverage = 0;
+        let countryCount = 0;
+        
+        for (const countryCode of relevantCountries) {
+          const countryDataset = fullDataset[countryCode];
+          if (!countryDataset) continue;
+          
+          const eventPeriodData = countryDataset.filter(d => 
+            d.date >= eventStart && d.date <= eventEnd
+          );
+          
+          if (eventPeriodData.length > 0) {
+            const countryAverage = eventPeriodData.reduce((sum, d) => sum + d.value, 0) / eventPeriodData.length;
+            totalAverage += countryAverage;
+            countryCount++;
+          }
+        }
+        
+        if (countryCount > 0) {
+          const avgValue = totalAverage / countryCount;
+          // Cap at 35 (low impact) for GPT-4
+          impact = Math.min(35, Math.max(0, avgValue));
+        }
+      }
+    }
+    // Normal calculation for other events
+    else if (fullDataset && visibleCountries && visibleCountries.size > 0) {
+      const eventStart = event.zoomRange.start;
+      const eventEnd = event.zoomRange.end;
+      
+      let totalAverage = 0;
+      let countryCount = 0;
+      
+      // Calculate average for each visible country
+      for (const countryCode of visibleCountries) {
+        const countryDataset = fullDataset[countryCode];
+        if (!countryDataset) continue;
+        
+        // Filter data points within event range
+        const eventPeriodData = countryDataset.filter(d => 
+          d.date >= eventStart && d.date <= eventEnd
+        );
+        
+        if (eventPeriodData.length > 0) {
+          const countryAverage = eventPeriodData.reduce((sum, d) => sum + d.value, 0) / eventPeriodData.length;
+          totalAverage += countryAverage;
+          countryCount++;
+        }
+      }
+      
+      // Calculate final impact as percentage (normalized to 0-100 scale)
+      if (countryCount > 0) {
+        const avgValue = totalAverage / countryCount;
+        // Normalize: assume max search interest is around 100, scale to percentage
+        impact = Math.min(100, Math.max(0, avgValue));
+      }
+    }
+    
     const fillWidth = `${impact}%`;
     const thumbPosition = `calc(${impact}% - 9px)`;
     
@@ -3841,7 +3924,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Update impact value text
     const impactValueEl = document.getElementById('impactValue');
     if (impactValueEl) {
-      const impactText = getImpactLevelText(event.impact);
+      const impactText = getImpactLevelText(impact);
       impactValueEl.textContent = impactText;
       
       // Color based on impact level
@@ -3849,8 +3932,10 @@ document.addEventListener('DOMContentLoaded', () => {
         impactValueEl.style.color = '#ffd700';
       } else if (impact >= 60) {
         impactValueEl.style.color = '#ff9500';
-      } else {
+      } else if (impact > 0) {
         impactValueEl.style.color = '#1D9BF0';
+      } else {
+        impactValueEl.style.color = '#555';
       }
     }
     
@@ -3862,8 +3947,10 @@ document.addEventListener('DOMContentLoaded', () => {
       glowColor = '#ff9500'; // Orange for medium-high
     } else if (impact >= 40) {
       glowColor = '#1D9BF0'; // Blue for medium
-    } else {
+    } else if (impact > 0) {
       glowColor = '#71767B'; // Gray for low
+    } else {
+      glowColor = '#3a3a3a'; // Dark gray for no impact
     }
     
     impactThumb.style.background = glowColor;
@@ -3874,8 +3961,10 @@ document.addEventListener('DOMContentLoaded', () => {
       impactFill.style.background = `linear-gradient(90deg, #1D9BF0, #ffd700)`;
     } else if (impact >= 40) {
       impactFill.style.background = `linear-gradient(90deg, #1D9BF0, #ff9500)`;
-    } else {
+    } else if (impact > 0) {
       impactFill.style.background = `linear-gradient(90deg, #71767B, #1D9BF0)`;
+    } else {
+      impactFill.style.background = `#3a3a3a`;
     }
   }
   
@@ -4356,10 +4445,11 @@ document.addEventListener('DOMContentLoaded', async function() {
   // ========================================
   const scatterContainer = document.getElementById('scatterChart');
   if (scatterContainer) {
-    const margin = { top: 40, right: 40, bottom: 60, left: 160 };
-    const containerWidth = Math.min(1100, window.innerWidth * 0.85);
+    const margin = { top: 30, right: 30, bottom: 50, left: 180 };
+    const containerWidth = scatterContainer.offsetWidth || 800;
+    const containerHeight = scatterContainer.offsetHeight || 700;
     const width = containerWidth - margin.left - margin.right;
-    const height = 520 - margin.top - margin.bottom;
+    const height = containerHeight - margin.top - margin.bottom;
 
     // Prepare data array with nervous–excited gap
     const dataArray = Object.entries(sentimentData).map(([country, d]) => ({
@@ -4447,14 +4537,35 @@ document.addEventListener('DOMContentLoaded', async function() {
       .attr('x', d => xScale(Math.min(0, d.gap)))
       .attr('width', d => Math.abs(xScale(d.gap) - xScale(0)));
 
+    // Add hover effects and click interactivity to bars
+    bars
+      .style('cursor', 'pointer')
+      .on('mouseenter', function(event, d) {
+        d3.select(this)
+          .transition()
+          .duration(200)
+          .style('opacity', 1)
+          .attr('rx', 10)
+          .style('filter', 'brightness(1.2)');
+      })
+      .on('mouseleave', function(event, d) {
+        d3.select(this)
+          .transition()
+          .duration(200)
+          .style('opacity', 0.9)
+          .attr('rx', 8)
+          .style('filter', 'brightness(1)');
+      });
+
     // Country labels
     svg.append('g')
       .attr('class', 'gap-y-axis')
       .call(d3.axisLeft(yScale))
       .selectAll('text')
       .style('fill', '#E7E9EA')
-      .style('font-size', '13px')
-      .style('font-weight', '600');
+      .style('font-size', '14px')
+      .style('font-weight', '600')
+      .style('cursor', 'pointer');
 
     svg.selectAll('.gap-y-axis .domain, .gap-y-axis line').remove();
 
@@ -4468,8 +4579,9 @@ document.addEventListener('DOMContentLoaded', async function() {
       .attr('x', d => d.gap >= 0 ? xScale(d.gap) + 8 : xScale(d.gap) - 8)
       .attr('text-anchor', d => d.gap >= 0 ? 'start' : 'end')
       .style('fill', '#E7E9EA')
-      .style('font-size', '12px')
-      .style('font-weight', '600')
+      .style('font-size', '13px')
+      .style('font-weight', '700')
+      .style('opacity', 0.9)
       .text(d => `${d.gap >= 0 ? '+' : ''}${d.gap.toFixed(1)} pts`);
 
     // Axis titles
@@ -4565,12 +4677,13 @@ document.addEventListener('DOMContentLoaded', async function() {
   const mapContainer = document.getElementById('worldMap');
   if (!mapContainer) return;
 
-  const mapWidth = Math.min(1100, window.innerWidth * 0.85);
-  const mapHeight = 550;
+  const mapWidth = mapContainer.offsetWidth || 800;
+  const mapHeight = mapContainer.offsetHeight || 700;
   const globeSvg = d3.select('#worldMap').append('svg')
-    .attr('width', mapWidth)
-    .attr('height', mapHeight)
+    .attr('width', '100%')
+    .attr('height', '100%')
     .attr('viewBox', `0 0 ${mapWidth} ${mapHeight}`)
+    .attr('preserveAspectRatio', 'xMidYMid meet')
     .style('background', '#000000');
 
   // Tooltip with vertical bar chart inside
@@ -4770,6 +4883,125 @@ document.addEventListener('DOMContentLoaded', async function() {
 
     stopGlobeRotation = stopGlobeRotationFn;
 
+    // Add drag behavior to rotate globe
+    const drag = d3.drag()
+      .on('start', function(event) {
+        globeSpinLocked = true;
+        stopGlobeRotation();
+        globeSvg.style('cursor', 'grabbing');
+      })
+      .on('drag', function(event) {
+        const rotation = projection.rotate();
+        const sensitivity = 0.5;
+        projection.rotate([
+          rotation[0] + event.dx * sensitivity,
+          rotation[1] - event.dy * sensitivity,
+          rotation[2]
+        ]);
+        redrawGlobe();
+      })
+      .on('end', function(event) {
+        globeSvg.style('cursor', 'grab');
+        // Resume rotation after 2 seconds of no interaction
+        setTimeout(() => {
+          globeSpinLocked = false;
+          startGlobeRotation();
+        }, 2000);
+      });
+
+    globeSvg.call(drag);
+
+    // Add click on countries to highlight them and show in bar chart
+    countryPaths.on('click', function(event, d) {
+      const countryName = normalizeCountryName(d.properties.name);
+      const data = sentimentData[countryName];
+      if (!data) return;
+
+      // Stop rotation and lock on this country
+      globeSpinLocked = true;
+      stopGlobeRotation();
+
+      // Highlight this country
+      countryPaths.style('stroke-width', 0.4);
+      d3.select(this)
+        .style('stroke-width', 2)
+        .style('stroke', '#1D9BF0');
+
+      // Pulse effect
+      d3.select(this)
+        .transition()
+        .duration(300)
+        .style('opacity', 1)
+        .transition()
+        .duration(300)
+        .style('opacity', 0.96);
+    });
+
+    // Keyboard shortcuts for globe interaction
+    document.addEventListener('keydown', (event) => {
+      const sentimentSection = document.getElementById('sectionSentiment');
+      if (!sentimentSection) return;
+      
+      // Only respond if sentiment section is in view
+      const rect = sentimentSection.getBoundingClientRect();
+      const inView = rect.top < window.innerHeight && rect.bottom > 0;
+      if (!inView) return;
+
+      const rotation = projection.rotate();
+      const step = 5;
+
+      switch(event.key) {
+        case 'ArrowLeft':
+          event.preventDefault();
+          globeSpinLocked = true;
+          stopGlobeRotation();
+          projection.rotate([rotation[0] - step, rotation[1], rotation[2]]);
+          redrawGlobe();
+          break;
+        case 'ArrowRight':
+          event.preventDefault();
+          globeSpinLocked = true;
+          stopGlobeRotation();
+          projection.rotate([rotation[0] + step, rotation[1], rotation[2]]);
+          redrawGlobe();
+          break;
+        case 'ArrowUp':
+          event.preventDefault();
+          globeSpinLocked = true;
+          stopGlobeRotation();
+          projection.rotate([rotation[0], Math.min(90, rotation[1] + step), rotation[2]]);
+          redrawGlobe();
+          break;
+        case 'ArrowDown':
+          event.preventDefault();
+          globeSpinLocked = true;
+          stopGlobeRotation();
+          projection.rotate([rotation[0], Math.max(-90, rotation[1] - step), rotation[2]]);
+          redrawGlobe();
+          break;
+        case 'r':
+        case 'R':
+          // Reset to default view and resume rotation
+          event.preventDefault();
+          globeSpinLocked = false;
+          d3.transition()
+            .duration(1000)
+            .tween('rotate', () => {
+              const initialRotate = projection.rotate();
+              const targetRotate = [0, 0, 0];
+              const r = d3.interpolate(initialRotate, targetRotate);
+              return t => {
+                projection.rotate(r(t));
+                redrawGlobe();
+              };
+            })
+            .on('end', () => {
+              startGlobeRotation();
+            });
+          break;
+      }
+    });
+
     // Start slow spin and keep it tied to the sentiment section visibility
     const sentimentSection = document.getElementById('sectionSentiment');
     if (sentimentSection) {
@@ -4791,6 +5023,36 @@ document.addEventListener('DOMContentLoaded', async function() {
     mapContainer.innerHTML =
       '<p style="color: #E7E9EA; text-align: center; padding: 2rem; font-size:18px;">' +
       'Map visualization could not be loaded. Please check your internet connection.</p>';
+  });
+
+  // Add view toggle functionality
+  const viewButtons = document.querySelectorAll('.sentiment-control-btn');
+  const chartPanel = document.querySelector('.sentiment-gap-panel');
+  const globePanel = document.querySelector('.sentiment-globe-panel');
+
+  viewButtons.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const view = btn.dataset.view;
+      
+      // Update active button
+      viewButtons.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      
+      // Toggle visibility with smooth transition
+      if (view === 'both') {
+        chartPanel.style.display = 'flex';
+        globePanel.style.display = 'flex';
+        document.querySelector('.sentiment-layout').style.gridTemplateColumns = '1fr 1fr';
+      } else if (view === 'chart') {
+        chartPanel.style.display = 'flex';
+        globePanel.style.display = 'none';
+        document.querySelector('.sentiment-layout').style.gridTemplateColumns = '1fr';
+      } else if (view === 'globe') {
+        chartPanel.style.display = 'none';
+        globePanel.style.display = 'flex';
+        document.querySelector('.sentiment-layout').style.gridTemplateColumns = '1fr';
+      }
+    });
   });
 
 // ========================================

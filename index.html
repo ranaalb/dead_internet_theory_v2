@@ -172,26 +172,40 @@
     <!-- Public Sentiment Section -->
     <section id="sectionSentiment" class="section sentiment-section">
   <div class="sentiment-container">
-    <h2 class="sentiment-title">
-      This isn't just a U.S. phenomenon; globally, people are more concerned than excited about AI
-    </h2>
-    <p class="sentiment-subtitle">
-      Survey of 23,781 respondents across 21 countries, 2023–2024
-    </p>
+    <div class="sentiment-header">
+      <h2 class="sentiment-title">
+        Global AI Sentiment: More Concerned Than Excited
+      </h2>
+      <p class="sentiment-subtitle">
+        Survey of 23,781 respondents across 21 countries • 2023–2024
+      </p>
+    </div>
 
-    <div class="sentiment-layout">
-      <div class="sentiment-panel sentiment-gap-panel">
-        <h3 class="sentiment-panel-title">Sentiment gap (Concerned – Excited)</h3>
+    <div class="sentiment-split-view">
+      <div class="sentiment-viz-column">
+        <div class="viz-header-compact">
+          <h3><i class="fas fa-chart-bar"></i> Sentiment Gap</h3>
+          <span class="viz-hint">Hover bars</span>
+        </div>
         <div id="scatterChart"></div>
       </div>
-      <div class="sentiment-panel sentiment-globe-panel">
+      
+      <div class="sentiment-viz-column">
+        <div class="viz-header-compact">
+          <h3><i class="fas fa-globe-americas"></i> Interactive Globe</h3>
+          <span class="viz-hint">Drag • Arrow keys • R to reset</span>
+        </div>
         <div id="worldMap"></div>
       </div>
     </div>
 
-    <p class="sentiment-note">
-      Bars to the right mean more people are concerned than excited about AI in that country; bars to the left mean the opposite.
-    </p>
+    <div class="sentiment-footer">
+      <div class="color-legend">
+        <span class="legend-end excited-end">More Excited</span>
+        <div class="legend-bar"></div>
+        <span class="legend-end concerned-end">More Concerned</span>
+      </div>
+    </div>
   </div>
 </section>
 
