@@ -1,4 +1,5 @@
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 // Select dots and sections
 const dots = document.querySelectorAll('.dot');
 const sections = document.querySelectorAll('.section');
@@ -6596,6 +6597,8 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 });
 =======
+=======
+>>>>>>> Stashed changes
 // Select dots and sections
 const dots = document.querySelectorAll('.dot');
 const sections = document.querySelectorAll('.section');
@@ -11497,5 +11500,9 @@ document.addEventListener('DOMContentLoaded', function() {
       });
     }
   }
+<<<<<<< Updated upstream
+});   
+>>>>>>> Stashed changes
+=======
 });   
 >>>>>>> Stashed changes
