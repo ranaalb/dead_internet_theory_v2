@@ -5660,17 +5660,31 @@ document.addEventListener('DOMContentLoaded', async () => {
 })();
 
 // ========================================
-// CLICKABLE CARDS FUNCTIONALITY
+// CLICKABLE CARDS FUNCTIONALITY - MOVED TO END
 // ========================================
-document.addEventListener('DOMContentLoaded', function() {
+function initializeClickableCards() {
+  console.log('🎯 Initializing clickable cards...');
+  
   // Find all clickable cards in the conclusion section
   const clickableCards = document.querySelectorAll('.clickable-card');
+  console.log('🔍 Found clickable cards:', clickableCards.length);
   
-  clickableCards.forEach(card => {
+  if (clickableCards.length === 0) {
+    console.warn('⚠️ No clickable cards found! Retrying in 1 second...');
+    setTimeout(initializeClickableCards, 1000);
+    return;
+  }
+  
+  clickableCards.forEach((card, index) => {
+    console.log(`🎨 Setting up card ${index}:`, card);
+    
     const expandedContent = card.querySelector('.card-expanded-content');
     const cardHint = card.querySelector('.card-hint');
     
-    if (expandedContent) {
+    console.log('📄 Expanded content:', expandedContent);
+    console.log('💡 Card hint:', cardHint);
+    
+    if (expandedContent && cardHint) {
       // Initially hide expanded content
       expandedContent.style.display = 'none';
       expandedContent.style.maxHeight = '0';
@@ -5682,9 +5696,12 @@ document.addEventListener('DOMContentLoaded', function() {
       
       // Add click event listener
       card.addEventListener('click', function(e) {
+        console.log('🖱️ Card clicked!', card);
         e.preventDefault();
+        e.stopPropagation();
         
         if (!isExpanded) {
+          console.log('📈 Expanding card...');
           // Expand the card
           expandedContent.style.display = 'block';
           expandedContent.style.maxHeight = expandedContent.scrollHeight + 'px';
@@ -5692,24 +5709,21 @@ document.addEventListener('DOMContentLoaded', function() {
           expandedContent.style.marginTop = '1rem';
           
           // Update hint text
-          if (cardHint) {
-            cardHint.textContent = 'Click to collapse';
-          }
+          cardHint.textContent = 'Click to collapse';
           
           // Add expanded class for additional styling
           card.classList.add('expanded');
           
         } else {
+          console.log('📉 Collapsing card...');
           // Collapse the card
           expandedContent.style.maxHeight = '0';
           expandedContent.style.opacity = '0';
           expandedContent.style.marginTop = '0';
           
           // Update hint text
-          if (cardHint) {
-            const isDetailsCard = card.querySelector('.answer-verdict');
-            cardHint.textContent = isDetailsCard ? 'Click for details' : 'Click for tips';
-          }
+          const isDetailsCard = card.querySelector('.answer-verdict');
+          cardHint.textContent = isDetailsCard ? 'Click for details' : 'Click for tips';
           
           // Remove expanded class
           card.classList.remove('expanded');
@@ -5729,92 +5743,32 @@ document.addEventListener('DOMContentLoaded', function() {
       card.addEventListener('mouseenter', function() {
         card.style.transform = 'translateY(-2px)';
         card.style.cursor = 'pointer';
+        console.log('🎯 Card hover enter');
       });
       
       card.addEventListener('mouseleave', function() {
         if (!card.classList.contains('expanded')) {
           card.style.transform = 'translateY(0)';
         }
+        console.log('🎯 Card hover leave');
       });
+      
+      console.log('✅ Card setup complete for card', index);
+    } else {
+      console.log('❌ Missing elements for card:', card);
+      console.log('  - expandedContent:', expandedContent);
+      console.log('  - cardHint:', cardHint);
     }
   });
   
-  // Also handle the message content card (The Takeaway)
-  const messageContent = document.querySelector('.conclusion-message');
-  if (messageContent && !messageContent.classList.contains('clickable-card')) {
-    messageContent.classList.add('clickable-card');
-    
-    const expandedContent = messageContent.querySelector('.card-expanded-content');
-    const cardHint = messageContent.querySelector('.card-hint');
-    
-    if (expandedContent) {
-      // Initially hide expanded content
-      expandedContent.style.display = 'none';
-      expandedContent.style.maxHeight = '0';
-      expandedContent.style.opacity = '0';
-      expandedContent.style.overflow = 'hidden';
-      expandedContent.style.transition = 'all 0.3s ease-in-out';
-      
-      let isExpanded = false;
-      
-      // Add click event listener
-      messageContent.addEventListener('click', function(e) {
-        e.preventDefault();
-        
-        if (!isExpanded) {
-          // Expand the card
-          expandedContent.style.display = 'block';
-          expandedContent.style.maxHeight = expandedContent.scrollHeight + 'px';
-          expandedContent.style.opacity = '1';
-          expandedContent.style.marginTop = '1rem';
-          
-          // Update hint text
-          if (cardHint) {
-            cardHint.textContent = 'Click to collapse';
-          }
-          
-          // Add expanded class for additional styling
-          messageContent.classList.add('expanded');
-          
-        } else {
-          // Collapse the card
-          expandedContent.style.maxHeight = '0';
-          expandedContent.style.opacity = '0';
-          expandedContent.style.marginTop = '0';
-          
-          // Update hint text
-          if (cardHint) {
-            cardHint.textContent = 'Click for tips';
-          }
-          
-          // Remove expanded class
-          messageContent.classList.remove('expanded');
-          
-          // Hide after animation completes
-          setTimeout(() => {
-            if (!isExpanded) {
-              expandedContent.style.display = 'none';
-            }
-          }, 300);
-        }
-        
-        isExpanded = !isExpanded;
-      });
-      
-      // Add hover effects
-      messageContent.addEventListener('mouseenter', function() {
-        messageContent.style.transform = 'translateY(-2px)';
-        messageContent.style.cursor = 'pointer';
-      });
-      
-      messageContent.addEventListener('mouseleave', function() {
-        if (!messageContent.classList.contains('expanded')) {
-          messageContent.style.transform = 'translateY(0)';
-        }
-      });
-    }
-  }
-});
+  console.log('🎉 Clickable cards initialization complete!');
+}
+
+// Initialize when DOM is ready
+document.addEventListener('DOMContentLoaded', initializeClickableCards);
+
+// Also initialize after a delay in case DOM loading is delayed
+setTimeout(initializeClickableCards, 2000);
 
 
 const botCanvas = document.getElementById('botFlowCanvas');
