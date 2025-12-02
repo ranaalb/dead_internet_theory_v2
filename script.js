@@ -4586,6 +4586,7 @@ document.addEventListener('DOMContentLoaded', async function() {
 
     // Axis titles
     svg.append('text')
+      .attr('class', 'axis-title')
       .attr('x', width / 2)
       .attr('y', height + 40)
       .attr('text-anchor', 'middle')
@@ -4595,6 +4596,7 @@ document.addEventListener('DOMContentLoaded', async function() {
       .text('Sentiment gap (Nervous − Excited, percentage points)');
 
     svg.append('text')
+      .attr('class', 'axis-label-left')
       .attr('x', xScale(-maxAbsGap))
       .attr('y', -18)
       .attr('text-anchor', 'start')
@@ -4604,6 +4606,7 @@ document.addEventListener('DOMContentLoaded', async function() {
       .text('More excited about AI');
 
     svg.append('text')
+      .attr('class', 'axis-label-right')
       .attr('x', xScale(maxAbsGap))
       .attr('y', -18)
       .attr('text-anchor', 'end')
@@ -4670,6 +4673,291 @@ document.addEventListener('DOMContentLoaded', async function() {
           focusCountryOnGlobe(d.country);
         }
       });
+
+    // SORT BUTTON FUNCTIONALITY
+    let currentSortMode = 'gap'; // Track current sort mode
+    
+    const sortButtons = document.querySelectorAll('.sort-btn');
+    sortButtons.forEach(button => {
+      button.addEventListener('click', function() {
+        // Update active button
+        sortButtons.forEach(btn => btn.classList.remove('active'));
+        this.classList.add('active');
+
+        const sortType = this.getAttribute('data-sort');
+        currentSortMode = sortType;
+        let sortedData;
+
+        switch(sortType) {
+          case 'gap':
+            sortedData = [...dataArray].sort((a, b) => b.gap - a.gap);
+            break;
+          case 'nervous':
+            sortedData = [...dataArray].sort((a, b) => b.nervous - a.nervous);
+            break;
+          case 'excited':
+            sortedData = [...dataArray].sort((a, b) => b.excited - a.excited);
+            break;
+          case 'country':
+            sortedData = [...dataArray].sort((a, b) => a.country.localeCompare(b.country));
+            break;
+          default:
+            sortedData = dataArray;
+        }
+
+        // Update yScale domain with new order
+        yScale.domain(sortedData.map(d => d.country));
+
+        // Update xScale based on sort mode
+        let maxValue;
+        if (sortType === 'nervous') {
+          maxValue = d3.max(sortedData, d => d.nervous);
+          xScale.domain([0, maxValue]).nice();
+        } else if (sortType === 'excited') {
+          maxValue = d3.max(sortedData, d => d.excited);
+          xScale.domain([0, maxValue]).nice();
+        } else if (sortType === 'country') {
+          maxValue = Math.max(d3.max(sortedData, d => d.nervous), d3.max(sortedData, d => d.excited));
+          xScale.domain([0, maxValue]).nice();
+        } else {
+          // gap mode
+          const maxAbsGap = d3.max(sortedData, d => Math.abs(d.gap)) || 0;
+          xScale.domain([-maxAbsGap, maxAbsGap]).nice();
+        }
+
+        // Update zero line position
+        svg.select('.gap-zero-line')
+          .transition()
+          .duration(750)
+          .attr('x1', xScale(0))
+          .attr('x2', xScale(0));
+
+        // Update grid
+        svg.select('.gap-x-grid')
+          .transition()
+          .duration(750)
+          .call(
+            d3.axisTop(xScale)
+              .ticks(7)
+              .tickSize(-height)
+              .tickFormat(d => {
+                if (sortType === 'gap') {
+                  return d === 0 ? '' : (d > 0 ? '+' + d.toFixed(0) : d.toFixed(0));
+                } else {
+                  return d.toFixed(0) + '%';
+                }
+              })
+          );
+
+        svg.selectAll('.gap-x-grid .domain').remove();
+        svg.selectAll('.gap-x-grid line')
+          .style('stroke', 'rgba(231,233,234,0.15)')
+          .style('stroke-dasharray', '3,6');
+
+        // Determine bar color scale based on sort mode
+        let getBarColor;
+        if (sortType === 'nervous') {
+          getBarColor = d => nervousColorScale(d.nervous);
+        } else if (sortType === 'excited') {
+          const excitedColorScale = d3.scaleSequential()
+            .domain([60, 25])
+            .interpolator(d3.interpolateRgb('#4AADFF', '#FF4444'));
+          getBarColor = d => excitedColorScale(d.excited);
+        } else if (sortType === 'country') {
+          getBarColor = d => nervousColorScale(d.nervous);
+        } else {
+          getBarColor = d => nervousColorScale(d.nervous);
+        }
+
+        // Rebind data and transition bars
+        svg.selectAll('.gap-bar')
+          .data(sortedData, d => d.country)
+          .transition()
+          .duration(750)
+          .attr('y', d => yScale(d.country))
+          .attr('x', d => {
+            if (sortType === 'gap') {
+              return xScale(Math.min(0, d.gap));
+            } else {
+              return xScale(0);
+            }
+          })
+          .attr('width', d => {
+            if (sortType === 'nervous') {
+              return xScale(d.nervous) - xScale(0);
+            } else if (sortType === 'excited') {
+              return xScale(d.excited) - xScale(0);
+            } else if (sortType === 'country') {
+              return xScale(d.nervous) - xScale(0);
+            } else {
+              return Math.abs(xScale(d.gap) - xScale(0));
+            }
+          })
+          .style('fill', getBarColor);
+
+        // Rebind data and transition labels
+        svg.selectAll('.gap-label')
+          .data(sortedData, d => d.country)
+          .transition()
+          .duration(750)
+          .attr('y', d => yScale(d.country) + yScale.bandwidth() / 2 + 4)
+          .attr('x', d => {
+            if (sortType === 'nervous') {
+              return xScale(d.nervous) + 8;
+            } else if (sortType === 'excited') {
+              return xScale(d.excited) + 8;
+            } else if (sortType === 'country') {
+              return xScale(d.nervous) + 8;
+            } else {
+              return d.gap >= 0 ? xScale(d.gap) + 8 : xScale(d.gap) - 8;
+            }
+          })
+          .attr('text-anchor', d => {
+            if (sortType === 'gap' && d.gap < 0) {
+              return 'end';
+            } else {
+              return 'start';
+            }
+          })
+          .text(d => {
+            if (sortType === 'nervous') {
+              return `${d.nervous.toFixed(1)}%`;
+            } else if (sortType === 'excited') {
+              return `${d.excited.toFixed(1)}%`;
+            } else if (sortType === 'country') {
+              return `${d.nervous.toFixed(1)}%`;
+            } else {
+              return `${d.gap >= 0 ? '+' : ''}${d.gap.toFixed(1)} pts`;
+            }
+          });
+
+        // Update y-axis with new order
+        svg.select('.gap-y-axis')
+          .transition()
+          .duration(750)
+          .call(d3.axisLeft(yScale));
+
+        svg.selectAll('.gap-y-axis .domain, .gap-y-axis line').remove();
+        svg.selectAll('.gap-y-axis text')
+          .style('fill', '#E7E9EA')
+          .style('font-size', '14px')
+          .style('font-weight', '600')
+          .style('cursor', 'pointer');
+
+        // Update axis title
+        svg.select('.axis-title')
+          .transition()
+          .duration(750)
+          .text(() => {
+            if (sortType === 'nervous') {
+              return 'Percentage of people nervous about AI';
+            } else if (sortType === 'excited') {
+              return 'Percentage of people excited about AI';
+            } else if (sortType === 'country') {
+              return 'Percentage of people nervous about AI';
+            } else {
+              return 'Sentiment gap (Nervous − Excited, percentage points)';
+            }
+          });
+
+        // Update top labels
+        svg.selectAll('.axis-label-left, .axis-label-right').remove();
+        
+        if (sortType === 'gap') {
+          svg.append('text')
+            .attr('class', 'axis-label-left')
+            .attr('x', xScale(-maxAbsGap))
+            .attr('y', -18)
+            .attr('text-anchor', 'start')
+            .style('fill', '#4AADFF')
+            .style('font-size', '12px')
+            .style('font-weight', '600')
+            .style('opacity', 0)
+            .text('More excited about AI')
+            .transition()
+            .duration(750)
+            .style('opacity', 1);
+
+          svg.append('text')
+            .attr('class', 'axis-label-right')
+            .attr('x', xScale(maxAbsGap))
+            .attr('y', -18)
+            .attr('text-anchor', 'end')
+            .style('fill', '#FF6B6B')
+            .style('font-size', '12px')
+            .style('font-weight', '600')
+            .style('opacity', 0)
+            .text('More nervous about AI')
+            .transition()
+            .duration(750)
+            .style('opacity', 1);
+        } else if (sortType === 'excited') {
+          svg.append('text')
+            .attr('class', 'axis-label-right')
+            .attr('x', xScale(maxValue))
+            .attr('y', -18)
+            .attr('text-anchor', 'end')
+            .style('fill', '#4AADFF')
+            .style('font-size', '12px')
+            .style('font-weight', '600')
+            .style('opacity', 0)
+            .text('More excited about AI')
+            .transition()
+            .duration(750)
+            .style('opacity', 1);
+        } else if (sortType === 'nervous' || sortType === 'country') {
+          svg.append('text')
+            .attr('class', 'axis-label-right')
+            .attr('x', xScale(maxValue || d3.max(sortedData, d => d.nervous)))
+            .attr('y', -18)
+            .attr('text-anchor', 'end')
+            .style('fill', '#FF6B6B')
+            .style('font-size', '12px')
+            .style('font-weight', '600')
+            .style('opacity', 0)
+            .text('More nervous about AI')
+            .transition()
+            .duration(750)
+            .style('opacity', 1);
+        }
+
+        // Update globe colors to match sort mode
+        if (typeof countryPaths !== 'undefined' && countryPaths) {
+          countryPaths
+            .transition()
+            .duration(750)
+            .attr('fill', d => {
+              const data = sentimentData[normalizeCountryName(d.properties.name)];
+              if (!data) return '#2d3748';
+              
+              if (sortType === 'excited') {
+                const excitedColorScale = d3.scaleSequential()
+                  .domain([60, 25])
+                  .interpolator(d3.interpolateRgb('#4AADFF', '#FF4444'));
+                return excitedColorScale(data.excited);
+              } else {
+                return nervousColorScale(data.nervous);
+              }
+            });
+        }
+
+        // Update color legend
+        const legendExcited = document.querySelector('.legend-end.excited-end');
+        const legendConcerned = document.querySelector('.legend-end.concerned-end');
+        
+        if (sortType === 'excited') {
+          if (legendExcited) legendExcited.textContent = 'Less Excited';
+          if (legendConcerned) legendConcerned.textContent = 'More Excited';
+        } else if (sortType === 'nervous' || sortType === 'country') {
+          if (legendExcited) legendExcited.textContent = 'Less Concerned';
+          if (legendConcerned) legendConcerned.textContent = 'More Concerned';
+        } else {
+          // gap mode
+          if (legendExcited) legendExcited.textContent = 'More Excited';
+          if (legendConcerned) legendConcerned.textContent = 'More Concerned';
+        }
+      });
+    });
   }
 
   // GLOBE MAP - ROTATING ORTHOGRAPHIC VIEW
