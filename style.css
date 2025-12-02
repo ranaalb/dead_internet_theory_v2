@@ -1,10 +1,14 @@
+<<<<<<< Updated upstream
 /* Section positioning for sentiment visuals */
+=======
+>>>>>>> Stashed changes
 #sectionSentiment {
   padding: 40px 0 80px;
   overflow: visible;
   isolation: isolate; /* Create new stacking context to contain z-index */
   display: flex;
   align-items: stretch;
+<<<<<<< Updated upstream
   justify-content: flex-start;
 }
 
@@ -17,6 +21,19 @@
    GLOBAL STYLE GUIDE & DESIGN SYSTEM
    X (Twitter) Dark Mode Aesthetic
    ======================================== */
+=======
+}
+
+#sectionSentiment #worldMap {
+  width: 100%;
+  margin: 0 auto;
+}
+
+/* ========================================
+   GLOBAL STYLE GUIDE & DESIGN SYSTEM
+   X (Twitter) Dark Mode Aesthetic
+   ======================================== */
+>>>>>>> Stashed changes
 html {
   font-size: 16px;  /* lock rem baseline */
 }
@@ -2337,6 +2354,7 @@ svg {
 /* ========================================
    PUBLIC SENTIMENT SECTION STYLES
    ======================================== */
+<<<<<<< Updated upstream
 .sentiment-section {
   background: var(--primary-dark);
   padding: 1rem 0.5rem;
@@ -2393,11 +2411,63 @@ svg {
   margin-bottom: 1.25rem;
   margin-top: 0.25rem;
   opacity: 0;
+=======
+.sentiment-section {
+  background: var(--primary-dark);
+  padding: 1rem 0.5rem;
+  min-height: auto;
+  overflow: visible;
+}
+
+.sentiment-container {
+  max-width: 1400px;
+  margin: 0 auto;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+  overflow: visible;
+  padding: 0 2rem;
+}
+
+.sentiment-title {
+  font-size: 1rem;
+  margin-bottom: 0.3rem;
+  margin-top: 1.5rem;
+  color: var(--text-bright);
+  letter-spacing: 0.5px;
+  font-weight: 700;
+  opacity: 0;
+  transform: translateY(30px);
+  animation: fadeInUp 0.8s ease-out forwards;
+  line-height: 1.2;
+  padding-bottom: 2.5rem;
+}
+
+.sentiment-subtitle {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  margin-bottom: 1rem;
+  opacity: 0;
+  transform: translateY(30px);
+  animation: fadeInUp 0.8s ease-out 0.2s forwards;
+  padding-bottom: 2rem;
+}
+
+/* Tab Navigation - scoped to sentiment section */
+.sentiment-section .viz-tabs {
+  display: flex;
+  justify-content: center;
+  gap: 0.6rem;
+  margin-bottom: 2.5rem;
+  margin-top: 0.5rem;
+  opacity: 0;
+>>>>>>> Stashed changes
   animation: fadeInUp 0.8s ease-out 0.4s forwards;
   flex-wrap: wrap;
 }
 
-.viz-tab {
+.sentiment-section .viz-tab {
   padding: 0.5rem 0.8rem;
   background: var(--secondary-dark);
   border: 2px solid transparent;
@@ -2413,7 +2483,7 @@ svg {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
 
-.viz-tab:hover {
+.sentiment-section .viz-tab:hover {
   background: rgba(29, 155, 240, 0.15);
   color: var(--text-bright);
   border-color: rgba(29, 155, 240, 0.5);
@@ -2421,7 +2491,7 @@ svg {
   box-shadow: 0 6px 16px rgba(29, 155, 240, 0.3);
 }
 
-.viz-tab.active {
+.sentiment-section .viz-tab.active {
   background: rgba(29, 155, 240, 0.2);
   color: var(--accent-blue);
   border-color: var(--accent-blue);
@@ -2437,12 +2507,15 @@ svg {
   display: none;
   opacity: 0;
   animation: fadeIn 0.5s ease-out forwards;
+  overflow: visible;
 }
 
-.tab-content.active {
+.sentiment-section .tab-content.active {
   display: block;
+  overflow: visible;
 }
 
+<<<<<<< Updated upstream
 #scatterChart {
   margin: 0 auto 0.75rem;
   min-height: 500px;
@@ -2461,6 +2534,261 @@ svg {
   align-items: center;
   justify-content: center;
 }
+=======
+#scatterChart {
+  margin: 0 auto 1rem;
+  min-height: 550px;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.sentiment-section #worldMap {
+  position: relative;
+  margin: 1rem auto 1.5rem;
+  min-height: 480px;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding-top: 1rem;
+}
+>>>>>>> Stashed changes
+
+/* ========================================
+   SENTIMENT BAR + GLOBE LAYOUT
+   ======================================== */
+
+/* Layout for sectionSentiment */
+
+
+
+
+.sentiment-layout {
+  display: flex;
+  gap: 3rem;
+  align-items: flex-start;
+  justify-content: center;
+  flex-wrap: nowrap;
+  width: 100%;
+  max-width: 1400px;
+  margin: 0 auto;
+  margin-top: 0;
+  padding-top: 0;
+}
+
+/* Left bar chart column */
+.sentiment-bar-wrapper {
+  flex: 0 0 50%;
+  min-width: 380px;
+  max-width: 580px;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+
+#sentimentBarChart {
+  width: 100%;
+}
+
+/* Right globe column */
+.sentiment-globe-wrapper {
+  flex: 0 0 50%;
+  min-width: 400px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  align-self: center;
+  margin-top: 2rem;
+}
+
+/* Allow the globe to scale up comfortably */
+#sentimentGlobe {
+  width: 100%;
+  max-width: 580px;
+  min-width: 450px;
+  aspect-ratio: 1 / 1;
+  margin: 0 auto;
+  overflow: visible;
+  position: relative;
+  z-index: 1;
+}
+
+/* Keep the footer text/legend from overlapping the globe */
+.sentiment-globe-footer {
+  margin-top: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  width: 100%;
+  max-width: 500px;
+}
+
+/* Tooltip card styling for globe + bar hover - scoped to sentiment section */
+.sentiment-section .sentiment-tooltip-card {
+  padding: 10px 12px;
+  background: rgba(0, 0, 0, 0.9);
+  border-radius: 10px;
+  border: 1px solid rgba(148, 163, 255, 0.5);
+  color: #fff;
+  min-width: 210px;
+  pointer-events: none;
+  z-index: 1000;
+  position: absolute;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.8);
+}
+
+/* Ensure globe container allows tooltips to overflow - scoped to sentiment section */
+.sentiment-section #sentimentGlobe canvas,
+.sentiment-section #sentimentGlobe > div {
+  overflow: visible !important;
+}
+
+.sentiment-tooltip-header {
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+
+.sentiment-tooltip-split {
+  display: flex;
+  flex-direction: row;
+  gap: 6px;
+  margin: 8px 0 4px;
+}
+
+.sentiment-tooltip-split-column {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  font-size: 11px;
+}
+
+.sentiment-tooltip-bar-outer {
+  width: 14px;
+  height: 48px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  overflow: hidden;
+  display: flex;
+  align-items: flex-end;
+  margin-bottom: 4px;
+}
+
+.sentiment-tooltip-bar-inner.excited {
+  width: 100%;
+  background: #4AADFF;
+}
+
+.sentiment-tooltip-bar-inner.nervous {
+  width: 100%;
+  background: #FF4444;
+}
+
+
+
+.sentiment-layout-title-row {
+  flex-basis: 100%;
+  margin-bottom: 0.75rem;
+}
+
+.sentiment-layout-title-text {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #E7E9EA;
+}
+
+.split-chart-container {
+  display: flex;
+  gap: 10px;
+  height: 70px;
+}
+
+.split-bar {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.split-bar-inner {
+  width: 16px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.12);
+  display: flex;
+  align-items: flex-end;
+  overflow: hidden;
+}
+
+.split-bar-inner.excited {
+  background: linear-gradient(to top, #1D9BF0, #4AADFF);
+}
+
+.split-bar-inner.nervous {
+  background: linear-gradient(to top, #FF4444, #FF8A8A);
+}
+
+.split-bar-label {
+  margin-top: 4px;
+  font-size: 11px;
+  opacity: 0.8;
+}
+
+/* Make layout stack nicely on narrow screens */
+@media (max-width: 900px) {
+  .sentiment-bar-wrapper,
+  .sentiment-globe-wrapper {
+    flex: 1 1 100%;
+    max-width: 100%;
+  }
+
+  .sentiment-split-card {
+    position: static;
+    margin: 1rem auto 0;
+  }
+}
+
+.sentiment-globe-caption {
+  margin-top: 0.6rem;
+  font-size: 0.8rem;
+  color: #8899A6;
+  text-align: center;
+  line-height: 1.4;
+}
+
+/* Bar chart styling */
+.sentiment-bar {
+  cursor: pointer;
+  opacity: 0.9;
+  transition: all 0.2s ease;
+}
+
+.sentiment-bar:hover,
+.sentiment-bar.bar-selected {
+  opacity: 1;
+  stroke: #E7E9EA;
+  stroke-width: 1.5;
+}
+
+.bar-axis path,
+.bar-axis line {
+  stroke: rgba(231, 233, 234, 0.4);
+  shape-rendering: crispEdges;
+}
+
+.bar-axis text {
+  fill: #E7E9EA;
+  font-size: 11px;
+}
+
+/* Keep worldMap tall enough to show both viz */
+.sentiment-section #worldMap {
+  min-height: 420px;
+}
+/* World map country styles */
 
 .country {
   stroke: #16181C;
@@ -2687,7 +3015,7 @@ svg {
     display: block;
   }
 
-  /* Facebook visualization is the exception â€” allow it to be larger */
+  /* Facebook visualization is the exception ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â allow it to be larger */
   #facebook-chart {
     width: 100%;
     max-width: 100%;
@@ -7074,4 +7402,170 @@ svg {
 
 /* ========================================
    CONCLUSION SECTION STYLES
+<<<<<<< Updated upstream
    ======================================== */
+=======
+   ======================================== */
+
+/* Sentiment split floating card */
+.sentiment-split-card {
+  position: absolute;
+  right: 9%;
+  top: 50%;
+  transform: translateY(-50%);
+  padding: 0.8rem 1rem 1rem;
+  background: rgba(22, 24, 28, 0.96);
+  border-radius: 12px;
+  border: 1px solid rgba(231, 233, 234, 0.18);
+  box-shadow: 0 18px 30px rgba(0,0,0,0.65);
+  width: 190px;
+  font-size: 0.78rem;
+  z-index: 5;
+}
+
+.sentiment-split-card.hidden {
+  display: none;
+}
+
+
+
+.split-country {
+  font-weight: 700;
+  color: #E7E9EA;
+}
+
+.split-count {
+  color: #8899A6;
+}
+
+
+
+
+
+
+
+.split-bar-inner.nervous {
+  background: #FF4444;
+  box-shadow: 0 0 12px rgba(255, 68, 68, 0.6);
+}
+
+
+
+
+/* Floating sentiment split overlay card */
+
+.sentiment-split-card {
+  position: absolute;
+  right: 9%;
+  top: 50%;
+  transform: translateY(-50%);
+  padding: 0.8rem 1rem 1rem;
+  background: rgba(22, 24, 28, 0.96);
+  border-radius: 12px;
+  border: 1px solid rgba(231, 233, 234, 0.18);
+  box-shadow: 0 18px 30px rgba(0,0,0,0.65);
+  width: 190px;
+  font-size: 0.78rem;
+  z-index: 5;
+}
+
+.sentiment-split-card.hidden {
+  display: none;
+}
+
+.split-header {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  margin-bottom: 0.5rem;
+}
+
+.split-country {
+  font-weight: 700;
+  color: #E7E9EA;
+}
+
+.split-count {
+  color: #8899A6;
+}
+
+.split-chart-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 0.75rem;
+  height: 130px;
+}
+
+.split-bar {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.split-bar-inner {
+  width: 22px;
+  border-radius: 999px;
+  background: #4AADFF;
+  box-shadow: 0 0 12px rgba(74, 173, 255, 0.6);
+}
+
+.split-bar-inner.nervous {
+  background: #FF4444;
+  box-shadow: 0 0 12px rgba(255, 68, 68, 0.6);
+}
+
+.split-bar-label {
+  color: #E7E9EA;
+}
+
+/* === Cleanup legacy UI elements (world map, scatter plot, and old tooltip) === */
+.tooltip {
+  display: none !important;
+}
+
+/* Hide tabs globally - they're only used in sentiment section */
+.viz-tabs,
+.viz-tab,
+#scatterChart,
+#scatterTooltip {
+  display: none !important;
+}
+
+/* Override: Show tabs in sentiment section */
+.sentiment-section .viz-tabs,
+.sentiment-section .viz-tab {
+  display: flex !important;
+}
+
+/* Ensure the 3D globe sits comfortably below the sentiment title */
+.sentiment-section #worldMap {
+  overflow: visible;
+}
+
+/* Ensure tooltips are not clipped - scoped to sentiment section only */
+.sentiment-section #worldMap,
+.sentiment-section .sentiment-layout,
+.sentiment-section .sentiment-globe-wrapper {
+  overflow: visible;
+}
+
+/* Additional tooltip overflow protection - scoped to sentiment section only */
+.sentiment-section .sentiment-globe-wrapper > * {
+  overflow: visible;
+}
+
+@media (min-width: 1024px) {
+  .sentiment-globe-wrapper {
+    margin-top: 2rem;
+  }
+  
+  #sentimentGlobe {
+    max-width: 600px;
+    min-width: 480px;
+  }
+}
+
+>>>>>>> Stashed changes
