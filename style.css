@@ -1,3 +1,18 @@
+/* Section positioning for sentiment visuals */
+#sectionSentiment {
+  padding: 40px 0 80px;
+  overflow: visible;
+  isolation: isolate; /* Create new stacking context to contain z-index */
+  display: flex;
+  align-items: stretch;
+  justify-content: flex-start;
+}
+
+#sectionSentiment #worldMap {
+  width: 100%;
+  margin: 0 auto;
+}
+
 /* ========================================
    GLOBAL STYLE GUIDE & DESIGN SYSTEM
    X (Twitter) Dark Mode Aesthetic
@@ -2326,20 +2341,25 @@ svg {
   background: var(--primary-dark);
   padding: 1rem 0.5rem;
   min-height: 100vh;
+  overflow: visible;
 }
 
 .sentiment-container {
-  max-width: 95%;
+  max-width: 1400px;
   margin: 0 auto;
   text-align: center;
   display: flex;
   flex-direction: column;
-  gap: 0.8rem;
+  justify-content: flex-start;
+  gap: 0.75rem;
+  padding: 4vh 2rem 6vh;
+  min-height: calc(100vh - 100px);
 }
 
 .sentiment-title {
   font-size: 1rem;
-  margin-bottom: 0.3rem;
+  margin-bottom: 0.1rem;
+  margin-top: 0.25rem;
   color: var(--text-bright);
   letter-spacing: 0.5px;
   font-weight: 700;
@@ -2347,15 +2367,22 @@ svg {
   transform: translateY(30px);
   animation: fadeInUp 0.8s ease-out forwards;
   line-height: 1.2;
+  padding-bottom: 0.75rem;
 }
 
 .sentiment-subtitle {
   font-size: 0.75rem;
   color: var(--text-secondary);
-  margin-bottom: 0.8rem;
+  margin-bottom: 0.5rem;
   opacity: 0;
   transform: translateY(30px);
   animation: fadeInUp 0.8s ease-out 0.2s forwards;
+  padding-bottom: 0.8rem;
+}
+
+.sentiment-subtitle:last-of-type {
+  padding-bottom: 0.25rem;
+  margin-bottom: 0.3rem;
 }
 
 /* Tab Navigation */
@@ -2363,7 +2390,8 @@ svg {
   display: flex;
   justify-content: center;
   gap: 0.6rem;
-  margin-bottom: 0.6rem;
+  margin-bottom: 1.25rem;
+  margin-top: 0.25rem;
   opacity: 0;
   animation: fadeInUp 0.8s ease-out 0.4s forwards;
   flex-wrap: wrap;
@@ -2416,8 +2444,9 @@ svg {
 }
 
 #scatterChart {
-  margin: 0 auto 1rem;
-  min-height: 550px;
+  margin: 0 auto 0.75rem;
+  min-height: 500px;
+  max-height: calc(100vh - 280px);
   width: 100%;
   display: flex;
   justify-content: center;
@@ -2425,8 +2454,12 @@ svg {
 }
 
 #worldMap {
-  margin: 0 auto 1rem;
-  min-height: 550px;
+  margin: 0.4rem auto 0.5rem;
+  min-height: 480px;
+  max-height: calc(100vh - 260px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .country {
@@ -6095,7 +6128,7 @@ svg {
 #botRevealViz,
 #facebook-chart,
 #traffic-chart {
-  max-height: 600px;
+  max-height: calc(100vh - 260px);
   height: auto;
   overflow: visible;
   margin-bottom: 0.5rem;
