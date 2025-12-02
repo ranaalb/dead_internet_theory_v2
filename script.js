@@ -5774,9 +5774,34 @@ setTimeout(initializeClickableCards, 2000);
 const botCanvas = document.getElementById('botFlowCanvas');
 const botCtx = botCanvas.getContext('2d');
 
+// Fix blurry canvas for high-DPI displays
+const dpr = window.devicePixelRatio || 1;
+const rect = botCanvas.getBoundingClientRect();
+
+// Set actual size in memory (scaled for high-DPI)
+botCanvas.width = rect.width * dpr;
+botCanvas.height = rect.height * dpr;
+
+// Scale the canvas back down using CSS
+botCanvas.style.width = rect.width + 'px';
+botCanvas.style.height = rect.height + 'px';
+
+// Scale the drawing context to match device pixel ratio
+botCtx.scale(dpr, dpr);
+
+// Enable image smoothing for better quality
+botCtx.imageSmoothingEnabled = true;
+botCtx.imageSmoothingQuality = 'high';
+
+// Update canvas dimensions for calculations
+const botWidth = rect.width;
+const botHeight = rect.height;
+
 // Active filters
 let botActiveCategory = null;
 let botActiveValue = null;
+let botHoveredNode = null;
+let botClickedNode = null;
 
 let botAnimationProgress = 0;
 let botIsAnimating = false;
@@ -5862,8 +5887,6 @@ const botData = {
 };
 
 // Layout calculations
-const botWidth = botCanvas.width;
-const botHeight = botCanvas.height;
 const botStageWidth = botWidth / 4;
 const botNodeWidth = 100;
 const botPadding = 35;
@@ -5885,6 +5908,92 @@ const botPositions = botData.stages.map((stage, stageIdx) => {
     currentY += nodeHeight + 18;
     return pos;
   });
+});
+
+// Mouse interaction functions
+function getMousePos(canvas, evt) {
+  const rect = canvas.getBoundingClientRect();
+  return {
+    x: evt.clientX - rect.left,
+    y: evt.clientY - rect.top
+  };
+}
+
+function getNodeAtPosition(x, y) {
+  for (let stageIdx = 0; stageIdx < botData.stages.length; stageIdx++) {
+    for (let nodeIdx = 0; nodeIdx < botData.stages[stageIdx].nodes.length; nodeIdx++) {
+      const pos = botPositions[stageIdx][nodeIdx];
+      if (x >= pos.x - botNodeWidth / 2 && x <= pos.x + botNodeWidth / 2 &&
+          y >= pos.y - pos.height / 2 && y <= pos.y + pos.height / 2) {
+        return { stageIdx, nodeIdx };
+      }
+    }
+  }
+  return null;
+}
+
+// Add mouse event listeners
+botCanvas.addEventListener('mousemove', (evt) => {
+  const mousePos = getMousePos(botCanvas, evt);
+  const nodeAt = getNodeAtPosition(mousePos.x, mousePos.y);
+  
+  if (nodeAt && (!botHoveredNode || 
+      botHoveredNode.stageIdx !== nodeAt.stageIdx || 
+      botHoveredNode.nodeIdx !== nodeAt.nodeIdx)) {
+    botHoveredNode = nodeAt;
+    botCanvas.style.cursor = 'pointer';
+    drawBotVisualization();
+  } else if (!nodeAt && botHoveredNode) {
+    botHoveredNode = null;
+    botCanvas.style.cursor = 'default';
+    drawBotVisualization();
+  }
+});
+
+botCanvas.addEventListener('click', (evt) => {
+  const mousePos = getMousePos(botCanvas, evt);
+  const nodeAt = getNodeAtPosition(mousePos.x, mousePos.y);
+  
+  if (nodeAt) {
+    botClickedNode = nodeAt;
+    
+    // Set the filter dropdowns to match the clicked node
+    const stage = botData.stages[nodeAt.stageIdx];
+    const node = stage.nodes[nodeAt.nodeIdx];
+    const categoryMap = {
+      0: 'origin',
+      1: 'sophistication', 
+      2: 'industry',
+      3: 'country'
+    };
+    
+    botActiveCategory = categoryMap[nodeAt.stageIdx];
+    botActiveValue = node.name;
+    
+    // Update UI dropdowns
+    const categorySelect = document.getElementById('botCategorySelect');
+    const valueSelect = document.getElementById('botValueSelect');
+    const valueSelectGroup = document.getElementById('botValueSelectGroup');
+    const valueLabel = document.getElementById('botValueLabel');
+    
+    categorySelect.value = botActiveCategory;
+    valueSelectGroup.style.display = 'flex';
+    valueLabel.textContent = `Step 2: Choose ${botActiveCategory.charAt(0).toUpperCase() + botActiveCategory.slice(1)}`;
+    
+    // Populate and select value
+    valueSelect.innerHTML = '<option value="">Select...</option>';
+    categoryOptions[botActiveCategory].forEach(option => {
+      const opt = document.createElement('option');
+      opt.value = option;
+      opt.textContent = option;
+      valueSelect.appendChild(opt);
+    });
+    valueSelect.value = botActiveValue;
+    
+    animateTransition();
+  } else {
+    botClickedNode = null;
+  }
 });
 
 // Find only DIRECT connections (not all reachable nodes)
@@ -6025,6 +6134,10 @@ function animateTransition(callback) {
 function drawBotVisualization() {
   botCtx.clearRect(0, 0, botWidth, botHeight);
   
+  // Enable high-quality rendering
+  botCtx.textBaseline = 'alphabetic';
+  botCtx.textRenderingOptimization = 'optimizeQuality';
+  
   const filtered = getFilteredElements();
   const hasFilters = filtered !== null;
   
@@ -6047,8 +6160,11 @@ function drawBotVisualization() {
     }
     
     if (shouldShow) {
+      botCtx.save();
       botCtx.strokeStyle = flow.color;
       botCtx.lineWidth = thickness;
+      botCtx.lineCap = 'round';
+      botCtx.lineJoin = 'round';
       botCtx.globalAlpha = opacity * (shouldShow ? 1 : (1 - (botAnimationProgress - 0.5) * 2));
       
       botCtx.beginPath();
@@ -6063,6 +6179,7 @@ function drawBotVisualization() {
         toPos.x - botNodeWidth / 2, toPos.y
       );
       botCtx.stroke();
+      botCtx.restore();
     }
   });
   
@@ -6070,15 +6187,28 @@ function drawBotVisualization() {
   
   // Draw nodes
   botData.stages.forEach((stage, stageIdx) => {
-    // Draw stage title
+    // Draw stage title with improved quality
+    botCtx.save();
     botCtx.fillStyle = '#9ca3af';
-    botCtx.font = 'bold 14px sans-serif';
+    botCtx.font = 'bold 14px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
     botCtx.textAlign = 'center';
-    botCtx.fillText(stage.name.toUpperCase(), stageIdx * botStageWidth + botStageWidth / 2, 10);
+    botCtx.textBaseline = 'top';
+    
+    // Add subtle text shadow for better readability
+    botCtx.shadowColor = 'rgba(0, 0, 0, 0.3)';
+    botCtx.shadowBlur = 1;
+    botCtx.shadowOffsetX = 0;
+    botCtx.shadowOffsetY = 1;
+    
+    botCtx.fillText(stage.name.toUpperCase(), stageIdx * botStageWidth + botStageWidth / 2, 15);
+    botCtx.restore();
     
     stage.nodes.forEach((node, nodeIdx) => {
       const pos = botPositions[stageIdx][nodeIdx];
       const nodeKey = `${stageIdx}-${nodeIdx}`;
+      
+      const isHovered = botHoveredNode && botHoveredNode.stageIdx === stageIdx && botHoveredNode.nodeIdx === nodeIdx;
+      const isClicked = botClickedNode && botClickedNode.stageIdx === stageIdx && botClickedNode.nodeIdx === nodeIdx;
       
       let opacity = 1;
       let scale = 1;
@@ -6095,6 +6225,10 @@ function drawBotVisualization() {
         }
       }
       
+      // Apply hover and click scaling
+      if (isHovered) scale *= 1.1;
+      if (isClicked) scale *= 1.15;
+      
       if (shouldShow && scale > 0) {
         const adjustedOpacity = opacity * (shouldShow ? 1 : (1 - (botAnimationProgress - 0.7) / 0.3));
         
@@ -6103,26 +6237,75 @@ function drawBotVisualization() {
         botCtx.scale(scale, scale);
         botCtx.translate(-pos.x, -pos.y);
         
-        // Draw node rectangle
+        // Add glow effect for hovered/clicked nodes
+        if (isHovered || isClicked) {
+          botCtx.shadowColor = node.color;
+          botCtx.shadowBlur = isClicked ? 20 : 15;
+          botCtx.shadowOffsetX = 0;
+          botCtx.shadowOffsetY = 0;
+        }
+        
+        // Draw node rectangle with rounded corners for better appearance
         botCtx.globalAlpha = adjustedOpacity;
         botCtx.fillStyle = node.color;
-        botCtx.fillRect(pos.x - botNodeWidth / 2, pos.y - pos.height / 2, botNodeWidth, pos.height);
         
-        // Draw border
-        botCtx.strokeStyle = filtered && filtered.nodes.has(nodeKey) ? '#ffffff' : '#000';
-        botCtx.lineWidth = filtered && filtered.nodes.has(nodeKey) ? 3 : 2;
-        botCtx.strokeRect(pos.x - botNodeWidth / 2, pos.y - pos.height / 2, botNodeWidth, pos.height);
+        // Use rounded rectangle for smoother appearance
+        const cornerRadius = 4;
+        const x = pos.x - botNodeWidth / 2;
+        const y = pos.y - pos.height / 2;
+        const width = botNodeWidth;
+        const height = pos.height;
         
-        // Draw node name
+        botCtx.beginPath();
+        botCtx.moveTo(x + cornerRadius, y);
+        botCtx.lineTo(x + width - cornerRadius, y);
+        botCtx.quadraticCurveTo(x + width, y, x + width, y + cornerRadius);
+        botCtx.lineTo(x + width, y + height - cornerRadius);
+        botCtx.quadraticCurveTo(x + width, y + height, x + width - cornerRadius, y + height);
+        botCtx.lineTo(x + cornerRadius, y + height);
+        botCtx.quadraticCurveTo(x, y + height, x, y + height - cornerRadius);
+        botCtx.lineTo(x, y + cornerRadius);
+        botCtx.quadraticCurveTo(x, y, x + cornerRadius, y);
+        botCtx.closePath();
+        botCtx.fill();
+        
+        // Draw border with rounded corners
+        let borderColor = '#000';
+        let borderWidth = 2;
+        
+        if (isClicked) {
+          borderColor = '#ffffff';
+          borderWidth = 3;
+        } else if (isHovered) {
+          borderColor = '#ffffff';
+          borderWidth = 2;
+        } else if (filtered && filtered.nodes.has(nodeKey)) {
+          borderColor = '#ffffff';
+          borderWidth = 3;
+        }
+        
+        botCtx.strokeStyle = borderColor;
+        botCtx.lineWidth = borderWidth;
+        botCtx.stroke(); // Use the same rounded path for border
+        
+        // Draw node name with improved quality
         botCtx.fillStyle = '#ffffff';
-        botCtx.font = 'bold 11px sans-serif';
+        botCtx.font = 'bold 12px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
         botCtx.textAlign = 'center';
-        botCtx.shadowColor = 'rgba(0, 0, 0, 0.8)';
-        botCtx.shadowBlur = 4;
+        botCtx.textBaseline = 'middle';
+        
+        // Enhanced text shadow for better contrast
+        botCtx.shadowColor = 'rgba(0, 0, 0, 0.9)';
+        botCtx.shadowBlur = 3;
+        botCtx.shadowOffsetX = 1;
+        botCtx.shadowOffsetY = 1;
         
         const words = node.name.split(' ');
+        const lineHeight = 16;
+        const startY = pos.y - ((words.length - 1) * lineHeight / 2);
+        
         words.forEach((word, i) => {
-          botCtx.fillText(word, pos.x, pos.y - (words.length - 1) * 6 + i * 14);
+          botCtx.fillText(word, pos.x, startY + i * lineHeight);
         });
         
         botCtx.shadowBlur = 0;
