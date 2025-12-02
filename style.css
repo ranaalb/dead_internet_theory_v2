@@ -2324,7 +2324,7 @@ svg {
    ======================================== */
 .sentiment-section {
   background: var(--primary-dark);
-  padding: 1rem 0.5rem;
+  padding: 4rem 1.5rem;
   min-height: 100vh;
 }
 
@@ -2335,6 +2335,58 @@ svg {
   display: flex;
   flex-direction: column;
   gap: 0.8rem;
+}
+
+.sentiment-layout {
+  margin-top: 1.8rem;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: flex-start;
+  gap: 2rem;
+}
+
+.sentiment-panel {
+  background: transparent;
+  padding: 0;
+  border-radius: 12px;
+  flex: 1 1 420px;
+  max-width: 720px;
+}
+
+.sentiment-gap-panel {
+  flex: 1 1 520px;
+}
+
+.sentiment-globe-panel {
+  flex: 1 1 420px;
+}
+
+.sentiment-panel-title {
+  font-size: 1.1rem;
+  margin-bottom: 0.5rem;
+  color: var(--text-bright);
+  font-weight: 700;
+  text-align: left;
+}
+
+#scatterChart,
+#worldMap {
+  width: 100%;
+  min-height: 520px;
+  margin: 0 auto;
+}
+
+/* Stack vertically on small screens */
+@media (max-width: 900px) {
+  .sentiment-layout {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .sentiment-panel {
+    max-width: 100%;
+  }
 }
 
 .sentiment-title {
@@ -2537,6 +2589,7 @@ svg {
   transition: opacity 0.2s ease;
   min-width: 320px;
   backdrop-filter: blur(10px);
+  text-align: center;
 }
 
 .map-tooltip.visible {
@@ -2562,6 +2615,49 @@ svg {
 .map-tooltip .sentiment-values strong {
   color: var(--accent-blue);
   font-size: 20px;
+}
+
+.map-tooltip .tooltip-bars {
+  margin-top: 8px;
+  display: flex;
+  gap: 12px;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.map-tooltip .tooltip-bar-column {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 80px;
+}
+
+.map-tooltip .tooltip-bar {
+  width: 16px;
+  border-radius: 4px 4px 0 0;
+}
+
+.map-tooltip .tooltip-bar.excited {
+  background: #4AADFF;
+}
+
+.map-tooltip .tooltip-bar.nervous {
+  background: #FF4444;
+}
+
+.map-tooltip .tooltip-bar-label {
+  margin-top: 4px;
+  font-size: 11px;
+}
+
+.map-tooltip .tooltip-bar-value {
+  font-size: 11px;
+  opacity: 0.8;
+}
+
+.map-tooltip .tooltip-bar-count {
+  font-size: 11px;
+  opacity: 0.7;
 }
 
 /* Interactive legend for map */
@@ -2654,7 +2750,7 @@ svg {
     display: block;
   }
 
-  /* Facebook visualization is the exception â€” allow it to be larger */
+  /* Facebook visualization is the exception Ã¢â‚¬â€ allow it to be larger */
   #facebook-chart {
     width: 100%;
     max-width: 100%;
@@ -5187,7 +5283,7 @@ svg {
 }
 
 .claims-list li:before {
-  content: "✓";
+  content: "âœ“";
   position: absolute;
   left: 0;
   color: #34a853;
@@ -5195,7 +5291,7 @@ svg {
 }
 
 .findings-list li:before {
-  content: "⚠";
+  content: "âš ";
   position: absolute;
   left: 0;
   color: #ea4335;
@@ -7143,3 +7239,86 @@ svg {
 /* ========================================
    CONCLUSION SECTION STYLES
    ======================================== */
+
+/* Tooltip smaller styles */
+.chart-tooltip {
+  position: absolute;
+  background: var(--primary-dark);
+  color: var(--text-primary);
+  padding: 0.65rem 0.9rem;
+  border-radius: 10px;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.18s ease;
+  font-size: 0.85rem;
+  border: 1px solid var(--accent-blue);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.75),
+              0 0 14px rgba(29, 155, 240, 0.25);
+  backdrop-filter: blur(12px);
+  z-index: 1000;
+  max-width: 260px;
+  line-height: 1.4;
+}
+
+.chart-tooltip.visible { opacity: 1; }
+
+.tooltip-date {
+  font-weight: 700;
+  color: #1D9BF0;
+  margin-bottom: 0.3rem;
+  font-size: 0.95rem;
+  text-shadow: 0 0 6px rgba(29, 155, 240, 0.6);
+}
+
+.tooltip-value {
+  color: #fff;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.tooltip-value strong {
+  color: #ffd700;
+  font-size: 1.05rem;
+  font-weight: 700;
+}
+
+.map-tooltip,
+.chart-tooltip {
+  position: fixed !important;
+  transform: none;
+  z-index: 9999;
+  min-width: 180px;
+  max-width: 260px;
+  padding: 0.6rem 0.8rem;
+}
+
+.map-tooltip {
+  background: rgba(15, 23, 42, 0.96);
+  color: #E7E9EA;
+  border-radius: 10px;
+  border: 1px solid rgba(148, 163, 184, 0.5);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.75);
+  line-height: 1.4;
+  font-size: 0.85rem;
+  pointer-events: none;
+}
+
+/* Highlight bars and countries */
+.gap-bar.selected {
+  outline: 2px solid #facc15;
+  outline-offset: 2px;
+  filter: drop-shadow(0 0 10px rgba(250, 204, 21, 0.65));
+  opacity: 1 !important;
+}
+
+.gap-label.selected {
+  fill: #facc15 !important;
+  font-weight: 700;
+}
+
+.countries path.selected-country {
+  stroke: #facc15 !important;
+  stroke-width: 1.6 !important;
+  filter: drop-shadow(0 0 10px rgba(250, 204, 21, 0.75));
+  opacity: 1 !important;
+}

@@ -4297,6 +4297,12 @@ document.addEventListener('DOMContentLoaded', async function() {
     'United States': { nervous: 52.9, excited: 21.9, count: 1100 }
   };
 
+
+  // Functions that let the sentiment bar chart control the globe.
+  // They are assigned concrete implementations once the globe is initialised.
+  let focusCountryOnGlobe = function(countryName) {};
+  let stopGlobeRotation = function() {};
+
   const normalizeCountryName = (name) => {
     const nameMap = {
       'United States of America': 'United States',
@@ -4307,353 +4313,448 @@ document.addEventListener('DOMContentLoaded', async function() {
     return nameMap[name] || name;
   };
 
+
   // ========================================
-  // SCATTER PLOT - EXTRA LARGE & INTERACTIVE
+  // SENTIMENT GAP BAR CHART - EXTRA LARGE & INTERACTIVE
   // ========================================
   const scatterContainer = document.getElementById('scatterChart');
   if (scatterContainer) {
-    const margin = { top: 40, right: 80, bottom: 80, left: 80 };
+    const margin = { top: 40, right: 40, bottom: 60, left: 160 };
     const containerWidth = Math.min(1100, window.innerWidth * 0.85);
     const width = containerWidth - margin.left - margin.right;
-    const height = 500 - margin.top - margin.bottom;
+    const height = 520 - margin.top - margin.bottom;
+
+    // Prepare data array with nervous–excited gap
+    const dataArray = Object.entries(sentimentData).map(([country, d]) => ({
+      country,
+      excited: d.excited,
+      nervous: d.nervous,
+      count: d.count,
+      gap: d.nervous - d.excited // positive = more nervous than excited
+    }))
+    // sort by gap descending (more nervous at top)
+    .sort((a, b) => b.gap - a.gap);
+
+    // Color scale shared with the globe (more nervous = redder)
+    const nervousColorScale = d3.scaleSequential()
+      .domain([25, 60])
+      .interpolator(d3.interpolateRgb('#4AADFF', '#FF4444'));
+
+    // Clear any previous chart
+    scatterContainer.innerHTML = '';
 
     const svg = d3.select('#scatterChart')
       .append('svg')
       .attr('width', containerWidth)
-      .attr('height', 500)
-      .attr('viewBox', `0 0 ${containerWidth} 500`)
+      .attr('height', height + margin.top + margin.bottom)
+      .attr('viewBox', `0 0 ${containerWidth} ${height + margin.top + margin.bottom}`)
       .attr('preserveAspectRatio', 'xMidYMid meet')
-      .style('background', '#000000')
-      .style('display', 'block')
-      .style('margin', '0 auto')
       .append('g')
       .attr('transform', `translate(${margin.left},${margin.top})`);
 
-    const xScale = d3.scaleLinear().domain([15, 65]).range([0, width]);
-    const yScale = d3.scaleLinear().domain([25, 65]).range([height, 0]);
+    const maxAbsGap = d3.max(dataArray, d => Math.abs(d.gap)) || 0;
 
-    // Enhanced grid with better spacing for zoomed view
-    svg.append('g').selectAll('line.grid-line-x').data(xScale.ticks(10)).enter().append('line')
-      .attr('class', 'grid-line').attr('x1', d => xScale(d)).attr('x2', d => xScale(d)).attr('y1', 0).attr('y2', height);
-    svg.append('g').selectAll('line.grid-line-y').data(yScale.ticks(7)).enter().append('line')
-      .attr('class', 'grid-line').attr('x1', 0).attr('x2', width).attr('y1', d => yScale(d)).attr('y2', d => yScale(d));
+    const xScale = d3.scaleLinear()
+      .domain([-maxAbsGap, maxAbsGap])
+      .range([0, width])
+      .nice();
 
-    // Reference lines with labels
-    svg.append('line').attr('class', 'reference-line')
-      .attr('x1', xScale(50)).attr('x2', xScale(50)).attr('y1', 0).attr('y2', height);
-    svg.append('line').attr('class', 'reference-line')
-      .attr('x1', 0).attr('x2', width).attr('y1', yScale(50)).attr('y2', yScale(50));
+    const yScale = d3.scaleBand()
+      .domain(dataArray.map(d => d.country))
+      .range([0, height])
+      .padding(0.25);
 
-    svg.append('text').attr('x', xScale(50) + 8).attr('y', 20)
-      .style('fill', '#1D9BF0').style('font-size', '18px').style('font-weight', '700')
-      .text('Global');
+    // Zero line
+    svg.append('line')
+      .attr('class', 'gap-zero-line')
+      .attr('x1', xScale(0))
+      .attr('x2', xScale(0))
+      .attr('y1', 0)
+      .attr('y2', height)
+      .style('stroke', 'rgba(231,233,234,0.4)')
+      .style('stroke-width', 1.5)
+      .style('stroke-dasharray', '4,4');
 
-    const tooltip = d3.select('body').append('div').attr('class', 'map-tooltip')
-      .style('position', 'absolute').style('opacity', 0);
+    // Grid lines
+    svg.append('g')
+      .attr('class', 'gap-x-grid')
+      .call(
+        d3.axisTop(xScale)
+          .ticks(7)
+          .tickSize(-height)
+          .tickFormat(d => (d === 0 ? '' : (d > 0 ? '+' + d.toFixed(0) : d.toFixed(0))))
+      )
+      .selectAll('line')
+      .style('stroke', 'rgba(231,233,234,0.15)')
+      .style('stroke-dasharray', '3,6');
 
-    const dataArray = Object.entries(sentimentData).map(([country, data]) => ({ country, ...data }));
+    svg.selectAll('.gap-x-grid .domain').remove();
 
-    // Larger, more interactive dots
-    const dots = svg.selectAll('.scatter-dot').data(dataArray).enter().append('circle')
-      .attr('class', 'scatter-dot')
-      .attr('cx', d => xScale(d.excited))
-      .attr('cy', d => yScale(d.nervous))
-      .attr('r', 0)
-      .attr('fill', '#1D9BF0')
-      .attr('opacity', 0.9)
-      .attr('stroke', '#000000')
-      .attr('stroke-width', 2);
+    // Bars
+    const bars = svg.selectAll('.gap-bar')
+      .data(dataArray)
+      .enter()
+      .append('rect')
+      .attr('class', 'gap-bar')
+      .attr('y', d => yScale(d.country))
+      .attr('x', xScale(0))
+      .attr('height', yScale.bandwidth())
+      .attr('width', 0)
+      .attr('rx', 8)
+      .style('fill', d => nervousColorScale(d.nervous))
+      .style('opacity', 0.9);
 
-    dots.transition().duration(1000).delay((d, i) => i * 40).attr('r', 10);
+    bars.transition()
+      .duration(900)
+      .delay((d, i) => i * 20)
+      .attr('x', d => xScale(Math.min(0, d.gap)))
+      .attr('width', d => Math.abs(xScale(d.gap) - xScale(0)));
 
-    dots.on('mouseover', function(event, d) {
-        d3.select(this).transition().duration(150).attr('r', 15).attr('opacity', 1);
-        
-        // Show or highlight label for this country
-        const existingLabel = svg.selectAll('.scatter-label')
-          .filter(label => label.country === d.country);
-        
-        if (!existingLabel.empty()) {
-          // Highlight existing label
-          existingLabel
-            .style('opacity', 1)
-            .style('font-weight', '900')
-            .style('font-size', '15px')
-            .style('fill', '#1D9BF0');
-        } else {
-          // Create temporary label for unlabeled country
-          svg.append('text')
-            .attr('class', 'scatter-label-temp')
-            .attr('x', xScale(d.excited) + 12)
-            .attr('y', yScale(d.nervous) + 5)
-            .attr('text-anchor', 'start')
-            .text(d.country)
-            .style('fill', '#1D9BF0')
-            .style('font-size', '14px')
-            .style('font-weight', '700')
-            .style('pointer-events', 'none')
-            .style('text-shadow', '2px 2px 4px rgba(0, 0, 0, 1), -2px -2px 4px rgba(0, 0, 0, 1), 2px -2px 4px rgba(0, 0, 0, 1), -2px 2px 4px rgba(0, 0, 0, 1), 0 0 6px rgba(0, 0, 0, 1)')
-            .style('opacity', 0)
-            .transition().duration(150).style('opacity', 1);
-        }
-        
-        tooltip.html(`
-          <div class="country-name">${d.country}</div>
-          <div class="sentiment-values">
-            <strong>Excited:</strong> ${d.excited.toFixed(1)}%<br/>
-            <strong>Nervous:</strong> ${d.nervous.toFixed(1)}%<br/>
-            <strong>Respondents:</strong> ${d.count.toLocaleString()}<br/>
-            <div style="margin-top:8px; padding-top:8px; border-top:1px solid rgba(29,155,240,0.3);">
-              <em style="color:#71767B;">Sentiment: ${d.excited > d.nervous ? 'More Excited' : 'More Nervous'}</em>
-            </div>
-          </div>
-        `)
-          .classed('visible', true)
+    // Country labels
+    svg.append('g')
+      .attr('class', 'gap-y-axis')
+      .call(d3.axisLeft(yScale))
+      .selectAll('text')
+      .style('fill', '#E7E9EA')
+      .style('font-size', '13px')
+      .style('font-weight', '600');
+
+    svg.selectAll('.gap-y-axis .domain, .gap-y-axis line').remove();
+
+    // Gap labels at bar ends
+    svg.selectAll('.gap-label')
+      .data(dataArray)
+      .enter()
+      .append('text')
+      .attr('class', 'gap-label')
+      .attr('y', d => yScale(d.country) + yScale.bandwidth() / 2 + 4)
+      .attr('x', d => d.gap >= 0 ? xScale(d.gap) + 8 : xScale(d.gap) - 8)
+      .attr('text-anchor', d => d.gap >= 0 ? 'start' : 'end')
+      .style('fill', '#E7E9EA')
+      .style('font-size', '12px')
+      .style('font-weight', '600')
+      .text(d => `${d.gap >= 0 ? '+' : ''}${d.gap.toFixed(1)} pts`);
+
+    // Axis titles
+    svg.append('text')
+      .attr('x', width / 2)
+      .attr('y', height + 40)
+      .attr('text-anchor', 'middle')
+      .style('fill', '#E7E9EA')
+      .style('font-size', '13px')
+      .style('font-weight', '700')
+      .text('Sentiment gap (Nervous − Excited, percentage points)');
+
+    svg.append('text')
+      .attr('x', xScale(-maxAbsGap))
+      .attr('y', -18)
+      .attr('text-anchor', 'start')
+      .style('fill', '#4AADFF')
+      .style('font-size', '12px')
+      .style('font-weight', '600')
+      .text('More excited about AI');
+
+    svg.append('text')
+      .attr('x', xScale(maxAbsGap))
+      .attr('y', -18)
+      .attr('text-anchor', 'end')
+      .style('fill', '#FF6B6B')
+      .style('font-size', '12px')
+      .style('font-weight', '600')
+      .text('More nervous about AI');
+
+    // Tooltip (re-use if it already exists)
+    let gapTooltip = d3.select('body').select('.chart-tooltip');
+    if (gapTooltip.empty()) {
+      gapTooltip = d3.select('body')
+        .append('div')
+        .attr('class', 'chart-tooltip');
+    }
+
+    bars
+      .on('mouseover', function(event, d) {
+        d3.select(this)
+          .transition()
+          .duration(150)
           .style('opacity', 1);
 
-        // Clamp tooltip position so it remains within the viewport
-        positionTooltip(tooltip, event.pageX, event.pageY, 15, 28);
+        const direction = d.gap >= 0 ? 'more nervous than excited' : 'more excited than nervous';
+
+        gapTooltip
+          .html(`
+            <div class="tooltip-date">${d.country}</div>
+            <div class="tooltip-value">
+              Nervous: <strong>${d.nervous.toFixed(1)}%</strong><br/>
+              Excited: <strong>${d.excited.toFixed(1)}%</strong><br/>
+              Gap: <strong>${d.gap >= 0 ? '+' : ''}${d.gap.toFixed(1)} pts</strong><br/>
+            </div>
+            <div style="margin-top: 0.6rem; font-size: 0.9rem;">
+              People here are <strong>${Math.abs(d.gap).toFixed(1)} points ${direction}</strong> about AI.<br/>
+              <span style="opacity:0.8;">Respondents: ${d.count.toLocaleString()}</span>
+            </div>
+          `)
+          .style('opacity', 1)
+          .classed('visible', true);
+
+        positionTooltip(gapTooltip, event.pageX, event.pageY, 15, 24);
       })
       .on('mousemove', function(event) {
-        positionTooltip(tooltip, event.pageX, event.pageY, 15, 28);
+        positionTooltip(gapTooltip, event.pageX, event.pageY, 15, 24);
       })
       .on('mouseout', function() {
-        d3.select(this).transition().duration(150).attr('r', 10).attr('opacity', 0.9);
-        
-        // Reset permanent labels
-        svg.selectAll('.scatter-label')
-          .style('opacity', 1)
-          .style('font-weight', '600')
-          .style('font-size', '14px')
-          .style('fill', '#E7E9EA');
-        
-        // Remove temporary labels
-        svg.selectAll('.scatter-label-temp').remove();
-        
-        tooltip.style('opacity', 0).classed('visible', false);
+        d3.select(this)
+          .transition()
+          .duration(150)
+          .style('opacity', 0.9);
+
+        gapTooltip
+          .classed('visible', false)
+          .style('opacity', 0);
       })
       .on('click', function(event, d) {
-        // Pulse animation on click
-        d3.select(this)
-          .transition().duration(200).attr('r', 20)
-          .transition().duration(200).attr('r', 10);
+        // Clicking a bar recenters the globe on that country and stops the spin
+        globeSpinLocked = true;
+        if (typeof stopGlobeRotation === 'function') {
+          stopGlobeRotation();
+        }
+        if (typeof focusCountryOnGlobe === 'function') {
+          focusCountryOnGlobe(d.country);
+        }
       });
-
-    // Show all 21 countries from the dataset with labels
-    const labeledCountries = new Set([
-      'United States', 'United Kingdom', 'Australia', 'Canada', 
-      'France', 'Germany', 'Spain', 'Italy', 'Poland', 'Portugal',
-      'Japan', 'China', 'India', 'Indonesia', 'Pakistan',
-      'Brazil', 'Argentina', 'Chile', 'Mexico', 
-      'South Africa', 'Kenya'
-    ]);
-    
-    svg.selectAll('.scatter-label')
-      .data(dataArray.filter(d => labeledCountries.has(d.country)))
-      .enter().append('text')
-      .attr('class', 'scatter-label')
-      .attr('x', d => {
-        const x = xScale(d.excited);
-        // Position labels based on data clustering
-        if (d.country === 'India' || d.country === 'Indonesia') return x + 15;
-        if (d.country === 'Australia' || d.country === 'United Kingdom' || d.country === 'Portugal') return x - 15;
-        return x > width / 2 ? x + 15 : x - 15;
-      })
-      .attr('y', d => {
-        const y = yScale(d.nervous);
-        // Adjust vertical position for readability
-        if (d.country === 'Indonesia') return y - 8;
-        if (d.country === 'India') return y + 5;
-        if (d.country === 'Kenya') return y - 8;
-        return y + 5;
-      })
-      .attr('text-anchor', d => {
-        if (d.country === 'India' || d.country === 'Indonesia') return 'start';
-        if (d.country === 'Australia' || d.country === 'United Kingdom' || d.country === 'Portugal') return 'end';
-        const x = xScale(d.excited);
-        return x > width / 2 ? 'start' : 'end';
-      })
-      .text(d => d.country)
-      .style('fill', '#E7E9EA')
-      .style('font-size', '14px')
-      .style('font-weight', '600')
-      .style('pointer-events', 'none')
-      .style('opacity', 0)
-      .transition().duration(600).delay(1200).style('opacity', 1);
-
-    // Enhanced axes
-    svg.append('g').attr('class', 'scatter-axis')
-      .attr('transform', `translate(0,${height})`)
-      .call(d3.axisBottom(xScale).ticks(10).tickFormat(d => d + '%').tickSize(10));
-    
-    svg.append('g').attr('class', 'scatter-axis')
-      .call(d3.axisLeft(yScale).ticks(10).tickFormat(d => d + '%').tickSize(10));
-
-    // Axis labels
-    svg.append('text').attr('x', width / 2).attr('y', height + 60)
-      .style('text-anchor', 'middle').style('fill', '#E7E9EA')
-      .style('font-size', '13px').style('font-weight', '700')
-      .text('Excited about AI growth (%)');
-    
-    svg.append('text').attr('transform', 'rotate(-90)')
-      .attr('x', -height / 2).attr('y', -55)
-      .style('text-anchor', 'middle').style('fill', '#E7E9EA')
-      .style('font-size', '13px').style('font-weight', '700')
-      .text('Concerned about AI growth (%)');
   }
 
-  // ========================================
-  // WORLD MAP - EXTRA LARGE & INTERACTIVE
+  // GLOBE MAP - ROTATING ORTHOGRAPHIC VIEW
   // ========================================
   const mapContainer = document.getElementById('worldMap');
   if (!mapContainer) return;
 
   const mapWidth = Math.min(1100, window.innerWidth * 0.85);
   const mapHeight = 550;
-  const mapSvg = d3.select('#worldMap').append('svg')
-    .attr('width', mapWidth).attr('height', mapHeight)
+  const globeSvg = d3.select('#worldMap').append('svg')
+    .attr('width', mapWidth)
+    .attr('height', mapHeight)
     .attr('viewBox', `0 0 ${mapWidth} ${mapHeight}`)
     .style('background', '#000000');
 
-  const mapTooltip = d3.select('body').append('div').attr('class', 'map-tooltip')
-    .style('position', 'fixed').style('opacity', 0);
+  // Tooltip with vertical bar chart inside
+  const mapTooltip = d3.select('body')
+    .append('div')
+    .attr('class', 'map-tooltip')
+    .style('position', 'fixed')
+    .style('opacity', 0);
+  // Hide tooltip if the cursor leaves the map entirely
+  globeSvg.on('mouseleave', () => {
+    mapTooltip.classed('visible', false).style('opacity', 0);
+  });
+  const mapDom = document.getElementById('worldMap');
+  if (mapDom) {
+    mapDom.addEventListener('mouseleave', () => {
+      mapTooltip.classed('visible', false).style('opacity', 0);
+    });
+  }
 
-  const projection = d3.geoNaturalEarth1()
-    .scale(mapWidth / 4.5)
-    .translate([mapWidth / 2, mapHeight / 1.8]);
+  // Orthographic (3D-style) projection
+  const projection = d3.geoOrthographic()
+    .scale(mapHeight / 2.1)
+    .translate([mapWidth * 0.52, mapHeight * 0.5])
+    .clipAngle(90);
 
   const path = d3.geoPath().projection(projection);
-  const colorScale = d3.scaleSequential()
+  const graticule = d3.geoGraticule();
+
+  const globeGroup = globeSvg.append('g').attr('class', 'globe-group');
+
+  // Soft glow behind globe
+  const defs = globeSvg.append('defs');
+  const glow = defs.append('radialGradient')
+    .attr('id', 'globe-glow')
+    .attr('cx', '50%')
+    .attr('cy', '50%');
+  glow.append('stop').attr('offset', '0%').attr('stop-color', '#1f2933').attr('stop-opacity', 0.9);
+  glow.append('stop').attr('offset', '70%').attr('stop-color', '#020617').attr('stop-opacity', 1);
+  glow.append('stop').attr('offset', '100%').attr('stop-color', '#020617').attr('stop-opacity', 0);
+
+  globeGroup.append('circle')
+    .attr('cx', mapWidth * 0.52)
+    .attr('cy', mapHeight * 0.5)
+    .attr('r', mapHeight / 2.2)
+    .attr('fill', 'url(#globe-glow)');
+
+  const sphere = globeGroup.append('path')
+    .datum({ type: 'Sphere' })
+    .attr('class', 'globe-sphere')
+    .attr('fill', '#020617')
+    .attr('stroke', '#020617')
+    .attr('stroke-width', 1)
+    .attr('d', path);
+
+  const graticulePath = globeGroup.append('path')
+    .datum(graticule())
+    .attr('class', 'globe-graticule')
+    .attr('fill', 'none')
+    .attr('stroke', 'rgba(148,163,184,0.25)')
+    .attr('stroke-width', 0.5)
+    .attr('d', path);
+
+  // Color scale shared with main bar chart (more nervous = redder)
+  const nervousColorScale = d3.scaleSequential()
     .domain([25, 60])
     .interpolator(d3.interpolateRgb('#4AADFF', '#FF4444'));
 
-  // Map numeric 'nervous' values to human-friendly sentiment labels
-  // (keep colors as-is; only redefine the meaning shown on hover)
-  function getSentimentLabel(nervous) {
-    if (nervous == null || isNaN(nervous)) return 'No data';
-    // thresholds chosen to align with the visual blue->red continuum
-    if (nervous <= 30) return 'Excited';
-    if (nervous <= 45) return 'Balanced sentiment';
-    if (nervous <= 55) return 'Slightly nervous';
-    return 'Nervous';
+  let countryFeatures = [];
+  let countryPaths;
+
+  function redrawGlobe() {
+    if (!countryPaths) return;
+    sphere.attr('d', path);
+    graticulePath.attr('d', path(graticule()));
+    countryPaths.attr('d', path);
   }
 
-  // Add legend with even top/bottom internal padding
-  const legendWidth = 220;
-  const legendRightSpacing = 20; // spacing from right edge of SVG
-  const internalPadding = 14; // equal top and bottom padding inside legend
-  const titleFontSize = 16;
-  const labelFontSize = 14;
-  const barHeight = 15;
+  let globeTimer = null;
+  let globeSpinLocked = false; // set true when a user click should keep the globe paused
+  function startGlobeRotation() {
+    if (globeSpinLocked || globeTimer) return; // Already spinning or intentionally paused
+    globeTimer = d3.timer((elapsed) => {
+      const rotation = projection.rotate();
+      // slow, steady spin ~ one full rotation per 35–40 seconds
+      const lambda = rotation[0] + 0.25; // Increased from 0.01 for more visible rotation
+      projection.rotate([lambda, rotation[1], rotation[2]]);
+      redrawGlobe();
+    });
+  }
 
-  // positions calculated so top and bottom padding are equal
-  const titleY = internalPadding + titleFontSize; // baseline for title
-  const barY = titleY + 8; // gap between title and bar
-  const labelY = barY + barHeight + (labelFontSize + 4); // baseline for labels
+  function stopGlobeRotationFn() {
+    if (globeTimer) {
+      globeTimer.stop();
+      globeTimer = null;
+    }
+  }
 
-  const legendHeight = labelY + internalPadding; // bottom padding equals top padding
-  const legendX = mapWidth - legendWidth - legendRightSpacing;
-  const legendY = mapHeight - legendHeight - 20; // keep a little extra spacing from SVG bottom
+  // Load world geometry and draw globe
+  d3.json('https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json').then(world => {
+    countryFeatures = topojson.feature(world, world.objects.countries).features;
 
-  const legend = mapSvg.append('g')
-    .attr('class', 'map-legend')
-    .attr('transform', `translate(${legendX}, ${legendY})`);
-
-  legend.append('rect')
-    .attr('width', legendWidth).attr('height', legendHeight)
-    .attr('fill', 'rgba(22, 24, 28, 0.95)')
-    .attr('stroke', 'rgba(29, 155, 240, 0.3)')
-    .attr('stroke-width', 2)
-    .attr('rx', 8);
-
-  legend.append('text')
-    .attr('x', 15).attr('y', titleY)
-    .style('fill', '#E7E9EA').style('font-size', `${titleFontSize}px`).style('font-weight', '700')
-    .text('Concern Level');
-
-  const gradient = legend.append('defs').append('linearGradient')
-    .attr('id', 'legend-gradient').attr('x1', '0%').attr('x2', '100%');
-  gradient.append('stop').attr('offset', '0%').attr('stop-color', '#4AADFF');
-  gradient.append('stop').attr('offset', '100%').attr('stop-color', '#FF4444');
-
-  // gradient bar
-  const barX = 15;
-  const barWidth = legendWidth - barX * 2;
-  legend.append('rect')
-    .attr('x', barX).attr('y', barY).attr('width', barWidth).attr('height', barHeight)
-    .attr('fill', 'url(#legend-gradient)').attr('rx', 3);
-
-  // labels
-  legend.append('text').attr('x', barX).attr('y', labelY)
-    .style('fill', '#71767B').style('font-size', `${labelFontSize}px`).text('Excited');
-  legend.append('text').attr('x', barX + barWidth).attr('y', labelY)
-    .style('fill', '#71767B').style('font-size', `${labelFontSize}px`).attr('text-anchor', 'end').text('Nervous');
-
-  try {
-    const world = await d3.json('https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json');
-    const countries = topojson.feature(world, world.objects.countries);
-
-    mapSvg.selectAll('.country').data(countries.features).enter().append('path')
-      .attr('class', d => sentimentData[normalizeCountryName(d.properties.name)] ? 'country has-data' : 'country')
+    countryPaths = globeGroup.append('g')
+      .attr('class', 'countries')
+      .selectAll('path')
+      .data(countryFeatures)
+      .enter()
+      .append('path')
       .attr('d', path)
       .attr('fill', d => {
         const data = sentimentData[normalizeCountryName(d.properties.name)];
-        return data ? colorScale(data.nervous) : '#1a1a1a';
+        return data ? nervousColorScale(data.nervous) : '#111827';
       })
-      .style('opacity', 0)
-      .transition().duration(1000).delay((d, i) => i * 2).style('opacity', 1)
-      .selection()
+      .attr('stroke', '#020617')
+      .attr('stroke-width', 0.4)
+      .style('opacity', d => sentimentData[normalizeCountryName(d.properties.name)] ? 0.96 : 0.3);
+
+    // Hover tooltip with tiny vertical bar chart
+    countryPaths
       .on('mouseover', function(event, d) {
         const data = sentimentData[normalizeCountryName(d.properties.name)];
-        if (data) {
-          d3.select(this).transition().duration(200).style('opacity', 1);
-          
-          mapTooltip.html(`
+        if (!data) return;
+
+        d3.select(this)
+          .raise()
+          .transition()
+          .duration(150)
+          .attr('stroke-width', 0.9)
+          .style('opacity', 1);
+
+        const maxBarHeight = 70;
+        const excitedHeight = (data.excited / 100) * maxBarHeight;
+        const nervousHeight = (data.nervous / 100) * maxBarHeight;
+
+        const excitedCount = Math.round(data.count * data.excited / 100);
+        const nervousCount = Math.round(data.count * data.nervous / 100);
+
+        mapTooltip
+          .html(`
             <div class="country-name">${d.properties.name}</div>
-            <div class="sentiment-values">
-              <strong>Nervous:</strong> ${data.nervous.toFixed(1)}%<br/>
-              <strong>Excited:</strong> ${data.excited.toFixed(1)}%<br/>
-              <strong>Respondents:</strong> ${data.count.toLocaleString()}<br/>
-              <div style="margin-top:10px; padding-top:8px; border-top:2px solid rgba(29,155,240,0.3);">
-                <div style="background:${colorScale(data.nervous)}; height:8px; border-radius:4px; margin-top:4px;"></div>
-                <em style="color:#71767B; font-size:13px;">
-                  ${getSentimentLabel(data.nervous)}
-                </em>
+            <div class="tooltip-bars">
+              <div class="tooltip-bar-column">
+                <div class="tooltip-bar excited" style="height:${excitedHeight}px;"></div>
+                <div class="tooltip-bar-label">Excited</div>
+                <div class="tooltip-bar-value">${data.excited.toFixed(1)}%</div>
+                <div class="tooltip-bar-count">${excitedCount.toLocaleString()} people</div>
+              </div>
+              <div class="tooltip-bar-column">
+                <div class="tooltip-bar nervous" style="height:${nervousHeight}px;"></div>
+                <div class="tooltip-bar-label">Nervous</div>
+                <div class="tooltip-bar-value">${data.nervous.toFixed(1)}%</div>
+                <div class="tooltip-bar-count">${nervousCount.toLocaleString()} people</div>
               </div>
             </div>
           `)
-            .classed('visible', true)
-            .style('opacity', 1);
+          .classed('visible', true)
+          .style('opacity', 1);
 
-          // Position/map tooltip and clamp to viewport
-          positionTooltip(mapTooltip, event.pageX, event.pageY, 15, 28);
-        }
+        positionTooltip(mapTooltip, event.pageX, event.pageY, 15, 28);
       })
       .on('mousemove', function(event) {
         positionTooltip(mapTooltip, event.pageX, event.pageY, 15, 28);
       })
       .on('mouseout', function() {
-        const data = sentimentData[normalizeCountryName(d3.select(this).datum().properties.name)];
-        if (data) {
-          d3.select(this).transition().duration(200).style('opacity', 0.9);
-        }
-  mapTooltip.style('opacity', 0).classed('visible', false);
-      })
-      .on('click', function(event, d) {
-        const data = sentimentData[normalizeCountryName(d.properties.name)];
-        if (data) {
-          // Pulse animation
-          d3.select(this)
-            .transition().duration(150).style('opacity', 1).attr('stroke-width', 4)
-            .transition().duration(150).attr('stroke-width', 1.2);
-        }
+        d3.select(this)
+          .transition()
+          .duration(150)
+          .attr('stroke-width', 0.4)
+          .style('opacity', d => sentimentData[normalizeCountryName(d.properties.name)] ? 0.96 : 0.3);
+
+        mapTooltip.classed('visible', false).style('opacity', 0);
       });
 
-  } catch (error) {
+    // Expose functions so the bar chart can control the globe
+    focusCountryOnGlobe = function(countryName) {
+      if (!countryFeatures.length) return;
+      const target = countryFeatures.find(f => normalizeCountryName(f.properties.name) === normalizeCountryName(countryName));
+      if (!target) return;
+
+      const centroid = d3.geoCentroid(target); // [lon, lat]
+      stopGlobeRotation();
+
+      d3.transition()
+        .duration(1250)
+        .tween('rotate', () => {
+          const initialRotate = projection.rotate();
+          const targetRotate = [-centroid[0], -centroid[1], 0];
+          const r = d3.interpolate(initialRotate, targetRotate);
+          return t => {
+            projection.rotate(r(t));
+            redrawGlobe();
+          };
+        })
+        .on('end', () => {
+          if (!globeSpinLocked) startGlobeRotation();
+        });
+    };
+
+    stopGlobeRotation = stopGlobeRotationFn;
+
+    // Start slow spin and keep it tied to the sentiment section visibility
+    const sentimentSection = document.getElementById('sectionSentiment');
+    if (sentimentSection) {
+      const sectionObserver = new IntersectionObserver((entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            if (!globeSpinLocked) startGlobeRotation();
+          } else {
+            stopGlobeRotation();
+          }
+        });
+      }, { threshold: 0.25 });
+      sectionObserver.observe(sentimentSection);
+    } else {
+      startGlobeRotation();
+    }
+  }).catch((error) => {
     console.error('Error loading map data:', error);
-    mapContainer.innerHTML = '<p style="color: #E7E9EA; text-align: center; padding: 2rem; font-size:18px;">Map visualization could not be loaded. Please check your internet connection.</p>';
-  }
-});
+    mapContainer.innerHTML =
+      '<p style="color: #E7E9EA; text-align: center; padding: 2rem; font-size:18px;">' +
+      'Map visualization could not be loaded. Please check your internet connection.</p>';
+  });
 
 // ========================================
 // BOSTON ZOOM TRANSITION ANIMATION
@@ -6770,4 +6871,5 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     });
   }
-});
+
+});})

@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -160,38 +161,29 @@
 
     <!-- Public Sentiment Section -->
     <section id="sectionSentiment" class="section sentiment-section">
-      <div class="sentiment-container">
+  <div class="sentiment-container">
+    <h2 class="sentiment-title">
+      This isn't just a U.S. phenomenon; globally, people are more concerned than excited about AI
+    </h2>
+    <p class="sentiment-subtitle">
+      Survey of 23,781 respondents across 21 countries, 2023–2024
+    </p>
 
-
-        <h2 class="sentiment-title">This isn't just a U.S. phenomenon; globally, people are more concerned than excited about AI</h2>
-        <p class="sentiment-subtitle">Survey of 23,781 respondents across 21 countries, 2023-2024</p>
-        <p class="sentiment-subtitle" style="font-size: 1.4rem; margin-top: -15px; opacity: 0.8;">
-        
-        </p>
-        
-        <!-- Tab Controls -->
-        <div class="viz-tabs">
-          <button class="viz-tab active" data-tab="map">
-            <i class="fas fa-globe"></i> World Map
-          </button>
-          <button class="viz-tab" data-tab="scatter">
-            <i class="fas fa-chart-scatter"></i> Scatter Plot
-        </div>
-
-        <!-- Tab Content -->
-        <div class="tab-content" id="scatterTab">
-          <div id="scatterChart"></div>
-        </div>
-        
-        <div class="tab-content active" id="mapTab">
-          <div id="worldMap"></div>
-        </div>
+    <div class="sentiment-layout">
+      <div class="sentiment-panel sentiment-gap-panel">
+        <h3 class="sentiment-panel-title">Sentiment gap (Concerned – Excited)</h3>
+        <div id="scatterChart"></div>
       </div>
-      
+      <div class="sentiment-panel sentiment-globe-panel">
+        <div id="worldMap"></div>
+      </div>
+    </div>
 
-
-      
-    </section>
+    <p class="sentiment-note">
+      Bars to the right mean more people are concerned than excited about AI in that country; bars to the left mean the opposite.
+    </p>
+  </div>
+</section>
 
     <!-- Chat Section - Local Boston Perspectives -->
     <section id="section3" class="section chat-section">
