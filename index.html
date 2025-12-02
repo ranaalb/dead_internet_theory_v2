@@ -615,28 +615,55 @@
     </p> 
 
 
-  <div class="bot-viz-wrapper">
-    <div id="botVizContainer">
-      <canvas id="botFlowCanvas" width="1600" height="400"></canvas>
+  <div class="bot-controls">
+    <div class="bot-filter-group">
+      <label class="bot-filter-label">Step 1: Choose Category</label>
+      <select id="botCategorySelect" class="bot-select">
+        <option value="">Select a category...</option>
+        <option value="origin">Origin</option>
+        <option value="sophistication">Sophistication</option>
+        <option value="industry">Industry</option>
+        <option value="country">Country</option>
+      </select>
     </div>
-    <div class="bot-legend">
-      <div class="bot-legend-item">
-        <div class="bot-legend-color" style="background: #ef4444;"></div>
-        <span>Origin (ISP Type)</span>
-      </div>
-      <div class="bot-legend-item">
-        <div class="bot-legend-color" style="background: #f59e0b;"></div>
-        <span>Sophistication Level</span>
-      </div>
-      <div class="bot-legend-item">
-        <div class="bot-legend-color" style="background: #60a5fa;"></div>
-        <span>Target Industry</span>
-      </div>
-      <div class="bot-legend-item">
-        <div class="bot-legend-color" style="background: #8b5cf6;"></div>
-        <span>Geographic Target</span>
-      </div>
+
+    <div class="bot-arrow">→</div>
+
+    <div class="bot-filter-group" id="botValueSelectGroup" style="display: none;">
+      <label class="bot-filter-label" id="botValueLabel">Step 2: Choose Value</label>
+      <select id="botValueSelect" class="bot-select">
+        <option value="">Select...</option>
+      </select>
     </div>
+
+    <button id="botResetFilters" class="bot-reset-btn">Reset</button>
+  </div>
+
+  <div id="botVizContainer">
+    <canvas id="botFlowCanvas" width="1200" height="420"></canvas>
+  </div>
+
+  <p class="bot-zoom-hint">💡 Use the two-step filter above to isolate any attack pathway</p>
+
+  <div class="bot-legend">
+    <div class="bot-legend-item">
+      <div class="bot-legend-color" style="background: #ef4444;"></div>
+      <span>Origin (ISP Type)</span>
+    </div>
+    <div class="bot-legend-item">
+      <div class="bot-legend-color" style="background: #f59e0b;"></div>
+      <span>Sophistication Level</span>
+    </div>
+    <div class="bot-legend-item">
+      <div class="bot-legend-color" style="background: #60a5fa;"></div>
+      <span>Target Industry</span>
+    </div>
+    <div class="bot-legend-item">
+      <div class="bot-legend-color" style="background: #8b5cf6;"></div>
+      <span>Geographic Target</span>
+    </div>
+  </div>
+</div>
 
     <p class="bot-instruction">Hover over nodes to highlight their attack flows</p>
     <p class="bot-instruction">For clarity, this Sankey focuses on the three most heavily attacked countries in the dataset (US, Netherlands, Australia), which together account for the majority of observed bad-bot traffic. </p>

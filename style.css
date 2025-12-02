@@ -5544,9 +5544,10 @@ svg {
 }
 
 .traffic-title {
-  font-size: 1.4rem;
+  font-size: 1.1rem;
   color: #fff;
-  margin-bottom: 0.8rem;
+  margin-bottom: 0.3rem;
+  margin-top: 0;
   font-weight: 700;
   animation: fadeInDown 1s ease;
   text-transform: none;
@@ -5554,9 +5555,9 @@ svg {
 }
 
 .traffic-subtitle {
-  font-size: 0.85rem;
+  font-size: 0.75rem;
   color: #8899A6;
-  line-height: 1.6;
+  line-height: 1.4;
   margin-bottom: 0.3rem;
   max-width: 900px;
   margin-left: auto;
@@ -6918,11 +6919,10 @@ svg {
 }
 
 /*Sankey Diagram*/
-.bot-container {
-    max-width: 1600px;
+ .bot-container {
+    max-width: 1400px;
     width: 100%;
     margin: 0 auto;
-    padding: 0 1rem;
     flex: 1;
     display: flex;
     flex-direction: column;
@@ -6964,6 +6964,92 @@ svg {
     color: #d1d5db;
   }
 
+  .bot-controls {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    margin-bottom: 8px;
+    flex-wrap: wrap;
+    align-items: flex-end;
+  }
+
+  .bot-filter-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .bot-filter-label {
+    font-size: 11px;
+    color: #9ca3af;
+    text-transform: uppercase;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+  }
+
+  .bot-select {
+    background: #374151;
+    color: #e5e5e5;
+    border: 1px solid #4b5563;
+    border-radius: 6px;
+    padding: 10px 14px;
+    font-size: 14px;
+    cursor: pointer;
+    min-width: 180px;
+    transition: all 0.3s ease;
+  }
+
+  .bot-select:hover {
+    border-color: #60a5fa;
+    background: #4b5563;
+  }
+
+  .bot-select:focus {
+    outline: none;
+    border-color: #60a5fa;
+    box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.1);
+  }
+
+  .bot-select:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  .bot-reset-btn {
+    background: #ef4444;
+    color: white;
+    border: none;
+    padding: 10px 24px;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    height: 42px;
+  }
+
+  .bot-reset-btn:hover {
+    background: #dc2626;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+  }
+
+  .bot-reset-btn:active {
+    transform: translateY(0);
+  }
+
+  .bot-arrow {
+    color: #60a5fa;
+    font-size: 24px;
+    font-weight: bold;
+    align-self: flex-end;
+    margin-bottom: 11px;
+  }
+
+  .bot-filter-group.hidden {
+    display: none;
+  }
+
   #botVizContainer {
     background: #0f0f0f;
     border-radius: 12px;
@@ -6988,10 +7074,43 @@ svg {
   .bot-legend {
     display: flex;
     justify-content: center;
-    gap: 30px;
-    margin-top: 20px;
-    margin-bottom: 20px;
+    gap: 20px;
+    margin-top: 4px;
+    margin-bottom: 4px;
     flex-wrap: wrap;
+  }
+
+  .bot-legend-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+  }
+
+  .bot-legend-color {
+    width: 18px;
+    height: 18px;
+    border-radius: 4px;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+  }
+
+  .bot-zoom-hint {
+    text-align: center;
+    margin-top: 4px;
+    margin-bottom: 4px;
+    color: #60a5fa;
+    font-size: 11px;
+    font-style: italic;
+  }
+
+  .bot-instruction {
+    text-align: center;
+    margin-top: 2px;
+    margin-bottom: 2px;
+    color: #9ca3af;
+    font-size: 10px;
+    font-style: italic;
+    line-height: 1.2;
   }
 
   @media (max-width: 768px) {
@@ -7015,28 +7134,10 @@ svg {
     .bot-legend-item {
       font-size: 11px;
     }
-  }
 
-  .bot-legend-item {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    font-size: 12px;
-  }
-
-  .bot-legend-color {
-    width: 18px;
-    height: 18px;
-    border-radius: 4px;
-    border: 1px solid rgba(255, 255, 255, 0.3);
-  }
-
-  .bot-instruction {
-    text-align: center;
-    margin-top: 15px;
-    color: #9ca3af;
-    font-size: 12px;
-    font-style: italic;
+    .bot-controls {
+      flex-direction: column;
+    }
   }
 
 /* ========================================
