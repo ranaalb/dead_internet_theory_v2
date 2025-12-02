@@ -71,7 +71,15 @@
     <section id="sectionTrend" class="section trend-section">
       <div class="trend-container">
         <h2 class="trend-title">Dead Internet Theory Has Been Trending Worldwide</h2>
-        <p class="trend-subtitle">Search traffic peaks correlated with major AI and bot innovation events</p>
+        <p class="trend-subtitle">Explore how search interest evolved across different countries and major events</p>
+        
+        <div class="trend-intro-message" id="trendIntroMessage">
+          <div class="intro-icon">💡</div>
+          <div class="intro-text">
+            <p><strong>Start with the worldwide view</strong>, then click country flags to compare or select an event to see its impact.</p>
+          </div>
+          <button class="intro-close" id="closeIntroMessage" title="Dismiss">✕</button>
+        </div>
         
         <div class="trend-layout">
           <!-- Charts Area (Main + Overview) -->
@@ -114,45 +122,47 @@
           
           <!-- Controls Panel -->
           <div class="controls-panel">
-            <h3>Make Your Own Adjustments</h3>
+            <h3>Interactive Controls</h3>
             
-            <div class="adjustment-question">
-              <p>How did the 
+            <div class="control-section">
+              <label class="control-section-label">
+                <i class="fas fa-calendar-alt"></i> Highlight Key Events
+              </label>
+              <div class="adjustment-question">
                 <select id="eventSelect" class="inline-event-dropdown">
-                  <option value="" selected>Click to see how different events affect search traffic</option>
-                  <option value="facebook-ai-policy">Facebook Response to "AI Slop" (March 31st, 2024)</option>
-                  <option value="chatgpt-launch">ChatGPT Launch (November 30th, 2022)</option>
-                  <option value="gpt4-release">GPT-4 Release (March 14th, 2023)</option>
-                  <option value="openai-board-crisis">OpenAI Board Crisis (November 26th, 2023)</option>
-                  <option value="bing-ai">Bing AI Integration (February 7th, 2023)</option>
-                  <option value="ai-regulation">EU AI Act Discussions (June 2023)</option>
-                  <option value="twitter-bots">Twitter Bot Purge (October 2022)</option>
+                  <option value="" selected>Select an AI/Bot event to highlight...</option>
+                  <option value="facebook-ai-policy">Facebook "AI Slop" Response (Mar 31, 2024)</option>
+                  <option value="chatgpt-launch">ChatGPT Launch (Nov 30, 2022)</option>
+                  <option value="gpt4-release">GPT-4 Release (Mar 14, 2023)</option>
+                  <option value="openai-board-crisis">OpenAI Board Crisis (Nov 26, 2023)</option>
                 </select>
-              </p>
+              </div>
             </div>
             
             <div class="impact-display">
               <div class="impact-section">
-                <label>Impact the</label>
+                <label class="impact-label">Event Impact on Search Traffic</label>
                 <div class="impact-indicator-container">
                   <div class="impact-track">
                     <div class="impact-fill" id="impactFill"></div>
                     <div class="impact-thumb" id="impactThumb"></div>
                   </div>
-                  <div class="impact-labels">
-                    <span style="font-size: 16px; font-weight: 700; color: var(--text-bright); letter-spacing: 0.5px;">Search Traffic</span>
-                  </div>
+                  <div class="impact-value-text" id="impactValue">Select an event to see impact</div>
                 </div>
               </div>
             </div>
             
-            <div class="control-group">
-              <label class="control-label">
-                <i class="fas fa-globe"></i> Country Filter
+            <div class="control-section">
+              <label class="control-section-label">
+                <i class="fas fa-globe"></i> Compare Countries
               </label>
+              <p class="control-hint">Click countries to add/remove them from the chart</p>
               <div id="countryControls" class="country-filter-buttons">
                 <!-- Flag buttons will be inserted here by JavaScript -->
               </div>
+              <button id="resetCountries" class="reset-countries-btn" style="display: none;">
+                <i class="fas fa-undo"></i> Show Worldwide Only
+              </button>
             </div>
           </div>
         </div>
@@ -162,26 +172,55 @@
     <!-- Public Sentiment Section -->
     <section id="sectionSentiment" class="section sentiment-section">
   <div class="sentiment-container">
-    <h2 class="sentiment-title">
-      This isn't just a U.S. phenomenon; globally, people are more concerned than excited about AI
-    </h2>
-    <p class="sentiment-subtitle">
-      Stanford AI Index Report 2025: Survey of 23,781 respondents across 21 countries, 2023–2024
-    </p>
+    <div class="sentiment-header">
+      <h2 class="sentiment-title">
+        And countries are more concerned than excited about AI and bots
+      </h2>
+      <p class="sentiment-subtitle">
+        Stanford AI Index Report 2025: Survey of 23,781 respondents across 21 countries • 2023–2024
+      </p>
+      <div class="sort-controls">
+        <span class="sort-label">Sort by:</span>
+        <button class="sort-btn active" data-sort="gap">
+          <i class="fas fa-arrows-alt-h"></i> Gap
+        </button>
+        <button class="sort-btn" data-sort="nervous">
+          <i class="fas fa-frown"></i> Nervous %
+        </button>
+        <button class="sort-btn" data-sort="excited">
+          <i class="fas fa-smile"></i> Excited %
+        </button>
+        <button class="sort-btn" data-sort="country">
+          <i class="fas fa-sort-alpha-down"></i> Country
+        </button>
+      </div>
+    </div>
 
-    <div class="sentiment-layout">
-      <div class="sentiment-panel sentiment-gap-panel">
-        <h3 class="sentiment-panel-title">Sentiment gap (Concerned – Excited)</h3>
+    <div class="sentiment-split-view">
+      <div class="sentiment-viz-column">
+        <div class="viz-header-compact">
+          <h3><i class="fas fa-chart-bar"></i> Sentiment Gap</h3>
+          <span class="viz-hint">Hover bars</span>
+        </div>
         <div id="scatterChart"></div>
       </div>
-      <div class="sentiment-panel sentiment-globe-panel">
+      
+      <div class="sentiment-viz-column">
+        <div class="viz-header-compact">
+          <h3><i class="fas fa-globe-americas"></i> Interactive Globe</h3>
+          <span class="viz-hint">Drag • Arrow keys • R to reset</span>
+        </div>
         <div id="worldMap"></div>
       </div>
     </div>
 
-    <p class="sentiment-note">
-      Bars to the right mean more people are concerned than excited about AI in that country; bars to the left mean the opposite.
-    </p>
+    <div class="sentiment-footer">
+      <div class="color-legend">
+        <span class="legend-end excited-end">More Excited</span>
+        <div class="legend-bar"></div>
+        <span class="legend-end concerned-end">More Concerned</span>
+      </div>
+    </div>
   </div>
 </section>
 
@@ -655,14 +694,11 @@
       <span>Geographic Target</span>
     </div>
   </div>
-</div>
 
     <p class="bot-instruction">Hover over nodes to highlight their attack flows</p>
     <p class="bot-instruction">For clarity, this Sankey focuses on the three most heavily attacked countries in the dataset (US, Netherlands, Australia), which together account for the majority of observed bad-bot traffic. </p>
 
-
   </div>
-</div>
   </section>
 
 

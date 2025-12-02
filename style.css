@@ -1040,13 +1040,92 @@ svg {
 .trend-subtitle {
   font-size: 1.1rem;
   color: var(--text-secondary);
-  margin-bottom: 3rem;
+  margin-bottom: 1.5rem;
   font-style: normal;
   font-weight: 400;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   opacity: 0;
   transform: translateY(30px);
   animation: fadeInUp 0.8s ease-out 0.2s forwards;
+}
+
+.trend-intro-message {
+  background: linear-gradient(135deg, rgba(29, 155, 240, 0.12), rgba(255, 215, 0, 0.08));
+  border: 1.5px solid rgba(29, 155, 240, 0.3);
+  border-radius: 12px;
+  padding: 1rem 1.5rem;
+  margin: 0.5rem auto 1.5rem;
+  max-width: 650px;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 4px 16px rgba(29, 155, 240, 0.15);
+  opacity: 0;
+  transform: translateY(15px);
+  animation: fadeInUp 0.6s ease-out 0.4s forwards;
+  position: relative;
+}
+
+.intro-icon {
+  font-size: 2rem;
+  flex-shrink: 0;
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+}
+
+@keyframes fadeOut {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+}
+
+.trend-intro-message .intro-text {
+  text-align: left;
+  flex: 1;
+}
+
+.trend-intro-message .intro-text p {
+  color: var(--text-bright);
+  font-size: 0.9rem;
+  line-height: 1.5;
+  margin: 0;
+}
+
+.trend-intro-message .intro-text strong {
+  color: #ffd700;
+  font-weight: 700;
+}
+
+.intro-close {
+  background: rgba(255, 255, 255, 0.1);
+  border: none;
+  color: var(--text-secondary);
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: all 0.3s ease;
+  flex-shrink: 0;
+}
+
+.intro-close:hover {
+  background: rgba(255, 255, 255, 0.2);
+  color: var(--text-bright);
+  transform: rotate(90deg);
 }
 
 .trend-layout {
@@ -1122,45 +1201,102 @@ svg {
 
 .controls-panel h3 {
   color: #ffd700;
-  font-size: 1.3rem;
+  font-size: 1.4rem;
   margin-bottom: 1.5rem;
   font-weight: 700;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
 }
 
-.adjustment-question {
-  margin-bottom: 1.5rem;
-  text-align: center;
+.control-section {
+  margin-bottom: 1rem;
+  padding-bottom: 0;
 }
 
-.adjustment-question p {
-  color: var(--text-primary);
-  font-size: 1rem;
-  margin-bottom: 0.8rem;
+.control-section:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+  padding-bottom: 0;
+}
+
+.control-section-label {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  flex-wrap: wrap;
+  color: var(--text-bright);
+  font-size: 1rem;
+  font-weight: 600;
+  margin-bottom: 0.8rem;
+  text-align: left;
+}
+
+.control-section-label i {
+  color: #ffd700;
+  font-size: 1.1rem;
+}
+
+.control-hint {
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+  margin: 0.5rem 0;
+  font-style: italic;
+  text-align: left;
+}
+
+.reset-countries-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-top: 1rem;
+  padding: 0.6rem 1.2rem;
+  background: rgba(255, 215, 0, 0.15);
+  border: 1.5px solid #ffd700;
+  color: #ffd700;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  width: 100%;
+}
+
+.reset-countries-btn:hover {
+  background: rgba(255, 215, 0, 0.25);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(255, 215, 0, 0.3);
+}
+
+.reset-countries-btn i {
+  font-size: 0.9rem;
+}
+
+.adjustment-question {
+  margin-top: 0.5rem;
 }
 
 .inline-event-dropdown {
   background: rgba(22, 24, 28, 0.9);
   border: 1.5px solid var(--border-dark);
-  color: var(--accent-blue);
-  border-radius: 6px;
-  padding: 0.4rem 0.6rem;
-  font-size: 0.9rem;
-  font-weight: 600;
+  color: var(--text-bright);
+  border-radius: 8px;
+  padding: 0.7rem 1rem;
+  font-size: 0.95rem;
+  font-weight: 500;
   cursor: pointer;
   transition: all 0.3s ease;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  min-width: 200px;
+  width: 100%;
+  text-align: left;
 }
 
 .inline-event-dropdown:hover {
   border-color: var(--accent-blue);
-  background: rgba(22, 24, 28, 1);
+  background: rgba(29, 155, 240, 0.1);
   box-shadow: 0 2px 8px rgba(29, 155, 240, 0.3);
 }
 
@@ -1168,6 +1304,12 @@ svg {
   outline: none;
   border-color: #ffd700;
   box-shadow: 0 0 0 2px rgba(255, 215, 0, 0.3);
+}
+
+.inline-event-dropdown option {
+  background: #16181c;
+  color: var(--text-bright);
+  padding: 0.5rem;
 }
 
 .current-event-display {
@@ -1225,8 +1367,9 @@ svg {
 }
 
 .impact-display {
+  margin-top: 0.5rem;
   margin-bottom: 1.5rem;
-  padding: 1.25rem 8px;
+  padding: 1rem 8px;
   background: linear-gradient(135deg, rgba(29, 155, 240, 0.08), rgba(255, 215, 0, 0.05));
   border-radius: 12px;
   border: 1px solid rgba(29, 155, 240, 0.2);
@@ -1242,7 +1385,7 @@ svg {
   font-size: 1rem;
   font-weight: 600;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  margin-bottom: 1rem;
+  margin-bottom: 0.7rem;
   display: block;
   text-transform: uppercase;
   letter-spacing: 0.5px;
@@ -1303,6 +1446,31 @@ svg {
   border: 1px solid rgba(255, 215, 0, 0.3);
 }
 
+.impact-value-text {
+  color: #ffd700;
+  font-size: 0.95rem;
+  font-weight: 600;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  margin-top: 0.75rem;
+  text-align: center;
+  padding: 0.6rem 1rem;
+  background: rgba(29, 155, 240, 0.1);
+  border-radius: 8px;
+  border: 1px solid rgba(29, 155, 240, 0.3);
+  transition: all 0.3s ease;
+  letter-spacing: 0.3px;
+}
+
+.impact-label {
+  color: var(--text-bright);
+  font-size: 0.95rem;
+  font-weight: 600;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  margin-bottom: 1rem;
+  display: block;
+  letter-spacing: 0.3px;
+}
+
 .impact-labels {
   display: flex;
   justify-content: center;
@@ -1328,6 +1496,34 @@ svg {
   .controls-panel {
     max-width: none;
     width: 100%;
+  }
+  
+  .trend-intro-message {
+    flex-direction: column;
+    text-align: center;
+    padding: 1rem 1.2rem 1rem 2.5rem;
+    margin: 0.5rem auto 1rem;
+  }
+  
+  .trend-intro-message .intro-text {
+    text-align: center;
+  }
+  
+  .trend-intro-message .intro-text p {
+    font-size: 0.85rem;
+  }
+  
+  .intro-icon {
+    font-size: 1.5rem;
+  }
+  
+  .intro-close {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    width: 22px;
+    height: 22px;
+    font-size: 0.85rem;
   }
 }
 
@@ -1393,12 +1589,43 @@ svg {
 }
 
 .overview-container {
-  margin-top: 1rem;
-  padding: 0.8rem;
-  background: rgba(22, 24, 28, 0.4);
-  border-radius: 6px;
-  border: 1px solid var(--border-dark);
-  opacity: 1;
+  margin-top: 1.5rem;
+  width: 100%;
+}
+
+.overview-label {
+  display: block;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.6);
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.overview-chart {
+  height: 60px;
+  width: 100%;
+  background: rgba(0, 0, 0, 0.4);
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  overflow: hidden;
+}
+
+.overview-chart svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.overview-label {
+  display: block;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.6);
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 .overview-chart {
@@ -1406,33 +1633,62 @@ svg {
   width: 100%;
   position: relative;
   cursor: pointer;
+  background: rgba(0, 0, 0, 0.4);
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  margin-top: 0;
+  overflow: hidden;
 }
 
-.overview-brush {
-  fill: rgba(29, 155, 240, 0.2);
-  stroke: #1D9BF0;
-  stroke-width: 1;
-  cursor: ew-resize;
+.overview-chart svg {
+  border-radius: 8px;
+  display: block;
 }
 
-.overview-brush-handle {
-  fill: #1D9BF0;
-  cursor: ew-resize;
-  opacity: 0.8;
+.overview-chart .brush .selection {
+  fill: rgba(29, 155, 240, 0.35) !important;
+  stroke: #1D9BF0 !important;
+  stroke-width: 3px !important;
+  rx: 4px !important;
+  cursor: move !important;
 }
 
-.overview-brush-handle:hover {
-  opacity: 1;
+.overview-chart .brush .handle {
+  fill: #1D9BF0 !important;
+  stroke: #ffffff !important;
+  stroke-width: 2px !important;
+  cursor: ew-resize !important;
+  opacity: 0.95 !important;
+  width: 10px !important;
+}
+
+.overview-chart .brush .handle:hover {
+  opacity: 1 !important;
+  fill: #ffffff !important;
+  stroke: #1D9BF0 !important;
+  stroke-width: 3px !important;
+}
+
+.overview-chart .brush .overlay {
+  cursor: crosshair !important;
+  pointer-events: all !important;
 }
 
 .overview-line {
   fill: none;
-  stroke: rgba(255, 255, 255, 0.6);
-  stroke-width: 1;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  transition: opacity 0.3s ease;
 }
 
 .overview-area {
-  fill: rgba(29, 155, 240, 0.1);
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+
+.overview-dimmer-left,
+.overview-dimmer-right {
+  transition: all 0.3s ease;
 }
 
 #searchTrendChart.visible {
@@ -2323,91 +2579,278 @@ svg {
    PUBLIC SENTIMENT SECTION STYLES
    ======================================== */
 .sentiment-section {
-  background: var(--primary-dark);
-  padding: 4rem 1.5rem;
+  background: linear-gradient(180deg, var(--primary-dark) 0%, #0a0e1a 100%);
+  padding: 2.5rem 2rem;
   min-height: 100vh;
+  max-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
 }
 
 .sentiment-container {
-  max-width: 95%;
+  width: 100%;
+  max-width: 1800px;
+  height: 92vh;
   margin: 0 auto;
-  text-align: center;
   display: flex;
   flex-direction: column;
-  gap: 0.8rem;
+  gap: 1rem;
 }
 
-.sentiment-layout {
-  margin-top: 1.8rem;
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  align-items: flex-start;
-  gap: 2rem;
-}
-
-.sentiment-panel {
-  background: transparent;
-  padding: 0;
-  border-radius: 12px;
-  flex: 1 1 420px;
-  max-width: 720px;
-}
-
-.sentiment-gap-panel {
-  flex: 1 1 520px;
-}
-
-.sentiment-globe-panel {
-  flex: 1 1 420px;
-}
-
-.sentiment-panel-title {
-  font-size: 1.1rem;
+.sentiment-header {
+  text-align: center;
   margin-bottom: 0.5rem;
+}
+
+.sentiment-split-view {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+  flex: 1;
+  min-height: 0;
+}
+
+.sentiment-viz-column {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.sentiment-viz-column:hover {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(29, 155, 240, 0.3);
+  box-shadow: 0 4px 24px rgba(29, 155, 240, 0.15);
+  transform: translateY(-2px);
+}
+
+.sentiment-viz-column:active {
+  transform: translateY(0);
+}
+
+.viz-header-compact {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.viz-header-compact h3 {
+  font-size: 1.1rem;
   color: var(--text-bright);
   font-weight: 700;
-  text-align: left;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0;
 }
+
+.viz-header-compact h3 i {
+  color: #1D9BF0;
+  font-size: 0.95rem;
+}
+
+.viz-hint {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  background: rgba(29, 155, 240, 0.1);
+  padding: 0.25rem 0.75rem;
+  border-radius: 12px;
+  border: 1px solid rgba(29, 155, 240, 0.2);
+}
+
+.sentiment-footer {
+  margin-top: auto;
+  padding-top: 0.75rem;
+}
+
+.color-legend {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  padding: 0.75rem 1.5rem;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.legend-bar {
+  flex: 1;
+  height: 8px;
+  border-radius: 4px;
+  background: linear-gradient(90deg, #4AADFF 0%, #FF4444 100%);
+  box-shadow: 0 2px 8px rgba(74, 173, 255, 0.2);
+}
+
+.legend-end {
+  font-size: 0.85rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.excited-end {
+  color: #4AADFF;
+}
+
+.concerned-end {
+  color: #FF4444;
+}
+
+
 
 #scatterChart,
 #worldMap {
   width: 100%;
-  min-height: 520px;
-  margin: 0 auto;
+  height: 100%;
+  min-height: 0;
+  flex: 1;
+  overflow: visible;
 }
 
-/* Stack vertically on small screens */
-@media (max-width: 900px) {
-  .sentiment-layout {
-    flex-direction: column;
-    align-items: stretch;
+#scatterChart svg,
+#worldMap svg {
+  width: 100%;
+  height: 100%;
+}
+
+#worldMap {
+  cursor: grab;
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+}
+
+#worldMap:active {
+  cursor: grabbing;
+}
+
+
+
+
+
+@media (max-width: 1400px) {
+  .sentiment-split-view {
+    grid-template-columns: 1fr;
+    gap: 1rem;
   }
 
-  .sentiment-panel {
-    max-width: 100%;
+  .sentiment-container {
+    height: auto;
+    min-height: 100vh;
+  }
+
+  .sentiment-section {
+    max-height: none;
+    overflow: visible;
+  }
+
+  .sentiment-viz-column {
+    min-height: 500px;
+  }
+}
+
+@media (max-width: 768px) {
+  .sentiment-section {
+    padding: 2rem 1rem;
+  }
+
+  .sentiment-title {
+    font-size: 1.3rem;
+  }
+
+  .sentiment-subtitle {
+    font-size: 0.8rem;
+  }
+
+  .viz-header-compact h3 {
+    font-size: 1rem;
+  }
+
+  .viz-hint {
+    font-size: 0.7rem;
+    padding: 0.2rem 0.6rem;
   }
 }
 
 .sentiment-title {
-  font-size: 1rem;
-  margin-bottom: 0.3rem;
+  font-size: 1.6rem;
+  margin-bottom: 0.25rem;
   color: var(--text-bright);
-  letter-spacing: 0.5px;
+  letter-spacing: 0.3px;
   font-weight: 700;
-  opacity: 0;
-  transform: translateY(30px);
-  animation: fadeInUp 0.8s ease-out forwards;
   line-height: 1.2;
 }
 
 .sentiment-subtitle {
-  font-size: 0.75rem;
+  font-size: 0.9rem;
   color: var(--text-secondary);
-  margin-bottom: 0.8rem;
-  opacity: 0;
-  transform: translateY(30px);
-  animation: fadeInUp 0.8s ease-out 0.2s forwards;
+  margin: 0;
+}
+
+.sort-controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  margin: 1.5rem 0 1rem;
+  flex-wrap: wrap;
+}
+
+.sort-label {
+  font-size: 0.9rem;
+  color: #94a3b8;
+  font-weight: 500;
+  margin-right: 0.5rem;
+}
+
+.sort-btn {
+  background: rgba(30, 41, 59, 0.5);
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  color: #94a3b8;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.sort-btn i {
+  font-size: 0.9rem;
+}
+
+.sort-btn:hover {
+  background: rgba(59, 130, 246, 0.15);
+  border-color: rgba(59, 130, 246, 0.4);
+  color: #60a5fa;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.2);
+}
+
+.sort-btn.active {
+  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+  border-color: #3b82f6;
+  color: #ffffff;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+}
+
+.sort-btn.active:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(59, 130, 246, 0.5);
 }
 
 /* Tab Navigation */
@@ -2578,22 +3021,24 @@ svg {
   position: absolute;
   padding: 24px 30px;
   background: rgba(22, 24, 28, 0.98);
-  border: 3px solid #1D9BF0;
-  border-radius: 12px;
+  border: 2px solid rgba(29, 155, 240, 0.6);
+  border-radius: 16px;
   pointer-events: none;
   font-size: 18px;
   color: var(--text-primary);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.7);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.8), 0 0 20px rgba(29, 155, 240, 0.2);
   z-index: 1000;
   opacity: 0;
-  transition: opacity 0.2s ease;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   min-width: 320px;
-  backdrop-filter: blur(10px);
+  backdrop-filter: blur(20px);
   text-align: center;
+  transform: translateY(10px);
 }
 
 .map-tooltip.visible {
   opacity: 1;
+  transform: translateY(0);
 }
 
 .map-tooltip .country-name {

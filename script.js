@@ -2090,8 +2090,8 @@ document.addEventListener('DOMContentLoaded', () => {
     'russia': { name: 'Russia', flag: '🇷🇺', color: '#9467bd', file: 'Datasets/search_country/russia_search.csv' }
   };
   
-  // Track which countries are currently visible
-  let visibleCountries = new Set(['worldwide', 'us', 'uk', 'canada', 'australia', 'russia']);
+  // Track which countries are currently visible - START WITH WORLDWIDE ONLY
+  let visibleCountries = new Set(['worldwide']);
   let allCountryData = {};
 
   // Load data from CSV files
@@ -2210,9 +2210,14 @@ document.addEventListener('DOMContentLoaded', () => {
     // Update stats, render chart, and setup controls
     updateStats(displayData.length > 0 ? displayData : currentData);
     renderChart(displayData.length > 0 ? displayData : currentData);
-    renderOverviewChart(); // Always update overview after zoom/filter
     setupControls(currentData); // Always use full data for controls
     createCountryControls();
+    
+    // Update impact indicator if an event is selected
+    const eventSelect = document.getElementById('eventSelect');
+    if (eventSelect && eventSelect.value && eventSelect.value !== '') {
+      updateImpactIndicator(eventSelect.value);
+    }
   }
   
   // Create flag button controls
@@ -2267,8 +2272,39 @@ document.addEventListener('DOMContentLoaded', () => {
       controlsContainer.appendChild(button);
     }
     
-    // Buttons are already in the sidebar, no need to insert anywhere
+    // Show/hide reset button based on selection
+    const resetBtn = document.getElementById('resetCountries');
+    if (resetBtn) {
+      if (visibleCountries.size === 1 && visibleCountries.has('worldwide')) {
+        resetBtn.style.display = 'none';
+      } else {
+        resetBtn.style.display = 'flex';
+      }
+    }
+    
     console.log('Country controls created in sidebar');
+  }
+  
+  // Setup reset button
+  const resetCountriesBtn = document.getElementById('resetCountries');
+  if (resetCountriesBtn) {
+    resetCountriesBtn.addEventListener('click', () => {
+      visibleCountries.clear();
+      visibleCountries.add('worldwide');
+      updateChartData();
+    });
+  }
+  
+  // Setup intro message close button
+  const closeIntroBtn = document.getElementById('closeIntroMessage');
+  const introMessage = document.getElementById('trendIntroMessage');
+  if (closeIntroBtn && introMessage) {
+    closeIntroBtn.addEventListener('click', () => {
+      introMessage.style.animation = 'fadeOut 0.3s ease-out forwards';
+      setTimeout(() => {
+        introMessage.style.display = 'none';
+      }, 300);
+    });
   }
   
   function toggleCountry(countryCode) {
@@ -2890,6 +2926,24 @@ Week,Dead Internet Theory: (Worldwide)
       
       // Add the line path with special styling for worldwide
       const isWorldwide = country === 'worldwide';
+      
+      // Create area generator
+      const area = d3.area()
+        .x(d => xScale(d.date))
+        .y0(height)
+        .y1(d => yScale(d.value))
+        .curve(d3.curveMonotoneX);
+      
+      // Add semi-transparent area fill
+      svg.append('path')
+        .datum(sortedData)
+        .attr('class', `country-area country-area-${country}`)
+        .attr('fill', color)
+        .attr('d', area)
+        .style('opacity', isWorldwide ? 0.15 : 0.1)
+        .style('pointer-events', 'none');
+      
+      // Add the line path on top
       const linePath = svg.append('path')
         .datum(sortedData)
         .attr('class', `country-line country-${country}`)
@@ -2919,6 +2973,12 @@ Week,Dead Internet Theory: (Worldwide)
             .attr('stroke-width', isWorldwide ? 4 : 3)
             .style('opacity', 1);
           
+          // Highlight the area fill
+          svg.select(`.country-area-${country}`)
+            .transition()
+            .duration(100)
+            .style('opacity', isWorldwide ? 0.3 : 0.25);
+          
           tooltip
             .style('opacity', 1)
             .html(`${flag} ${countryName}`);
@@ -2929,6 +2989,12 @@ Week,Dead Internet Theory: (Worldwide)
             .duration(100)
             .attr('stroke-width', isWorldwide ? 3 : 2)
             .style('opacity', isWorldwide ? 1 : 0.8);
+          
+          // Reset area fill opacity
+          svg.select(`.country-area-${country}`)
+            .transition()
+            .duration(100)
+            .style('opacity', isWorldwide ? 0.15 : 0.1);
           
           tooltip.style('opacity', 0);
         })
@@ -2991,11 +3057,11 @@ Week,Dead Internet Theory: (Worldwide)
       fullDataset = [...data];
     }
     
-    // Render overview chart
+    // Render overview chart after a brief delay
     setTimeout(() => {
       renderOverviewChart();
-    }, 500);
-    
+    }, 100);
+
     console.log(`Chart rendered with ${dataByCountry.size} countries`);
   }
   
@@ -3092,6 +3158,12 @@ Week,Dead Internet Theory: (Worldwide)
     console.log('Zooming to event:', event.name);
     console.log('Zoom range:', event.zoomRange.start, 'to', event.zoomRange.end);
     
+    // Set the currentZoomRange so overview chart can highlight it
+    currentZoomRange = {
+      start: event.zoomRange.start,
+      end: event.zoomRange.end
+    };
+    
     // Filter data to zoom range
     const zoomedData = currentData.filter(d => 
       d.date >= event.zoomRange.start && d.date <= event.zoomRange.end
@@ -3183,108 +3255,84 @@ Week,Dead Internet Theory: (Worldwide)
   }
   
   function updateChart(data) {
-    // Do NOT set currentZoomRange here; only set by brush or explicit zoom
     // Update scales
     xScale.domain(d3.extent(data, d => d.date));
     yScale.domain([0, d3.max(data, d => d.value) * 1.15]);
     // Clear and re-render
     renderChart(data);
-    renderOverviewChart(); // Always update overview after zoom
+    // Update overview to show current zoom
+    renderOverviewChart();
   }
   
-  // Overview chart function
+  // Simple overview chart
   function renderOverviewChart() {
-    const overviewContainer = document.getElementById('overviewChart');
-    if (!overviewContainer) return;
+    const container = document.getElementById('overviewChart');
+    if (!container || !fullDataset || fullDataset.length === 0) return;
     
-    // Always use the true full dataset for the overview xScale
-    const overviewData = fullDataset && fullDataset.length ? fullDataset : currentData;
-    if (!overviewData || overviewData.length === 0) {
-      d3.select('#overviewChart').selectAll('*').remove();
-      return;
-    }
-
-    // Only create the SVG and brush once
-    const margin = { top: 8, right: 15, bottom: 15, left: 15 };
-    const containerWidth = overviewContainer.clientWidth || 800;
-    const width = containerWidth - margin.left - margin.right;
-    const height = 60 - margin.top - margin.bottom;
-
-    // Remove previous SVG if it exists
-    d3.select('#overviewChart').selectAll('svg').remove();
-    overviewSVG = d3.select('#overviewChart')
+    d3.select('#overviewChart').selectAll('*').remove();
+    
+    const margin = {top: 5, right: 10, bottom: 5, left: 10};
+    const width = container.clientWidth - margin.left - margin.right;
+    const height = 50;
+    
+    const svg = d3.select('#overviewChart')
       .append('svg')
-      .attr('width', containerWidth)
-      .attr('height', 60)
-      .append('g')
+      .attr('width', container.clientWidth)
+      .attr('height', 60);
+      
+    const g = svg.append('g')
       .attr('transform', `translate(${margin.left},${margin.top})`);
-
-    // Group data by country
-    const dataByCountry = d3.group(overviewData, d => d.country);
-
-    // Scales for overview (always use full min/max date)
-    const minDate = d3.min(fullDataset, d => d.date);
-    const maxDate = d3.max(fullDataset, d => d.date);
-    overviewXScale = d3.scaleTime()
-      .domain([minDate, maxDate])
+    
+    // Scales based on FULL dataset
+    const x = d3.scaleTime()
+      .domain(d3.extent(fullDataset, d => d.date))
       .range([0, width]);
-
-    const yScale = d3.scaleLinear()
-      .domain(d3.extent(overviewData, d => d.value))
+      
+    const y = d3.scaleLinear()
+      .domain([0, d3.max(fullDataset, d => d.value)])
       .range([height, 0]);
-
-    // Create line generator
-    const line = d3.line()
-      .x(d => overviewXScale(d.date))
-      .y(d => yScale(d.value))
-      .curve(d3.curveMonotoneX);
-
-    // Draw lines for each visible country
-    dataByCountry.forEach((countryDataArray, country) => {
-      const color = countryData[country]?.color || '#1f77b4';
-      const sortedData = countryDataArray.sort((a, b) => a.date - b.date);
-      const isWorldwide = country === 'worldwide';
-      overviewSVG.append('path')
-        .datum(sortedData)
-        .attr('class', `overview-line overview-${country}`)
-        .attr('fill', 'none')
-        .attr('stroke', color)
-        .attr('stroke-width', isWorldwide ? 1.5 : 1)
-        .attr('d', line)
-        .style('opacity', isWorldwide ? 1 : 0.8);
+    
+    // Draw line for each visible country
+    const byCountry = d3.group(fullDataset, d => d.country);
+    
+    byCountry.forEach((data, country) => {
+      if (visibleCountries.has(country)) {
+        const line = d3.line()
+          .x(d => x(d.date))
+          .y(d => y(d.value))
+          .curve(d3.curveMonotoneX);
+          
+        const color = countryData[country]?.color || '#1f77b4';
+        
+        g.append('path')
+          .datum(data.sort((a, b) => a.date - b.date))
+          .attr('fill', 'none')
+          .attr('stroke', color)
+          .attr('stroke-width', country === 'worldwide' ? 1.5 : 1)
+          .attr('d', line)
+          .attr('opacity', 0.7);
+      }
     });
-
-    // Persistent brush instance
-    if (!overviewBrush) {
-      overviewBrush = d3.brushX()
-        .extent([[0, 0], [width, height]])
-        .on('brush end', function(event) {
-          if (!event.selection) return;
-          const [x0, x1] = event.selection;
-          const domain = [overviewXScale.invert(x0), overviewXScale.invert(x1)];
-          // Update current zoom range and main chart
-          currentZoomRange = {
-            start: domain[0],
-            end: domain[1]
-          };
-          updateChart(currentData.filter(d => d.date >= domain[0] && d.date <= domain[1]));
-        });
-    }
-    // Add brush
-    const brushGroup = overviewSVG.append('g')
-      .attr('class', 'brush')
-      .call(overviewBrush);
-    // Style brush
-    brushGroup.selectAll('.selection').style('opacity', 0.1);
-    brushGroup.selectAll('.handle').style('opacity', 0.3);
-
-    // If we have a zoom range, update the brush selection programmatically
-    if (currentZoomRange && currentZoomRange.start && currentZoomRange.end) {
-      let start = currentZoomRange.start < minDate ? minDate : currentZoomRange.start;
-      let end = currentZoomRange.end > maxDate ? maxDate : currentZoomRange.end;
-      overviewSVG.select('.brush').call(overviewBrush.move, [overviewXScale(start), overviewXScale(end)]);
+    
+    // Highlight current view from main chart
+    const currentDomain = xScale.domain();
+    if (currentDomain && currentDomain[0] && currentDomain[1]) {
+      const x0 = x(currentDomain[0]);
+      const x1 = x(currentDomain[1]);
+      
+      g.append('rect')
+        .attr('x', x0)
+        .attr('y', 0)
+        .attr('width', x1 - x0)
+        .attr('height', height)
+        .attr('fill', 'rgba(74, 158, 255, 0.3)')
+        .attr('stroke', '#4a9eff')
+        .attr('stroke-width', 2)
+        .attr('rx', 2);
     }
   }
+  
+
   
   // Add scroll animation for chart appearance
   const observer = new IntersectionObserver((entries) => {
@@ -3638,6 +3686,10 @@ Week,Dead Internet Theory: (Worldwide)
       // If no event selected (placeholder), show full chart
       if (!selectedEvent || selectedEvent === '') {
         console.log('Showing full chart');
+        
+        // Reset zoom range
+        currentZoomRange = null;
+        
         renderChart(currentData);
         
         // Reset impact value to placeholder
@@ -3679,79 +3731,59 @@ document.addEventListener('DOMContentLoaded', () => {
   // Key AI and Bot Innovation Events with search traffic data
   const eventsData = {
     'facebook-ai-policy': {
-      name: 'Facebook adds first AI policy - everything has to say that it is made by AI (April 5th, 2024)',
-      date: new Date('2024-04-05'),
-      peakValue: 95,
-      impact: 90, // Very high impact
+      name: 'Facebook "AI Slop" Response',
+      date: new Date('2024-03-31'),
+      impact: 95, // Massive spike in search interest - highest on record
       description: 'Very High Impact',
-      articleUrl: 'https://about.fb.com/news/2024/04/metas-approach-to-labeling-ai-generated-content-and-manipulated-media/',
       showLine: true,
       zoomRange: {
-        start: new Date('2024-03-15'),
-        end: new Date('2024-04-25')
+        start: new Date('2024-03-01'),
+        end: new Date('2024-05-01')
       }
     },
     'chatgpt-launch': {
-      name: 'ChatGPT Launch (November 30th, 2022)',
+      name: 'ChatGPT Launch',
       date: new Date('2022-11-30'),
-      peakValue: 89,
-      impact: 75, // Medium-high impact
+      impact: 65, // Moderate increase, beginning of trend
       description: 'High Impact',
       showLine: true,
       zoomRange: {
-        start: new Date('2022-11-01'),
-        end: new Date('2022-12-31')
+        start: new Date('2022-10-30'),
+        end: new Date('2023-01-15')
       }
     },
     'gpt4-release': {
-      name: 'GPT-4 Release (March 14th, 2023)',
+      name: 'GPT-4 Release',
       date: new Date('2023-03-14'),
-      peakValue: 142,
-      impact: 85, // High impact
+      impact: 85, // Major spike in March 2023
       description: 'Very High Impact',
       showLine: true,
       zoomRange: {
         start: new Date('2023-02-15'),
-        end: new Date('2023-04-15')
+        end: new Date('2023-04-30')
       }
     },
-    'bing-ai': {
-      name: 'Bing AI Integration (February 7th, 2023)',
-      date: new Date('2023-02-07'),
-      peakValue: 78,
-      impact: 45, // Medium impact
-      description: 'Medium Impact',
-      showLine: true,
-      zoomRange: {
-        start: new Date('2023-01-15'),
-        end: new Date('2023-03-15')
-      }
-    },
-    'ai-regulation': {
-      name: 'EU AI Act Discussions (June 2023)',
-      date: new Date('2023-06-15'),
-      peakValue: 156,
-      impact: 80, // High impact
+    'openai-board-crisis': {
+      name: 'OpenAI Board Crisis',
+      date: new Date('2023-11-26'),
+      impact: 78, // Significant increase during crisis period
       description: 'High Impact',
       showLine: true,
       zoomRange: {
-        start: new Date('2023-05-15'),
-        end: new Date('2023-07-15')
-      }
-    },
-    'twitter-bots': {
-      name: 'Twitter Bot Purge (October 2022)',
-      date: new Date('2022-10-15'),
-      peakValue: 94,
-      impact: 60, // Medium-high impact
-      description: 'Medium-High Impact',
-      showLine: true,
-      zoomRange: {
-        start: new Date('2022-09-15'),
-        end: new Date('2022-11-15')
+        start: new Date('2023-11-01'),
+        end: new Date('2023-12-31')
       }
     }
   };
+  
+  // Add event listener for the dropdown
+  eventSelect.addEventListener('change', () => {
+    const selectedEvent = eventSelect.value;
+    updateImpactIndicator(selectedEvent);
+  });
+  
+  // Initialize with empty state
+  updateImpactIndicator('');
   
   // Function to determine impact level text based on numeric impact value
   function getImpactLevelText(impactValue) {
@@ -3801,20 +3833,110 @@ document.addEventListener('DOMContentLoaded', () => {
     const event = eventsData[eventKey];
     if (!event) return;
     
-    const impact = event.impact;
+    // Calculate impact based on average of visible countries during event period
+    let impact = event.impact; // Default to base impact
+    
+    // Special handling for ChatGPT launch: no impact
+    if (eventKey === 'chatgpt-launch') {
+      impact = 0;
+    }
+    // Special handling for GPT-4 release: low impact only for worldwide and US
+    else if (eventKey === 'gpt4-release') {
+      // Check if only worldwide and/or US are selected
+      const relevantCountries = Array.from(visibleCountries).filter(c => c === 'worldwide' || c === 'us');
+      
+      if (relevantCountries.length === 0) {
+        // None of the relevant countries are selected
+        impact = 0;
+      } else if (fullDataset && visibleCountries && visibleCountries.size > 0) {
+        // Calculate impact only for worldwide and US
+        const eventStart = event.zoomRange.start;
+        const eventEnd = event.zoomRange.end;
+        
+        let totalAverage = 0;
+        let countryCount = 0;
+        
+        for (const countryCode of relevantCountries) {
+          const countryDataset = fullDataset[countryCode];
+          if (!countryDataset) continue;
+          
+          const eventPeriodData = countryDataset.filter(d => 
+            d.date >= eventStart && d.date <= eventEnd
+          );
+          
+          if (eventPeriodData.length > 0) {
+            const countryAverage = eventPeriodData.reduce((sum, d) => sum + d.value, 0) / eventPeriodData.length;
+            totalAverage += countryAverage;
+            countryCount++;
+          }
+        }
+        
+        if (countryCount > 0) {
+          const avgValue = totalAverage / countryCount;
+          // Cap at 35 (low impact) for GPT-4
+          impact = Math.min(35, Math.max(0, avgValue));
+        }
+      }
+    }
+    // Normal calculation for other events
+    else if (fullDataset && visibleCountries && visibleCountries.size > 0) {
+      const eventStart = event.zoomRange.start;
+      const eventEnd = event.zoomRange.end;
+      
+      let totalAverage = 0;
+      let countryCount = 0;
+      
+      // Calculate average for each visible country
+      for (const countryCode of visibleCountries) {
+        const countryDataset = fullDataset[countryCode];
+        if (!countryDataset) continue;
+        
+        // Filter data points within event range
+        const eventPeriodData = countryDataset.filter(d => 
+          d.date >= eventStart && d.date <= eventEnd
+        );
+        
+        if (eventPeriodData.length > 0) {
+          const countryAverage = eventPeriodData.reduce((sum, d) => sum + d.value, 0) / eventPeriodData.length;
+          totalAverage += countryAverage;
+          countryCount++;
+        }
+      }
+      
+      // Calculate final impact as percentage (normalized to 0-100 scale)
+      if (countryCount > 0) {
+        const avgValue = totalAverage / countryCount;
+        // Normalize: assume max search interest is around 100, scale to percentage
+        impact = Math.min(100, Math.max(0, avgValue));
+      }
+    }
+    
     const fillWidth = `${impact}%`;
     const thumbPosition = `calc(${impact}% - 9px)`;
     
-    // Update the visual indicator
+    // Update the visual indicator with animation
+    impactFill.style.transition = 'width 0.6s cubic-bezier(0.4, 0, 0.2, 1), background 0.6s ease';
+    impactThumb.style.transition = 'left 0.6s cubic-bezier(0.4, 0, 0.2, 1), background 0.3s ease, box-shadow 0.3s ease';
+    
     impactFill.style.width = fillWidth;
     impactThumb.style.left = thumbPosition;
     
     // Update impact value text
-    const impactValue = document.getElementById('impactValue');
-    if (impactValue) {
-      const impactText = getImpactLevelText(event.impact);
-      impactValue.textContent = `${event.name} - ${impactText}`;
-      impactValue.style.color = '#ffd700';
+    const impactValueEl = document.getElementById('impactValue');
+    if (impactValueEl) {
+      const impactText = getImpactLevelText(impact);
+      impactValueEl.textContent = impactText;
+      
+      // Color based on impact level
+      if (impact >= 80) {
+        impactValueEl.style.color = '#ffd700';
+      } else if (impact >= 60) {
+        impactValueEl.style.color = '#ff9500';
+      } else if (impact > 0) {
+        impactValueEl.style.color = '#1D9BF0';
+      } else {
+        impactValueEl.style.color = '#555';
+      }
     }
     
     // Add visual feedback based on impact level
@@ -3825,8 +3947,10 @@ document.addEventListener('DOMContentLoaded', () => {
       glowColor = '#ff9500'; // Orange for medium-high
     } else if (impact >= 40) {
       glowColor = '#1D9BF0'; // Blue for medium
-    } else {
+    } else if (impact > 0) {
       glowColor = '#71767B'; // Gray for low
+    } else {
+      glowColor = '#3a3a3a'; // Dark gray for no impact
     }
     
     impactThumb.style.background = glowColor;
@@ -3837,8 +3961,10 @@ document.addEventListener('DOMContentLoaded', () => {
       impactFill.style.background = `linear-gradient(90deg, #1D9BF0, #ffd700)`;
     } else if (impact >= 40) {
       impactFill.style.background = `linear-gradient(90deg, #1D9BF0, #ff9500)`;
-    } else {
+    } else if (impact > 0) {
       impactFill.style.background = `linear-gradient(90deg, #71767B, #1D9BF0)`;
+    } else {
+      impactFill.style.background = `#3a3a3a`;
     }
   }
   
@@ -4319,10 +4445,11 @@ document.addEventListener('DOMContentLoaded', async function() {
   // ========================================
   const scatterContainer = document.getElementById('scatterChart');
   if (scatterContainer) {
-    const margin = { top: 40, right: 40, bottom: 60, left: 160 };
-    const containerWidth = Math.min(1100, window.innerWidth * 0.85);
+    const margin = { top: 30, right: 30, bottom: 50, left: 180 };
+    const containerWidth = scatterContainer.offsetWidth || 800;
+    const containerHeight = scatterContainer.offsetHeight || 700;
     const width = containerWidth - margin.left - margin.right;
-    const height = 520 - margin.top - margin.bottom;
+    const height = containerHeight - margin.top - margin.bottom;
 
     // Prepare data array with nervous–excited gap
     const dataArray = Object.entries(sentimentData).map(([country, d]) => ({
@@ -4410,14 +4537,35 @@ document.addEventListener('DOMContentLoaded', async function() {
       .attr('x', d => xScale(Math.min(0, d.gap)))
       .attr('width', d => Math.abs(xScale(d.gap) - xScale(0)));
 
+    // Add hover effects and click interactivity to bars
+    bars
+      .style('cursor', 'pointer')
+      .on('mouseenter', function(event, d) {
+        d3.select(this)
+          .transition()
+          .duration(200)
+          .style('opacity', 1)
+          .attr('rx', 10)
+          .style('filter', 'brightness(1.2)');
+      })
+      .on('mouseleave', function(event, d) {
+        d3.select(this)
+          .transition()
+          .duration(200)
+          .style('opacity', 0.9)
+          .attr('rx', 8)
+          .style('filter', 'brightness(1)');
+      });
+
     // Country labels
     svg.append('g')
       .attr('class', 'gap-y-axis')
       .call(d3.axisLeft(yScale))
       .selectAll('text')
       .style('fill', '#E7E9EA')
-      .style('font-size', '13px')
-      .style('font-weight', '600');
+      .style('font-size', '14px')
+      .style('font-weight', '600')
+      .style('cursor', 'pointer');
 
     svg.selectAll('.gap-y-axis .domain, .gap-y-axis line').remove();
 
@@ -4431,8 +4579,9 @@ document.addEventListener('DOMContentLoaded', async function() {
       .attr('x', d => d.gap >= 0 ? xScale(d.gap) + 8 : xScale(d.gap) - 8)
       .attr('text-anchor', d => d.gap >= 0 ? 'start' : 'end')
       .style('fill', '#E7E9EA')
-      .style('font-size', '12px')
-      .style('font-weight', '600')
+      .style('font-size', '13px')
+      .style('font-weight', '700')
+      .style('opacity', 0.9)
       .text(d => `${d.gap >= 0 ? '+' : ''}${d.gap.toFixed(1)} pts`);
 
     // Axis titles
@@ -4528,12 +4677,13 @@ document.addEventListener('DOMContentLoaded', async function() {
   const mapContainer = document.getElementById('worldMap');
   if (!mapContainer) return;
 
-  const mapWidth = Math.min(1100, window.innerWidth * 0.85);
-  const mapHeight = 550;
+  const mapWidth = mapContainer.offsetWidth || 800;
+  const mapHeight = mapContainer.offsetHeight || 700;
   const globeSvg = d3.select('#worldMap').append('svg')
-    .attr('width', mapWidth)
-    .attr('height', mapHeight)
+    .attr('width', '100%')
+    .attr('height', '100%')
     .attr('viewBox', `0 0 ${mapWidth} ${mapHeight}`)
+    .attr('preserveAspectRatio', 'xMidYMid meet')
     .style('background', '#000000');
 
   // Tooltip with vertical bar chart inside
@@ -4644,11 +4794,12 @@ document.addEventListener('DOMContentLoaded', async function() {
       .attr('d', path)
       .attr('fill', d => {
         const data = sentimentData[normalizeCountryName(d.properties.name)];
-        return data ? nervousColorScale(data.nervous) : '#111827';
+        return data ? nervousColorScale(data.nervous) : '#2d3748';
       })
       .attr('stroke', '#020617')
       .attr('stroke-width', 0.4)
-      .style('opacity', d => sentimentData[normalizeCountryName(d.properties.name)] ? 0.96 : 0.3);
+      .style('opacity', d => sentimentData[normalizeCountryName(d.properties.name)] ? 0.96 : 0.4)
+      .style('pointer-events', d => sentimentData[normalizeCountryName(d.properties.name)] ? 'auto' : 'none');
 
     // Hover tooltip with tiny vertical bar chart
     countryPaths
@@ -4697,11 +4848,14 @@ document.addEventListener('DOMContentLoaded', async function() {
         positionTooltip(mapTooltip, event.pageX, event.pageY, 15, 28);
       })
       .on('mouseout', function() {
+        const data = sentimentData[normalizeCountryName(d3.select(this).datum().properties.name)];
+        if (!data) return;
+        
         d3.select(this)
           .transition()
           .duration(150)
           .attr('stroke-width', 0.4)
-          .style('opacity', d => sentimentData[normalizeCountryName(d.properties.name)] ? 0.96 : 0.3);
+          .style('opacity', 0.96);
 
         mapTooltip.classed('visible', false).style('opacity', 0);
       });
@@ -4714,6 +4868,17 @@ document.addEventListener('DOMContentLoaded', async function() {
 
       const centroid = d3.geoCentroid(target); // [lon, lat]
       stopGlobeRotation();
+
+      // Reset all country strokes first
+      countryPaths.style('stroke-width', 0.4).style('stroke', '#020617');
+
+      // Find and highlight the target country path
+      const targetIndex = countryFeatures.findIndex(f => f === target);
+      if (targetIndex !== -1) {
+        d3.select(countryPaths.nodes()[targetIndex])
+          .style('stroke-width', 2)
+          .style('stroke', '#1D9BF0');
+      }
 
       d3.transition()
         .duration(1250)
@@ -4732,6 +4897,125 @@ document.addEventListener('DOMContentLoaded', async function() {
     };
 
     stopGlobeRotation = stopGlobeRotationFn;
+
+    // Add drag behavior to rotate globe
+    const drag = d3.drag()
+      .on('start', function(event) {
+        globeSpinLocked = true;
+        stopGlobeRotation();
+        globeSvg.style('cursor', 'grabbing');
+      })
+      .on('drag', function(event) {
+        const rotation = projection.rotate();
+        const sensitivity = 0.5;
+        projection.rotate([
+          rotation[0] + event.dx * sensitivity,
+          rotation[1] - event.dy * sensitivity,
+          rotation[2]
+        ]);
+        redrawGlobe();
+      })
+      .on('end', function(event) {
+        globeSvg.style('cursor', 'grab');
+        // Resume rotation after 2 seconds of no interaction
+        setTimeout(() => {
+          globeSpinLocked = false;
+          startGlobeRotation();
+        }, 2000);
+      });
+
+    globeSvg.call(drag);
+
+    // Add click on countries to highlight them and show in bar chart
+    countryPaths.on('click', function(event, d) {
+      const countryName = normalizeCountryName(d.properties.name);
+      const data = sentimentData[countryName];
+      if (!data) return;
+
+      // Stop rotation and lock on this country
+      globeSpinLocked = true;
+      stopGlobeRotation();
+
+      // Highlight this country
+      countryPaths.style('stroke-width', 0.4);
+      d3.select(this)
+        .style('stroke-width', 2)
+        .style('stroke', '#1D9BF0');
+
+      // Pulse effect
+      d3.select(this)
+        .transition()
+        .duration(300)
+        .style('opacity', 1)
+        .transition()
+        .duration(300)
+        .style('opacity', 0.96);
+    });
+
+    // Keyboard shortcuts for globe interaction
+    document.addEventListener('keydown', (event) => {
+      const sentimentSection = document.getElementById('sectionSentiment');
+      if (!sentimentSection) return;
+      
+      // Only respond if sentiment section is in view
+      const rect = sentimentSection.getBoundingClientRect();
+      const inView = rect.top < window.innerHeight && rect.bottom > 0;
+      if (!inView) return;
+
+      const rotation = projection.rotate();
+      const step = 5;
+
+      switch(event.key) {
+        case 'ArrowLeft':
+          event.preventDefault();
+          globeSpinLocked = true;
+          stopGlobeRotation();
+          projection.rotate([rotation[0] - step, rotation[1], rotation[2]]);
+          redrawGlobe();
+          break;
+        case 'ArrowRight':
+          event.preventDefault();
+          globeSpinLocked = true;
+          stopGlobeRotation();
+          projection.rotate([rotation[0] + step, rotation[1], rotation[2]]);
+          redrawGlobe();
+          break;
+        case 'ArrowUp':
+          event.preventDefault();
+          globeSpinLocked = true;
+          stopGlobeRotation();
+          projection.rotate([rotation[0], Math.min(90, rotation[1] + step), rotation[2]]);
+          redrawGlobe();
+          break;
+        case 'ArrowDown':
+          event.preventDefault();
+          globeSpinLocked = true;
+          stopGlobeRotation();
+          projection.rotate([rotation[0], Math.max(-90, rotation[1] - step), rotation[2]]);
+          redrawGlobe();
+          break;
+        case 'r':
+        case 'R':
+          // Reset to default view and resume rotation
+          event.preventDefault();
+          globeSpinLocked = false;
+          d3.transition()
+            .duration(1000)
+            .tween('rotate', () => {
+              const initialRotate = projection.rotate();
+              const targetRotate = [0, 0, 0];
+              const r = d3.interpolate(initialRotate, targetRotate);
+              return t => {
+                projection.rotate(r(t));
+                redrawGlobe();
+              };
+            })
+            .on('end', () => {
+              startGlobeRotation();
+            });
+          break;
+      }
+    });
 
     // Start slow spin and keep it tied to the sentiment section visibility
     const sentimentSection = document.getElementById('sectionSentiment');
@@ -4754,6 +5038,36 @@ document.addEventListener('DOMContentLoaded', async function() {
     mapContainer.innerHTML =
       '<p style="color: #E7E9EA; text-align: center; padding: 2rem; font-size:18px;">' +
       'Map visualization could not be loaded. Please check your internet connection.</p>';
+  });
+
+  // Add view toggle functionality
+  const viewButtons = document.querySelectorAll('.sentiment-control-btn');
+  const chartPanel = document.querySelector('.sentiment-gap-panel');
+  const globePanel = document.querySelector('.sentiment-globe-panel');
+
+  viewButtons.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const view = btn.dataset.view;
+      
+      // Update active button
+      viewButtons.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      
+      // Toggle visibility with smooth transition
+      if (view === 'both') {
+        chartPanel.style.display = 'flex';
+        globePanel.style.display = 'flex';
+        document.querySelector('.sentiment-layout').style.gridTemplateColumns = '1fr 1fr';
+      } else if (view === 'chart') {
+        chartPanel.style.display = 'flex';
+        globePanel.style.display = 'none';
+        document.querySelector('.sentiment-layout').style.gridTemplateColumns = '1fr';
+      } else if (view === 'globe') {
+        chartPanel.style.display = 'none';
+        globePanel.style.display = 'flex';
+        document.querySelector('.sentiment-layout').style.gridTemplateColumns = '1fr';
+      }
+    });
   });
 
 // ========================================
