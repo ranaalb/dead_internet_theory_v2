@@ -5806,6 +5806,13 @@ let botClickedNode = null;
 let botAnimationProgress = 0;
 let botIsAnimating = false;
 
+// Flowing dots animation system
+let flowingDots = [];
+let lastDotTime = 0;
+let animationId = null;
+const maxDotsPerFlow = 3;
+const dotCreationInterval = 800; // milliseconds
+
 // Category options
 const categoryOptions = {
   origin: ['Data Center', 'Residential Proxy', 'Mobile ISP'],
@@ -5996,6 +6003,127 @@ botCanvas.addEventListener('click', (evt) => {
   }
 });
 
+// Flowing dots animation functions
+function createFlowingDot(flowIdx) {
+  const flow = botData.flows[flowIdx];
+  return {
+    flowIdx,
+    progress: 0,
+    speed: 0.008 + Math.random() * 0.004, // Random speed for variety
+    life: 1.0,
+    color: flow.color,
+    size: 3 + Math.random() * 2,
+    opacity: 0.8 + Math.random() * 0.2,
+    glowSize: 8 + Math.random() * 4,
+    id: Math.random()
+  };
+}
+
+function updateFlowingDots(currentTime) {
+  const filtered = getFilteredElements();
+  
+  // Create new dots periodically
+  if (currentTime - lastDotTime > dotCreationInterval) {
+    if (!filtered) {
+      // No filters - create dots on random flows
+      if (Math.random() < 0.4) {
+        const randomFlowIdx = Math.floor(Math.random() * botData.flows.length);
+        // Limit dots per flow
+        const dotsOnThisFlow = flowingDots.filter(dot => dot.flowIdx === randomFlowIdx).length;
+        if (dotsOnThisFlow < maxDotsPerFlow) {
+          flowingDots.push(createFlowingDot(randomFlowIdx));
+        }
+      }
+    } else {
+      // Only create dots on filtered flows
+      if (filtered.flows.size > 0 && Math.random() < 0.7) {
+        const filteredFlowsArray = Array.from(filtered.flows);
+        const randomFlowIdx = filteredFlowsArray[Math.floor(Math.random() * filteredFlowsArray.length)];
+        const dotsOnThisFlow = flowingDots.filter(dot => dot.flowIdx === randomFlowIdx).length;
+        if (dotsOnThisFlow < maxDotsPerFlow) {
+          flowingDots.push(createFlowingDot(randomFlowIdx));
+        }
+      }
+    }
+    lastDotTime = currentTime;
+  }
+  
+  // Update existing dots
+  flowingDots = flowingDots.filter(dot => {
+    dot.progress += dot.speed;
+    dot.life -= 0.008;
+    return dot.progress < 1.0 && dot.life > 0;
+  });
+}
+
+function drawFlowingDots() {
+  const filtered = getFilteredElements();
+  
+  flowingDots.forEach(dot => {
+    const flow = botData.flows[dot.flowIdx];
+    const fromPos = botPositions[flow.from[0]][flow.from[1]];
+    const toPos = botPositions[flow.to[0]][flow.to[1]];
+    
+    // Skip if this flow should be hidden
+    if (filtered && !filtered.flows.has(dot.flowIdx)) {
+      return;
+    }
+    
+    // Calculate position along bezier curve
+    const startX = fromPos.x + botNodeWidth / 2;
+    const startY = fromPos.y;
+    const endX = toPos.x - botNodeWidth / 2;
+    const endY = toPos.y;
+    
+    const cp1X = fromPos.x + botStageWidth / 2;
+    const cp1Y = fromPos.y;
+    const cp2X = toPos.x - botStageWidth / 2;
+    const cp2Y = toPos.y;
+    
+    // Bezier curve calculation
+    const t = dot.progress;
+    const mt = 1 - t;
+    const mt2 = mt * mt;
+    const mt3 = mt2 * mt;
+    const t2 = t * t;
+    const t3 = t2 * t;
+    
+    const x = mt3 * startX + 3 * mt2 * t * cp1X + 3 * mt * t2 * cp2X + t3 * endX;
+    const y = mt3 * startY + 3 * mt2 * t * cp1Y + 3 * mt * t2 * cp2Y + t3 * endY;
+    
+    // Draw dot with multiple glow layers for enhanced effect
+    botCtx.save();
+    
+    // Outer glow (largest)
+    botCtx.globalAlpha = dot.opacity * dot.life * 0.15;
+    botCtx.fillStyle = dot.color;
+    botCtx.beginPath();
+    botCtx.arc(x, y, dot.glowSize, 0, 2 * Math.PI);
+    botCtx.fill();
+    
+    // Middle glow
+    botCtx.globalAlpha = dot.opacity * dot.life * 0.3;
+    botCtx.beginPath();
+    botCtx.arc(x, y, dot.glowSize * 0.6, 0, 2 * Math.PI);
+    botCtx.fill();
+    
+    // Inner glow
+    botCtx.globalAlpha = dot.opacity * dot.life * 0.6;
+    botCtx.beginPath();
+    botCtx.arc(x, y, dot.size * 1.5, 0, 2 * Math.PI);
+    botCtx.fill();
+    
+    // Core dot
+    botCtx.globalAlpha = dot.opacity * dot.life;
+    botCtx.fillStyle = '#ffffff';
+    botCtx.beginPath();
+    botCtx.arc(x, y, dot.size, 0, 2 * Math.PI);
+    botCtx.fill();
+    
+    botCtx.restore();
+  });
+}
+
 // Find only DIRECT connections (not all reachable nodes)
 function findConnectedElements(stageIdx, nodeIdx) {
   const connectedNodes = new Set();
@@ -6141,6 +6269,9 @@ function drawBotVisualization() {
   const filtered = getFilteredElements();
   const hasFilters = filtered !== null;
   
+  // Update flowing dots animation
+  updateFlowingDots(Date.now());
+  
   // Draw flows
   botData.flows.forEach((flow, flowIdx) => {
     const fromPos = botPositions[flow.from[0]][flow.from[1]];
@@ -6161,11 +6292,26 @@ function drawBotVisualization() {
     
     if (shouldShow) {
       botCtx.save();
+      
+      // Add subtle pulsing effect to highlighted flows
+      let pulseMultiplier = 1;
+      if (hasFilters && filtered.flows.has(flowIdx)) {
+        pulseMultiplier = 1 + 0.3 * Math.sin(Date.now() * 0.003);
+      }
+      
       botCtx.strokeStyle = flow.color;
-      botCtx.lineWidth = thickness;
+      botCtx.lineWidth = thickness * pulseMultiplier;
       botCtx.lineCap = 'round';
       botCtx.lineJoin = 'round';
       botCtx.globalAlpha = opacity * (shouldShow ? 1 : (1 - (botAnimationProgress - 0.5) * 2));
+      
+      // Add glow for highlighted flows
+      if (hasFilters && filtered.flows.has(flowIdx)) {
+        botCtx.shadowColor = flow.color;
+        botCtx.shadowBlur = 10 * pulseMultiplier;
+        botCtx.shadowOffsetX = 0;
+        botCtx.shadowOffsetY = 0;
+      }
       
       botCtx.beginPath();
       botCtx.moveTo(fromPos.x + botNodeWidth / 2, fromPos.y);
@@ -6182,6 +6328,9 @@ function drawBotVisualization() {
       botCtx.restore();
     }
   });
+  
+  // Draw flowing dots
+  drawFlowingDots();
   
   botCtx.globalAlpha = 1;
   
@@ -6237,10 +6386,19 @@ function drawBotVisualization() {
         botCtx.scale(scale, scale);
         botCtx.translate(-pos.x, -pos.y);
         
-        // Add glow effect for hovered/clicked nodes
-        if (isHovered || isClicked) {
+        // Add enhanced glow effects
+        let glowIntensity = 0;
+        if (isClicked) {
+          glowIntensity = 25 + 10 * Math.sin(Date.now() * 0.005);
+        } else if (isHovered) {
+          glowIntensity = 20 + 5 * Math.sin(Date.now() * 0.004);
+        } else if (filtered && filtered.nodes.has(nodeKey)) {
+          glowIntensity = 15 + 5 * Math.sin(Date.now() * 0.003);
+        }
+        
+        if (glowIntensity > 0) {
           botCtx.shadowColor = node.color;
-          botCtx.shadowBlur = isClicked ? 20 : 15;
+          botCtx.shadowBlur = glowIntensity;
           botCtx.shadowOffsetX = 0;
           botCtx.shadowOffsetY = 0;
         }
@@ -6316,6 +6474,25 @@ function drawBotVisualization() {
   });
   
   botCtx.globalAlpha = 1;
+  
+  // Continue animation loop
+  animationId = requestAnimationFrame(drawBotVisualization);
+}
+
+// Start continuous animation
+function startBotAnimation() {
+  if (animationId) {
+    cancelAnimationFrame(animationId);
+  }
+  drawBotVisualization();
+}
+
+// Stop animation (for cleanup)
+function stopBotAnimation() {
+  if (animationId) {
+    cancelAnimationFrame(animationId);
+    animationId = null;
+  }
 }
 
 // Event listeners for filters
@@ -6368,10 +6545,19 @@ document.getElementById('botResetFilters').addEventListener('click', () => {
   animateTransition();
 });
 
-// Initial draw
+// Initial setup and start continuous animation
 botAnimationProgress = 1;
-drawBotVisualization();
-console.log('✅ Bot visualization rendered successfully!');
+startBotAnimation();
+console.log('✅ Bot visualization with flowing dots animation started!');
+
+// Handle page visibility to optimize performance
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) {
+    stopBotAnimation();
+  } else {
+    startBotAnimation();
+  }
+});
 
 // ========================================
 // SOCIAL MEDIA PLATFORM DASHBOARD
