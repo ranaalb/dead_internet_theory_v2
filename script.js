@@ -4586,6 +4586,7 @@ document.addEventListener('DOMContentLoaded', async function() {
 
     // Axis titles
     svg.append('text')
+      .attr('class', 'axis-title')
       .attr('x', width / 2)
       .attr('y', height + 40)
       .attr('text-anchor', 'middle')
@@ -4595,6 +4596,7 @@ document.addEventListener('DOMContentLoaded', async function() {
       .text('Sentiment gap (Nervous − Excited, percentage points)');
 
     svg.append('text')
+      .attr('class', 'axis-label-left')
       .attr('x', xScale(-maxAbsGap))
       .attr('y', -18)
       .attr('text-anchor', 'start')
@@ -4604,6 +4606,7 @@ document.addEventListener('DOMContentLoaded', async function() {
       .text('More excited about AI');
 
     svg.append('text')
+      .attr('class', 'axis-label-right')
       .attr('x', xScale(maxAbsGap))
       .attr('y', -18)
       .attr('text-anchor', 'end')
@@ -4670,6 +4673,291 @@ document.addEventListener('DOMContentLoaded', async function() {
           focusCountryOnGlobe(d.country);
         }
       });
+
+    // SORT BUTTON FUNCTIONALITY
+    let currentSortMode = 'gap'; // Track current sort mode
+    
+    const sortButtons = document.querySelectorAll('.sort-btn');
+    sortButtons.forEach(button => {
+      button.addEventListener('click', function() {
+        // Update active button
+        sortButtons.forEach(btn => btn.classList.remove('active'));
+        this.classList.add('active');
+
+        const sortType = this.getAttribute('data-sort');
+        currentSortMode = sortType;
+        let sortedData;
+
+        switch(sortType) {
+          case 'gap':
+            sortedData = [...dataArray].sort((a, b) => b.gap - a.gap);
+            break;
+          case 'nervous':
+            sortedData = [...dataArray].sort((a, b) => b.nervous - a.nervous);
+            break;
+          case 'excited':
+            sortedData = [...dataArray].sort((a, b) => b.excited - a.excited);
+            break;
+          case 'country':
+            sortedData = [...dataArray].sort((a, b) => a.country.localeCompare(b.country));
+            break;
+          default:
+            sortedData = dataArray;
+        }
+
+        // Update yScale domain with new order
+        yScale.domain(sortedData.map(d => d.country));
+
+        // Update xScale based on sort mode
+        let maxValue;
+        if (sortType === 'nervous') {
+          maxValue = d3.max(sortedData, d => d.nervous);
+          xScale.domain([0, maxValue]).nice();
+        } else if (sortType === 'excited') {
+          maxValue = d3.max(sortedData, d => d.excited);
+          xScale.domain([0, maxValue]).nice();
+        } else if (sortType === 'country') {
+          maxValue = Math.max(d3.max(sortedData, d => d.nervous), d3.max(sortedData, d => d.excited));
+          xScale.domain([0, maxValue]).nice();
+        } else {
+          // gap mode
+          const maxAbsGap = d3.max(sortedData, d => Math.abs(d.gap)) || 0;
+          xScale.domain([-maxAbsGap, maxAbsGap]).nice();
+        }
+
+        // Update zero line position
+        svg.select('.gap-zero-line')
+          .transition()
+          .duration(750)
+          .attr('x1', xScale(0))
+          .attr('x2', xScale(0));
+
+        // Update grid
+        svg.select('.gap-x-grid')
+          .transition()
+          .duration(750)
+          .call(
+            d3.axisTop(xScale)
+              .ticks(7)
+              .tickSize(-height)
+              .tickFormat(d => {
+                if (sortType === 'gap') {
+                  return d === 0 ? '' : (d > 0 ? '+' + d.toFixed(0) : d.toFixed(0));
+                } else {
+                  return d.toFixed(0) + '%';
+                }
+              })
+          );
+
+        svg.selectAll('.gap-x-grid .domain').remove();
+        svg.selectAll('.gap-x-grid line')
+          .style('stroke', 'rgba(231,233,234,0.15)')
+          .style('stroke-dasharray', '3,6');
+
+        // Determine bar color scale based on sort mode
+        let getBarColor;
+        if (sortType === 'nervous') {
+          getBarColor = d => nervousColorScale(d.nervous);
+        } else if (sortType === 'excited') {
+          const excitedColorScale = d3.scaleSequential()
+            .domain([60, 25])
+            .interpolator(d3.interpolateRgb('#4AADFF', '#FF4444'));
+          getBarColor = d => excitedColorScale(d.excited);
+        } else if (sortType === 'country') {
+          getBarColor = d => nervousColorScale(d.nervous);
+        } else {
+          getBarColor = d => nervousColorScale(d.nervous);
+        }
+
+        // Rebind data and transition bars
+        svg.selectAll('.gap-bar')
+          .data(sortedData, d => d.country)
+          .transition()
+          .duration(750)
+          .attr('y', d => yScale(d.country))
+          .attr('x', d => {
+            if (sortType === 'gap') {
+              return xScale(Math.min(0, d.gap));
+            } else {
+              return xScale(0);
+            }
+          })
+          .attr('width', d => {
+            if (sortType === 'nervous') {
+              return xScale(d.nervous) - xScale(0);
+            } else if (sortType === 'excited') {
+              return xScale(d.excited) - xScale(0);
+            } else if (sortType === 'country') {
+              return xScale(d.nervous) - xScale(0);
+            } else {
+              return Math.abs(xScale(d.gap) - xScale(0));
+            }
+          })
+          .style('fill', getBarColor);
+
+        // Rebind data and transition labels
+        svg.selectAll('.gap-label')
+          .data(sortedData, d => d.country)
+          .transition()
+          .duration(750)
+          .attr('y', d => yScale(d.country) + yScale.bandwidth() / 2 + 4)
+          .attr('x', d => {
+            if (sortType === 'nervous') {
+              return xScale(d.nervous) + 8;
+            } else if (sortType === 'excited') {
+              return xScale(d.excited) + 8;
+            } else if (sortType === 'country') {
+              return xScale(d.nervous) + 8;
+            } else {
+              return d.gap >= 0 ? xScale(d.gap) + 8 : xScale(d.gap) - 8;
+            }
+          })
+          .attr('text-anchor', d => {
+            if (sortType === 'gap' && d.gap < 0) {
+              return 'end';
+            } else {
+              return 'start';
+            }
+          })
+          .text(d => {
+            if (sortType === 'nervous') {
+              return `${d.nervous.toFixed(1)}%`;
+            } else if (sortType === 'excited') {
+              return `${d.excited.toFixed(1)}%`;
+            } else if (sortType === 'country') {
+              return `${d.nervous.toFixed(1)}%`;
+            } else {
+              return `${d.gap >= 0 ? '+' : ''}${d.gap.toFixed(1)} pts`;
+            }
+          });
+
+        // Update y-axis with new order
+        svg.select('.gap-y-axis')
+          .transition()
+          .duration(750)
+          .call(d3.axisLeft(yScale));
+
+        svg.selectAll('.gap-y-axis .domain, .gap-y-axis line').remove();
+        svg.selectAll('.gap-y-axis text')
+          .style('fill', '#E7E9EA')
+          .style('font-size', '14px')
+          .style('font-weight', '600')
+          .style('cursor', 'pointer');
+
+        // Update axis title
+        svg.select('.axis-title')
+          .transition()
+          .duration(750)
+          .text(() => {
+            if (sortType === 'nervous') {
+              return 'Percentage of people nervous about AI';
+            } else if (sortType === 'excited') {
+              return 'Percentage of people excited about AI';
+            } else if (sortType === 'country') {
+              return 'Percentage of people nervous about AI';
+            } else {
+              return 'Sentiment gap (Nervous − Excited, percentage points)';
+            }
+          });
+
+        // Update top labels
+        svg.selectAll('.axis-label-left, .axis-label-right').remove();
+        
+        if (sortType === 'gap') {
+          svg.append('text')
+            .attr('class', 'axis-label-left')
+            .attr('x', xScale(-maxAbsGap))
+            .attr('y', -18)
+            .attr('text-anchor', 'start')
+            .style('fill', '#4AADFF')
+            .style('font-size', '12px')
+            .style('font-weight', '600')
+            .style('opacity', 0)
+            .text('More excited about AI')
+            .transition()
+            .duration(750)
+            .style('opacity', 1);
+
+          svg.append('text')
+            .attr('class', 'axis-label-right')
+            .attr('x', xScale(maxAbsGap))
+            .attr('y', -18)
+            .attr('text-anchor', 'end')
+            .style('fill', '#FF6B6B')
+            .style('font-size', '12px')
+            .style('font-weight', '600')
+            .style('opacity', 0)
+            .text('More nervous about AI')
+            .transition()
+            .duration(750)
+            .style('opacity', 1);
+        } else if (sortType === 'excited') {
+          svg.append('text')
+            .attr('class', 'axis-label-right')
+            .attr('x', xScale(maxValue))
+            .attr('y', -18)
+            .attr('text-anchor', 'end')
+            .style('fill', '#4AADFF')
+            .style('font-size', '12px')
+            .style('font-weight', '600')
+            .style('opacity', 0)
+            .text('More excited about AI')
+            .transition()
+            .duration(750)
+            .style('opacity', 1);
+        } else if (sortType === 'nervous' || sortType === 'country') {
+          svg.append('text')
+            .attr('class', 'axis-label-right')
+            .attr('x', xScale(maxValue || d3.max(sortedData, d => d.nervous)))
+            .attr('y', -18)
+            .attr('text-anchor', 'end')
+            .style('fill', '#FF6B6B')
+            .style('font-size', '12px')
+            .style('font-weight', '600')
+            .style('opacity', 0)
+            .text('More nervous about AI')
+            .transition()
+            .duration(750)
+            .style('opacity', 1);
+        }
+
+        // Update globe colors to match sort mode
+        if (typeof countryPaths !== 'undefined' && countryPaths) {
+          countryPaths
+            .transition()
+            .duration(750)
+            .attr('fill', d => {
+              const data = sentimentData[normalizeCountryName(d.properties.name)];
+              if (!data) return '#2d3748';
+              
+              if (sortType === 'excited') {
+                const excitedColorScale = d3.scaleSequential()
+                  .domain([60, 25])
+                  .interpolator(d3.interpolateRgb('#4AADFF', '#FF4444'));
+                return excitedColorScale(data.excited);
+              } else {
+                return nervousColorScale(data.nervous);
+              }
+            });
+        }
+
+        // Update color legend
+        const legendExcited = document.querySelector('.legend-end.excited-end');
+        const legendConcerned = document.querySelector('.legend-end.concerned-end');
+        
+        if (sortType === 'excited') {
+          if (legendExcited) legendExcited.textContent = 'Less Excited';
+          if (legendConcerned) legendConcerned.textContent = 'More Excited';
+        } else if (sortType === 'nervous' || sortType === 'country') {
+          if (legendExcited) legendExcited.textContent = 'Less Concerned';
+          if (legendConcerned) legendConcerned.textContent = 'More Concerned';
+        } else {
+          // gap mode
+          if (legendExcited) legendExcited.textContent = 'More Excited';
+          if (legendConcerned) legendConcerned.textContent = 'More Concerned';
+        }
+      });
+    });
   }
 
   // GLOBE MAP - ROTATING ORTHOGRAPHIC VIEW
@@ -5372,17 +5660,31 @@ document.addEventListener('DOMContentLoaded', async () => {
 })();
 
 // ========================================
-// CLICKABLE CARDS FUNCTIONALITY
+// CLICKABLE CARDS FUNCTIONALITY - MOVED TO END
 // ========================================
-document.addEventListener('DOMContentLoaded', function() {
+function initializeClickableCards() {
+  console.log('🎯 Initializing clickable cards...');
+  
   // Find all clickable cards in the conclusion section
   const clickableCards = document.querySelectorAll('.clickable-card');
+  console.log('🔍 Found clickable cards:', clickableCards.length);
   
-  clickableCards.forEach(card => {
+  if (clickableCards.length === 0) {
+    console.warn('⚠️ No clickable cards found! Retrying in 1 second...');
+    setTimeout(initializeClickableCards, 1000);
+    return;
+  }
+  
+  clickableCards.forEach((card, index) => {
+    console.log(`🎨 Setting up card ${index}:`, card);
+    
     const expandedContent = card.querySelector('.card-expanded-content');
     const cardHint = card.querySelector('.card-hint');
     
-    if (expandedContent) {
+    console.log('📄 Expanded content:', expandedContent);
+    console.log('💡 Card hint:', cardHint);
+    
+    if (expandedContent && cardHint) {
       // Initially hide expanded content
       expandedContent.style.display = 'none';
       expandedContent.style.maxHeight = '0';
@@ -5394,9 +5696,12 @@ document.addEventListener('DOMContentLoaded', function() {
       
       // Add click event listener
       card.addEventListener('click', function(e) {
+        console.log('🖱️ Card clicked!', card);
         e.preventDefault();
+        e.stopPropagation();
         
         if (!isExpanded) {
+          console.log('📈 Expanding card...');
           // Expand the card
           expandedContent.style.display = 'block';
           expandedContent.style.maxHeight = expandedContent.scrollHeight + 'px';
@@ -5404,24 +5709,21 @@ document.addEventListener('DOMContentLoaded', function() {
           expandedContent.style.marginTop = '1rem';
           
           // Update hint text
-          if (cardHint) {
-            cardHint.textContent = 'Click to collapse';
-          }
+          cardHint.textContent = 'Click to collapse';
           
           // Add expanded class for additional styling
           card.classList.add('expanded');
           
         } else {
+          console.log('📉 Collapsing card...');
           // Collapse the card
           expandedContent.style.maxHeight = '0';
           expandedContent.style.opacity = '0';
           expandedContent.style.marginTop = '0';
           
           // Update hint text
-          if (cardHint) {
-            const isDetailsCard = card.querySelector('.answer-verdict');
-            cardHint.textContent = isDetailsCard ? 'Click for details' : 'Click for tips';
-          }
+          const isDetailsCard = card.querySelector('.answer-verdict');
+          cardHint.textContent = isDetailsCard ? 'Click for details' : 'Click for tips';
           
           // Remove expanded class
           card.classList.remove('expanded');
@@ -5441,103 +5743,75 @@ document.addEventListener('DOMContentLoaded', function() {
       card.addEventListener('mouseenter', function() {
         card.style.transform = 'translateY(-2px)';
         card.style.cursor = 'pointer';
+        console.log('🎯 Card hover enter');
       });
       
       card.addEventListener('mouseleave', function() {
         if (!card.classList.contains('expanded')) {
           card.style.transform = 'translateY(0)';
         }
+        console.log('🎯 Card hover leave');
       });
+      
+      console.log('✅ Card setup complete for card', index);
+    } else {
+      console.log('❌ Missing elements for card:', card);
+      console.log('  - expandedContent:', expandedContent);
+      console.log('  - cardHint:', cardHint);
     }
   });
   
-  // Also handle the message content card (The Takeaway)
-  const messageContent = document.querySelector('.conclusion-message');
-  if (messageContent && !messageContent.classList.contains('clickable-card')) {
-    messageContent.classList.add('clickable-card');
-    
-    const expandedContent = messageContent.querySelector('.card-expanded-content');
-    const cardHint = messageContent.querySelector('.card-hint');
-    
-    if (expandedContent) {
-      // Initially hide expanded content
-      expandedContent.style.display = 'none';
-      expandedContent.style.maxHeight = '0';
-      expandedContent.style.opacity = '0';
-      expandedContent.style.overflow = 'hidden';
-      expandedContent.style.transition = 'all 0.3s ease-in-out';
-      
-      let isExpanded = false;
-      
-      // Add click event listener
-      messageContent.addEventListener('click', function(e) {
-        e.preventDefault();
-        
-        if (!isExpanded) {
-          // Expand the card
-          expandedContent.style.display = 'block';
-          expandedContent.style.maxHeight = expandedContent.scrollHeight + 'px';
-          expandedContent.style.opacity = '1';
-          expandedContent.style.marginTop = '1rem';
-          
-          // Update hint text
-          if (cardHint) {
-            cardHint.textContent = 'Click to collapse';
-          }
-          
-          // Add expanded class for additional styling
-          messageContent.classList.add('expanded');
-          
-        } else {
-          // Collapse the card
-          expandedContent.style.maxHeight = '0';
-          expandedContent.style.opacity = '0';
-          expandedContent.style.marginTop = '0';
-          
-          // Update hint text
-          if (cardHint) {
-            cardHint.textContent = 'Click for tips';
-          }
-          
-          // Remove expanded class
-          messageContent.classList.remove('expanded');
-          
-          // Hide after animation completes
-          setTimeout(() => {
-            if (!isExpanded) {
-              expandedContent.style.display = 'none';
-            }
-          }, 300);
-        }
-        
-        isExpanded = !isExpanded;
-      });
-      
-      // Add hover effects
-      messageContent.addEventListener('mouseenter', function() {
-        messageContent.style.transform = 'translateY(-2px)';
-        messageContent.style.cursor = 'pointer';
-      });
-      
-      messageContent.addEventListener('mouseleave', function() {
-        if (!messageContent.classList.contains('expanded')) {
-          messageContent.style.transform = 'translateY(0)';
-        }
-      });
-    }
-  }
-});
+  console.log('🎉 Clickable cards initialization complete!');
+}
+
+// Initialize when DOM is ready
+document.addEventListener('DOMContentLoaded', initializeClickableCards);
+
+// Also initialize after a delay in case DOM loading is delayed
+setTimeout(initializeClickableCards, 2000);
 
 
 const botCanvas = document.getElementById('botFlowCanvas');
 const botCtx = botCanvas.getContext('2d');
 
+// Fix blurry canvas for high-DPI displays
+const dpr = window.devicePixelRatio || 1;
+const rect = botCanvas.getBoundingClientRect();
+
+// Set actual size in memory (scaled for high-DPI)
+botCanvas.width = rect.width * dpr;
+botCanvas.height = rect.height * dpr;
+
+// Scale the canvas back down using CSS
+botCanvas.style.width = rect.width + 'px';
+botCanvas.style.height = rect.height + 'px';
+
+// Scale the drawing context to match device pixel ratio
+botCtx.scale(dpr, dpr);
+
+// Enable image smoothing for better quality
+botCtx.imageSmoothingEnabled = true;
+botCtx.imageSmoothingQuality = 'high';
+
+// Update canvas dimensions for calculations
+const botWidth = rect.width;
+const botHeight = rect.height;
+
 // Active filters
 let botActiveCategory = null;
 let botActiveValue = null;
+let botHoveredNode = null;
+let botClickedNode = null;
 
 let botAnimationProgress = 0;
 let botIsAnimating = false;
+
+// Flowing dots animation system
+let flowingDots = [];
+let lastDotTime = 0;
+let animationId = null;
+const maxDotsPerFlow = 3;
+const dotCreationInterval = 800; // milliseconds
 
 // Category options
 const categoryOptions = {
@@ -5620,8 +5894,6 @@ const botData = {
 };
 
 // Layout calculations
-const botWidth = botCanvas.width;
-const botHeight = botCanvas.height;
 const botStageWidth = botWidth / 4;
 const botNodeWidth = 100;
 const botPadding = 35;
@@ -5644,6 +5916,213 @@ const botPositions = botData.stages.map((stage, stageIdx) => {
     return pos;
   });
 });
+
+// Mouse interaction functions
+function getMousePos(canvas, evt) {
+  const rect = canvas.getBoundingClientRect();
+  return {
+    x: evt.clientX - rect.left,
+    y: evt.clientY - rect.top
+  };
+}
+
+function getNodeAtPosition(x, y) {
+  for (let stageIdx = 0; stageIdx < botData.stages.length; stageIdx++) {
+    for (let nodeIdx = 0; nodeIdx < botData.stages[stageIdx].nodes.length; nodeIdx++) {
+      const pos = botPositions[stageIdx][nodeIdx];
+      if (x >= pos.x - botNodeWidth / 2 && x <= pos.x + botNodeWidth / 2 &&
+          y >= pos.y - pos.height / 2 && y <= pos.y + pos.height / 2) {
+        return { stageIdx, nodeIdx };
+      }
+    }
+  }
+  return null;
+}
+
+// Add mouse event listeners
+botCanvas.addEventListener('mousemove', (evt) => {
+  const mousePos = getMousePos(botCanvas, evt);
+  const nodeAt = getNodeAtPosition(mousePos.x, mousePos.y);
+  
+  if (nodeAt && (!botHoveredNode || 
+      botHoveredNode.stageIdx !== nodeAt.stageIdx || 
+      botHoveredNode.nodeIdx !== nodeAt.nodeIdx)) {
+    botHoveredNode = nodeAt;
+    botCanvas.style.cursor = 'pointer';
+    drawBotVisualization();
+  } else if (!nodeAt && botHoveredNode) {
+    botHoveredNode = null;
+    botCanvas.style.cursor = 'default';
+    drawBotVisualization();
+  }
+});
+
+botCanvas.addEventListener('click', (evt) => {
+  const mousePos = getMousePos(botCanvas, evt);
+  const nodeAt = getNodeAtPosition(mousePos.x, mousePos.y);
+  
+  if (nodeAt) {
+    botClickedNode = nodeAt;
+    
+    // Set the filter dropdowns to match the clicked node
+    const stage = botData.stages[nodeAt.stageIdx];
+    const node = stage.nodes[nodeAt.nodeIdx];
+    const categoryMap = {
+      0: 'origin',
+      1: 'sophistication', 
+      2: 'industry',
+      3: 'country'
+    };
+    
+    botActiveCategory = categoryMap[nodeAt.stageIdx];
+    botActiveValue = node.name;
+    
+    // Update UI dropdowns
+    const categorySelect = document.getElementById('botCategorySelect');
+    const valueSelect = document.getElementById('botValueSelect');
+    const valueSelectGroup = document.getElementById('botValueSelectGroup');
+    const valueLabel = document.getElementById('botValueLabel');
+    
+    categorySelect.value = botActiveCategory;
+    valueSelectGroup.style.display = 'flex';
+    valueLabel.textContent = `Step 2: Choose ${botActiveCategory.charAt(0).toUpperCase() + botActiveCategory.slice(1)}`;
+    
+    // Populate and select value
+    valueSelect.innerHTML = '<option value="">Select...</option>';
+    categoryOptions[botActiveCategory].forEach(option => {
+      const opt = document.createElement('option');
+      opt.value = option;
+      opt.textContent = option;
+      valueSelect.appendChild(opt);
+    });
+    valueSelect.value = botActiveValue;
+    
+    animateTransition();
+  } else {
+    botClickedNode = null;
+  }
+});
+
+// Flowing dots animation functions
+function createFlowingDot(flowIdx) {
+  const flow = botData.flows[flowIdx];
+  return {
+    flowIdx,
+    progress: 0,
+    speed: 0.008 + Math.random() * 0.004, // Random speed for variety
+    life: 1.0,
+    color: flow.color,
+    size: 3 + Math.random() * 2,
+    opacity: 0.8 + Math.random() * 0.2,
+    glowSize: 8 + Math.random() * 4,
+    id: Math.random()
+  };
+}
+
+function updateFlowingDots(currentTime) {
+  const filtered = getFilteredElements();
+  
+  // Create new dots periodically
+  if (currentTime - lastDotTime > dotCreationInterval) {
+    if (!filtered) {
+      // No filters - create dots on random flows
+      if (Math.random() < 0.4) {
+        const randomFlowIdx = Math.floor(Math.random() * botData.flows.length);
+        // Limit dots per flow
+        const dotsOnThisFlow = flowingDots.filter(dot => dot.flowIdx === randomFlowIdx).length;
+        if (dotsOnThisFlow < maxDotsPerFlow) {
+          flowingDots.push(createFlowingDot(randomFlowIdx));
+        }
+      }
+    } else {
+      // Only create dots on filtered flows
+      if (filtered.flows.size > 0 && Math.random() < 0.7) {
+        const filteredFlowsArray = Array.from(filtered.flows);
+        const randomFlowIdx = filteredFlowsArray[Math.floor(Math.random() * filteredFlowsArray.length)];
+        const dotsOnThisFlow = flowingDots.filter(dot => dot.flowIdx === randomFlowIdx).length;
+        if (dotsOnThisFlow < maxDotsPerFlow) {
+          flowingDots.push(createFlowingDot(randomFlowIdx));
+        }
+      }
+    }
+    lastDotTime = currentTime;
+  }
+  
+  // Update existing dots
+  flowingDots = flowingDots.filter(dot => {
+    dot.progress += dot.speed;
+    dot.life -= 0.008;
+    return dot.progress < 1.0 && dot.life > 0;
+  });
+}
+
+function drawFlowingDots() {
+  const filtered = getFilteredElements();
+  
+  flowingDots.forEach(dot => {
+    const flow = botData.flows[dot.flowIdx];
+    const fromPos = botPositions[flow.from[0]][flow.from[1]];
+    const toPos = botPositions[flow.to[0]][flow.to[1]];
+    
+    // Skip if this flow should be hidden
+    if (filtered && !filtered.flows.has(dot.flowIdx)) {
+      return;
+    }
+    
+    // Calculate position along bezier curve
+    const startX = fromPos.x + botNodeWidth / 2;
+    const startY = fromPos.y;
+    const endX = toPos.x - botNodeWidth / 2;
+    const endY = toPos.y;
+    
+    const cp1X = fromPos.x + botStageWidth / 2;
+    const cp1Y = fromPos.y;
+    const cp2X = toPos.x - botStageWidth / 2;
+    const cp2Y = toPos.y;
+    
+    // Bezier curve calculation
+    const t = dot.progress;
+    const mt = 1 - t;
+    const mt2 = mt * mt;
+    const mt3 = mt2 * mt;
+    const t2 = t * t;
+    const t3 = t2 * t;
+    
+    const x = mt3 * startX + 3 * mt2 * t * cp1X + 3 * mt * t2 * cp2X + t3 * endX;
+    const y = mt3 * startY + 3 * mt2 * t * cp1Y + 3 * mt * t2 * cp2Y + t3 * endY;
+    
+    // Draw dot with multiple glow layers for enhanced effect
+    botCtx.save();
+    
+    // Outer glow (largest)
+    botCtx.globalAlpha = dot.opacity * dot.life * 0.15;
+    botCtx.fillStyle = dot.color;
+    botCtx.beginPath();
+    botCtx.arc(x, y, dot.glowSize, 0, 2 * Math.PI);
+    botCtx.fill();
+    
+    // Middle glow
+    botCtx.globalAlpha = dot.opacity * dot.life * 0.3;
+    botCtx.beginPath();
+    botCtx.arc(x, y, dot.glowSize * 0.6, 0, 2 * Math.PI);
+    botCtx.fill();
+    
+    // Inner glow
+    botCtx.globalAlpha = dot.opacity * dot.life * 0.6;
+    botCtx.beginPath();
+    botCtx.arc(x, y, dot.size * 1.5, 0, 2 * Math.PI);
+    botCtx.fill();
+    
+    // Core dot
+    botCtx.globalAlpha = dot.opacity * dot.life;
+    botCtx.fillStyle = '#ffffff';
+    botCtx.beginPath();
+    botCtx.arc(x, y, dot.size, 0, 2 * Math.PI);
+    botCtx.fill();
+    
+    botCtx.restore();
+  });
+}
 
 // Find only DIRECT connections (not all reachable nodes)
 function findConnectedElements(stageIdx, nodeIdx) {
@@ -5783,8 +6262,15 @@ function animateTransition(callback) {
 function drawBotVisualization() {
   botCtx.clearRect(0, 0, botWidth, botHeight);
   
+  // Enable high-quality rendering
+  botCtx.textBaseline = 'alphabetic';
+  botCtx.textRenderingOptimization = 'optimizeQuality';
+  
   const filtered = getFilteredElements();
   const hasFilters = filtered !== null;
+  
+  // Update flowing dots animation
+  updateFlowingDots(Date.now());
   
   // Draw flows
   botData.flows.forEach((flow, flowIdx) => {
@@ -5805,9 +6291,27 @@ function drawBotVisualization() {
     }
     
     if (shouldShow) {
+      botCtx.save();
+      
+      // Add subtle pulsing effect to highlighted flows
+      let pulseMultiplier = 1;
+      if (hasFilters && filtered.flows.has(flowIdx)) {
+        pulseMultiplier = 1 + 0.3 * Math.sin(Date.now() * 0.003);
+      }
+      
       botCtx.strokeStyle = flow.color;
-      botCtx.lineWidth = thickness;
+      botCtx.lineWidth = thickness * pulseMultiplier;
+      botCtx.lineCap = 'round';
+      botCtx.lineJoin = 'round';
       botCtx.globalAlpha = opacity * (shouldShow ? 1 : (1 - (botAnimationProgress - 0.5) * 2));
+      
+      // Add glow for highlighted flows
+      if (hasFilters && filtered.flows.has(flowIdx)) {
+        botCtx.shadowColor = flow.color;
+        botCtx.shadowBlur = 10 * pulseMultiplier;
+        botCtx.shadowOffsetX = 0;
+        botCtx.shadowOffsetY = 0;
+      }
       
       botCtx.beginPath();
       botCtx.moveTo(fromPos.x + botNodeWidth / 2, fromPos.y);
@@ -5821,22 +6325,39 @@ function drawBotVisualization() {
         toPos.x - botNodeWidth / 2, toPos.y
       );
       botCtx.stroke();
+      botCtx.restore();
     }
   });
+  
+  // Draw flowing dots
+  drawFlowingDots();
   
   botCtx.globalAlpha = 1;
   
   // Draw nodes
   botData.stages.forEach((stage, stageIdx) => {
-    // Draw stage title
+    // Draw stage title with improved quality
+    botCtx.save();
     botCtx.fillStyle = '#9ca3af';
-    botCtx.font = 'bold 14px sans-serif';
+    botCtx.font = 'bold 14px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
     botCtx.textAlign = 'center';
-    botCtx.fillText(stage.name.toUpperCase(), stageIdx * botStageWidth + botStageWidth / 2, 10);
+    botCtx.textBaseline = 'top';
+    
+    // Add subtle text shadow for better readability
+    botCtx.shadowColor = 'rgba(0, 0, 0, 0.3)';
+    botCtx.shadowBlur = 1;
+    botCtx.shadowOffsetX = 0;
+    botCtx.shadowOffsetY = 1;
+    
+    botCtx.fillText(stage.name.toUpperCase(), stageIdx * botStageWidth + botStageWidth / 2, 15);
+    botCtx.restore();
     
     stage.nodes.forEach((node, nodeIdx) => {
       const pos = botPositions[stageIdx][nodeIdx];
       const nodeKey = `${stageIdx}-${nodeIdx}`;
+      
+      const isHovered = botHoveredNode && botHoveredNode.stageIdx === stageIdx && botHoveredNode.nodeIdx === nodeIdx;
+      const isClicked = botClickedNode && botClickedNode.stageIdx === stageIdx && botClickedNode.nodeIdx === nodeIdx;
       
       let opacity = 1;
       let scale = 1;
@@ -5853,6 +6374,10 @@ function drawBotVisualization() {
         }
       }
       
+      // Apply hover and click scaling
+      if (isHovered) scale *= 1.1;
+      if (isClicked) scale *= 1.15;
+      
       if (shouldShow && scale > 0) {
         const adjustedOpacity = opacity * (shouldShow ? 1 : (1 - (botAnimationProgress - 0.7) / 0.3));
         
@@ -5861,26 +6386,84 @@ function drawBotVisualization() {
         botCtx.scale(scale, scale);
         botCtx.translate(-pos.x, -pos.y);
         
-        // Draw node rectangle
+        // Add enhanced glow effects
+        let glowIntensity = 0;
+        if (isClicked) {
+          glowIntensity = 25 + 10 * Math.sin(Date.now() * 0.005);
+        } else if (isHovered) {
+          glowIntensity = 20 + 5 * Math.sin(Date.now() * 0.004);
+        } else if (filtered && filtered.nodes.has(nodeKey)) {
+          glowIntensity = 15 + 5 * Math.sin(Date.now() * 0.003);
+        }
+        
+        if (glowIntensity > 0) {
+          botCtx.shadowColor = node.color;
+          botCtx.shadowBlur = glowIntensity;
+          botCtx.shadowOffsetX = 0;
+          botCtx.shadowOffsetY = 0;
+        }
+        
+        // Draw node rectangle with rounded corners for better appearance
         botCtx.globalAlpha = adjustedOpacity;
         botCtx.fillStyle = node.color;
-        botCtx.fillRect(pos.x - botNodeWidth / 2, pos.y - pos.height / 2, botNodeWidth, pos.height);
         
-        // Draw border
-        botCtx.strokeStyle = filtered && filtered.nodes.has(nodeKey) ? '#ffffff' : '#000';
-        botCtx.lineWidth = filtered && filtered.nodes.has(nodeKey) ? 3 : 2;
-        botCtx.strokeRect(pos.x - botNodeWidth / 2, pos.y - pos.height / 2, botNodeWidth, pos.height);
+        // Use rounded rectangle for smoother appearance
+        const cornerRadius = 4;
+        const x = pos.x - botNodeWidth / 2;
+        const y = pos.y - pos.height / 2;
+        const width = botNodeWidth;
+        const height = pos.height;
         
-        // Draw node name
+        botCtx.beginPath();
+        botCtx.moveTo(x + cornerRadius, y);
+        botCtx.lineTo(x + width - cornerRadius, y);
+        botCtx.quadraticCurveTo(x + width, y, x + width, y + cornerRadius);
+        botCtx.lineTo(x + width, y + height - cornerRadius);
+        botCtx.quadraticCurveTo(x + width, y + height, x + width - cornerRadius, y + height);
+        botCtx.lineTo(x + cornerRadius, y + height);
+        botCtx.quadraticCurveTo(x, y + height, x, y + height - cornerRadius);
+        botCtx.lineTo(x, y + cornerRadius);
+        botCtx.quadraticCurveTo(x, y, x + cornerRadius, y);
+        botCtx.closePath();
+        botCtx.fill();
+        
+        // Draw border with rounded corners
+        let borderColor = '#000';
+        let borderWidth = 2;
+        
+        if (isClicked) {
+          borderColor = '#ffffff';
+          borderWidth = 3;
+        } else if (isHovered) {
+          borderColor = '#ffffff';
+          borderWidth = 2;
+        } else if (filtered && filtered.nodes.has(nodeKey)) {
+          borderColor = '#ffffff';
+          borderWidth = 3;
+        }
+        
+        botCtx.strokeStyle = borderColor;
+        botCtx.lineWidth = borderWidth;
+        botCtx.stroke(); // Use the same rounded path for border
+        
+        // Draw node name with improved quality
         botCtx.fillStyle = '#ffffff';
-        botCtx.font = 'bold 11px sans-serif';
+        botCtx.font = 'bold 12px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
         botCtx.textAlign = 'center';
-        botCtx.shadowColor = 'rgba(0, 0, 0, 0.8)';
-        botCtx.shadowBlur = 4;
+        botCtx.textBaseline = 'middle';
+        
+        // Enhanced text shadow for better contrast
+        botCtx.shadowColor = 'rgba(0, 0, 0, 0.9)';
+        botCtx.shadowBlur = 3;
+        botCtx.shadowOffsetX = 1;
+        botCtx.shadowOffsetY = 1;
         
         const words = node.name.split(' ');
+        const lineHeight = 16;
+        const startY = pos.y - ((words.length - 1) * lineHeight / 2);
+        
         words.forEach((word, i) => {
-          botCtx.fillText(word, pos.x, pos.y - (words.length - 1) * 6 + i * 14);
+          botCtx.fillText(word, pos.x, startY + i * lineHeight);
         });
         
         botCtx.shadowBlur = 0;
@@ -5891,6 +6474,25 @@ function drawBotVisualization() {
   });
   
   botCtx.globalAlpha = 1;
+  
+  // Continue animation loop
+  animationId = requestAnimationFrame(drawBotVisualization);
+}
+
+// Start continuous animation
+function startBotAnimation() {
+  if (animationId) {
+    cancelAnimationFrame(animationId);
+  }
+  drawBotVisualization();
+}
+
+// Stop animation (for cleanup)
+function stopBotAnimation() {
+  if (animationId) {
+    cancelAnimationFrame(animationId);
+    animationId = null;
+  }
 }
 
 // Event listeners for filters
@@ -5943,10 +6545,19 @@ document.getElementById('botResetFilters').addEventListener('click', () => {
   animateTransition();
 });
 
-// Initial draw
+// Initial setup and start continuous animation
 botAnimationProgress = 1;
-drawBotVisualization();
-console.log('✅ Bot visualization rendered successfully!');
+startBotAnimation();
+console.log('✅ Bot visualization with flowing dots animation started!');
+
+// Handle page visibility to optimize performance
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) {
+    stopBotAnimation();
+  } else {
+    startBotAnimation();
+  }
+});
 
 // ========================================
 // SOCIAL MEDIA PLATFORM DASHBOARD
