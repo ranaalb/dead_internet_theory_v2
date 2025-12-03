@@ -5959,6 +5959,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const platformSelector = document.getElementById('platformSelector');
   const dashboardContent = document.getElementById('dashboardContent');
   const tabTitle = document.getElementById('tabTitle');
+  const platformGrid = document.querySelector('.platform-grid');
+  const body = document.body;
 
   // Platform data
   const platformData = {
@@ -6167,6 +6169,11 @@ document.addEventListener('DOMContentLoaded', () => {
       ]
     }
   };
+
+  // If the dashboard shell is missing, bail early to avoid errors
+  if (!modal || !platformSelector || !dashboardContent || !tabTitle) {
+    return;
+  }
 
   function renderDashboard(platform) {
     const data = platformData[platform];
@@ -6848,14 +6855,36 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  function openDashboardFor(platform) {
+    const key = platformData[platform] ? platform : 'twitter';
+    renderDashboard(key);
+    modal.style.display = 'flex';
+    modal.setAttribute('data-open', 'true');
+    body.style.overflow = 'hidden';
+  }
+
   // Open dashboard when clicking platform icon
   platformIcons.forEach(icon => {
     icon.addEventListener('click', () => {
       const platform = icon.dataset.platform;
-      renderDashboard(platform);
-      modal.style.display = 'flex';
-      document.body.style.overflow = 'hidden';
+      openDashboardFor(platform);
     });
+  });
+
+  // Delegate as a backup (helps if icons are added dynamically)
+  if (platformGrid) {
+    platformGrid.addEventListener('click', (e) => {
+      const icon = e.target.closest('.platform-icon');
+      if (!icon) return;
+      openDashboardFor(icon.dataset.platform);
+    });
+  }
+
+  // Capture clicks anywhere on the document as a fallback (e.g., if icons are dynamically injected)
+  document.addEventListener('click', (e) => {
+    const icon = e.target.closest('.platform-icon');
+    if (!icon) return;
+    openDashboardFor(icon.dataset.platform);
   });
 
   // Change platform via dropdown
@@ -7093,10 +7122,13 @@ document.addEventListener('DOMContentLoaded', () => {
   // Close dashboard
   function closeDashboardModal() {
     modal.style.display = 'none';
+    modal.removeAttribute('data-open');
     document.body.style.overflow = 'auto';
   }
 
-  closeBtn.addEventListener('click', closeDashboardModal);
+  if (closeBtn) {
+    closeBtn.addEventListener('click', closeDashboardModal);
+  }
   
   modal.addEventListener('click', (e) => {
     if (e.target === modal) {

@@ -4490,6 +4490,8 @@ svg {
   transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   opacity: 0;
   animation: iconFadeIn 0.6s ease forwards;
+  pointer-events: auto;
+  z-index: 2;
 }
 
 .platform-icon:nth-child(1) { animation-delay: 0.1s; }
@@ -4607,19 +4609,20 @@ svg {
 
 /* Chrome Browser Dashboard Modal */
 .platform-dashboard {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.85);
-  backdrop-filter: blur(10px);
-  z-index: 10000;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 2rem;
-  animation: fadeIn 0.3s ease;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0,0,0,0.4);
+    backdrop-filter: blur(6px);
+    z-index: 9999;
+    display: none; /* JS controls this */
+    opacity: 1;     /* FIX */
+    visibility: visible; /* FIX */
+    pointer-events: auto; /* FIX */
+    align-items: center;
+    justify-content: center;
 }
 
 @keyframes fadeIn {

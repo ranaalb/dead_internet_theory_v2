@@ -529,49 +529,50 @@
         
         <!-- Chrome Browser Dashboard Modal -->
         <div id="platformDashboard" class="platform-dashboard" style="display: none;">
-          <div class="browser-window">
-            <div class="browser-header">
-              <div class="browser-controls">
-                <span class="control-btn close" id="closeDashboard"></span>
-                <span class="control-btn minimize"></span>
-                <span class="control-btn maximize"></span>
-              </div>
-              <div class="browser-tabs">
-                <div class="browser-tab active">
-                  <span class="tab-icon">🛡️</span>
-                  <span class="tab-title" id="tabTitle">Platform Dashboard</span>
-                </div>
-              </div>
+        <div class="browser-window">
+          <div class="browser-header">
+            <div class="browser-controls">
+              <span class="control-btn close" id="closeDashboard"></span>
+              <span class="control-btn minimize"></span>
+              <span class="control-btn maximize"></span>
             </div>
-            
-            <div class="browser-toolbar">
-              <div class="url-bar">
-                <span class="url-secure">🔒</span>
-                <select id="platformSelector" class="platform-dropdown">
-                  <option value="twitter">twitter.com/bot-analysis</option>
-                  <option value="facebook">facebook.com/bot-analysis</option>
-                  <option value="instagram">instagram.com/bot-analysis</option>
-                  <option value="tiktok">tiktok.com/bot-analysis</option>
-                  <option value="reddit">reddit.com/bot-analysis</option>
-                  <option value="youtube">youtube.com/bot-analysis</option>
-                </select>
-                <div class="toolbar-actions">
-                  <button id="compareBtn" class="toolbar-btn" title="Compare all platforms (Press C)">
-                    <i class="fas fa-chart-bar"></i> Compare
-                  </button>
-                  <button id="keyboardHelpBtn" class="toolbar-btn toolbar-btn-help" title="Keyboard shortcuts">
-                    <i class="fas fa-keyboard"></i>
-                  </button>
-                </div>
+
+            <div class="browser-tabs">
+              <div class="browser-tab active">
+                <span class="tab-icon">🛡️</span>
+                <span class="tab-title" id="tabTitle">Platform Dashboard</span>
               </div>
-            </div>
-            
-            <div class="dashboard-content" id="dashboardContent">
-              <!-- Dynamic content will be loaded here -->
             </div>
           </div>
+
+          <div class="browser-toolbar">
+            <div class="url-bar">
+              <span class="url-secure">🔒</span>
+
+              <select id="platformSelector" class="platform-dropdown">
+                <option value="twitter">twitter.com/bot-analysis</option>
+                <option value="facebook">facebook.com/bot-analysis</option>
+                <option value="instagram">instagram.com/bot-analysis</option>
+                <option value="tiktok">tiktok.com/bot-analysis</option>
+                <option value="reddit">reddit.com/bot-analysis</option>
+                <option value="youtube">youtube.com/bot-analysis</option>
+              </select>
+
+              <div class="toolbar-actions">
+                <button id="compareBtn" class="toolbar-btn">
+                  <i class="fas fa-chart-bar"></i> Compare
+                </button>
+                <button id="keyboardHelpBtn" class="toolbar-btn toolbar-btn-help">
+                  <i class="fas fa-keyboard"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div class="dashboard-content" id="dashboardContent"></div>
         </div>
       </div>
+
     </section>
 
     <!-- Global Internet Traffic Section -->
